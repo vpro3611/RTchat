@@ -1,0 +1,105 @@
+import { Pool, PoolClient } from "pg";
+import { UserRepoWriterPg } from "../../../src/modules/users/repositories/user_repo_writer_pg";
+import { User } from "../../../src/modules/users/domain/user";
+import { Username } from "../../../src/modules/users/domain/Username";
+
+describe("UserRepoWriterPg (integration - transactional)", () => {
+    let pool: Pool;
+    let client: PoolClient;
+    let repo: UserRepoWriterPg;
+
+    beforeAll(async () => {
+        pool = new Pool({
+            connectionString: process.env.TEST_DATABASE_URL,
+        });
+    });
+
+    beforeEach(async () => {
+        client = await pool.connect();
+        await client.query("BEGIN");
+        repo = new UserRepoWriterPg(client); // per-transaction dependency
+    });
+
+    afterEach(async () => {
+        await client.query("ROLLBACK");
+        client.release();
+    });
+
+    afterAll(async () => {
+        await pool.end();
+    });
+
+    function createTestUser(overrides?: Partial<any>): User {
+        return User.restore(
+            overrides?.id ?? "11111111-1111-1111-1111-111111111111",
+            overrides?.username ?? Username.create("testuser").getValue(),
+            overrides?.email ?? "test@example.com",
+            overrides?.password_hash ?? "hash123",
+            overrides?.is_active ?? true,
+            overrides?.last_seen_at ?? null,
+            overrides?.created_at ?? new Date(),
+            overrides?.updated_at ?? new Date(),
+        );
+    }
+
+    it("should insert new user", async () => {
+        const user = createTestUser();
+
+        const saved = await repo.save(user);
+
+        const result = await client.query(
+            "SELECT * FROM users WHERE id = $1",
+            [user.id]
+        );
+
+        expect(result.rows.length).toBe(1);
+        expect(saved.id).toBe(user.id);
+    });
+
+    it("should update existing user (upsert)", async () => {
+        const user = createTestUser();
+        await repo.save(user);
+
+        const updatedUser = createTestUser({
+            username: Username.create("updateduser").getValue(),
+        });
+
+        const saved = await repo.save(updatedUser);
+
+        expect(saved.getUsername().getValue()).toBe("updateduser");
+
+        const result = await client.query(
+            "SELECT username FROM users WHERE id = $1",
+            [user.id]
+        );
+
+        expect(result.rows[0].username).toBe("updateduser");
+    });
+
+    it("should throw USERNAME_ALREADY_EXISTS", async () => {
+        const user1 = createTestUser({
+            id: "11111111-1111-1111-1111-111111111111",
+        });
+
+        const user2 = createTestUser({
+            id: "22222222-2222-2222-2222-222222222222",
+            username: Username.create("testuser").getValue(),
+        });
+
+        await repo.save(user1);
+
+        await expect(repo.save(user2)).rejects.toThrow(
+            "USERNAME_ALREADY_EXISTS"
+        );
+    });
+
+    it("should throw INVALID_UUID_FORMAT", async () => {
+        const user = createTestUser({
+            id: "invalid-uuid",
+        });
+
+        await expect(repo.save(user)).rejects.toThrow(
+            "INVALID_UUID_FORMAT"
+        );
+    });
+});
