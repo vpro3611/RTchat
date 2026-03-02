@@ -27,24 +27,26 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
             notNull: true,
             default: true,
         },
-        avatar_url: {
-            type: "text",
-            notNull: false,
-        },
+        // avatar_key: {
+        //     type: "text",
+        //     notNull: false,
+        // },
         last_seen_at: {
-            type: "timestamp",
+            type: "TIMESTAMPTZ",
             notNull: false,
         },
         created_at: {
-            type: "timestamp",
+            type: "TIMESTAMPTZ",
             notNull: true,
         },
         updated_at: {
-            type: "timestamp",
+            type: "TIMESTAMPTZ",
             notNull: true,
             default: pgm.func('now()'),
         },
     })
 }
 
-export async function down(pgm: MigrationBuilder): Promise<void> {}
+export async function down(pgm: MigrationBuilder): Promise<void> {
+    pgm.dropTable('users');
+}
