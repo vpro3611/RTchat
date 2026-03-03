@@ -27,10 +27,11 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
             notNull: true,
             default: true,
         },
-        // avatar_key: {
-        //     type: "text",
-        //     notNull: false,
-        // },
+        is_verified: {
+            type: "boolean",
+            notNull: true,
+            default: false,
+        },
         last_seen_at: {
             type: "TIMESTAMPTZ",
             notNull: false,
