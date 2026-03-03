@@ -1,13 +1,15 @@
 import {UserRepoReader, UserRepoWriter} from "../ports/user_repo_interfaces";
 import {Email} from "../domain/email";
-import {SHAREDmapToDto} from "../shared/map_to_dto";
-import {SHAREDUserExistsById} from "../shared/user_exists_by_id";
 import {EmailAlreadyExistsError} from "../errors/email_errors";
+import {UserMapper} from "../shared/map_to_dto";
+import {UserLookup} from "../shared/user_exists_by_id";
 
 
 export class ChangeEmailUseCase {
     constructor(private readonly userRepoReader: UserRepoReader,
-                private readonly userRepoWriter: UserRepoWriter
+                private readonly userRepoWriter: UserRepoWriter,
+                private readonly mapper: UserMapper,
+                private readonly userLookup: UserLookup
     ) {}
 
 
@@ -22,16 +24,14 @@ export class ChangeEmailUseCase {
     async changeEmailUseCase(actorId: string, newEmail: string) {
         const newEmailValid = Email.create(newEmail);
 
-        const user = await SHAREDUserExistsById(actorId, this.userRepoReader);
+        const user = await this.userLookup.getUserOrThrow(actorId);
 
         await this.checkUserWithSameEmail(newEmailValid.getValue());
-
-        user.ensureIsActive();
 
         user.setEmail(newEmailValid);
 
         const saved = await this.userRepoWriter.save(user);
 
-        return SHAREDmapToDto(saved);
+        return this.mapper.mapToDto(saved);
     }
 }

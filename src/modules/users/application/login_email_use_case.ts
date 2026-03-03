@@ -1,14 +1,15 @@
 import {UserRepoReader} from "../ports/user_repo_interfaces";
-import {BcryptInterface} from "../../infrasctructure/ports/bcrypt_interface";
+import {BcryptInterface} from "../../infrasctructure/ports/bcrypter/bcrypt_interface";
 import {Email} from "../domain/email";
 import {Password} from "../domain/password";
-import {SHAREDmapToDto} from "../shared/map_to_dto";
 import {InvalidCredentialsError, UserNotFoundError} from "../errors/use_case_errors";
+import {UserMapper} from "../shared/map_to_dto";
 
 
 export class LoginEmailUseCase {
     constructor(private readonly userRepoReader: UserRepoReader,
-                private readonly bcrypter: BcryptInterface
+                private readonly bcrypter: BcryptInterface,
+                private readonly mapper: UserMapper
     ) {}
 
     private async userExists(email: string) {
@@ -34,10 +35,10 @@ export class LoginEmailUseCase {
 
         const user = await this.userExists(emailValid.getValue());
 
-        user.ensureIsActive();
+        user.canLogin();
 
         await this.passwordComparison(passwordValid, user.getPassword().getHash());
 
-        return SHAREDmapToDto(user);
+        return this.mapper.mapToDto(user);
     }
 }

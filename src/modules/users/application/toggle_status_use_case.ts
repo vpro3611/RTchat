@@ -1,22 +1,26 @@
-import {UserRepoReader, UserRepoWriter} from "../ports/user_repo_interfaces";
-import {SHAREDmapToDto} from "../shared/map_to_dto";
-import {SHAREDUserExistsById} from "../shared/user_exists_by_id";
+import {UserRepoWriter} from "../ports/user_repo_interfaces";
+import {UserMapper} from "../shared/map_to_dto";
+import {UserLookup} from "../shared/user_exists_by_id";
 
 
 export class ToggleIsActiveUseCase {
-    constructor(private readonly userRepoReader: UserRepoReader,
-                private readonly userRepoWriter: UserRepoWriter
+    constructor(
+                private readonly userRepoWriter: UserRepoWriter,
+                private readonly mapper: UserMapper,
+                private readonly userLookup: UserLookup
     ) {}
 
 
 
     async toggleIsActiveUseCase(actorId: string) {
-        const user = await SHAREDUserExistsById(actorId, this.userRepoReader);
+        const user = await this.userLookup.getUserOrThrow(actorId);
+
+        user.ensureIsVerified();
 
         user.setIsActive();
 
         const saved = await this.userRepoWriter.save(user);
 
-        return SHAREDmapToDto(saved);
+        return this.mapper.mapToDto(saved);
     }
 }

@@ -1,15 +1,17 @@
 import {UserRepoReader, UserRepoWriter} from "../ports/user_repo_interfaces";
-import {BcryptInterface} from "../../infrasctructure/ports/bcrypt_interface";
+import {BcryptInterface} from "../../infrasctructure/ports/bcrypter/bcrypt_interface";
 import {Password} from "../domain/password";
-import {SHAREDmapToDto} from "../shared/map_to_dto";
-import {SHAREDUserExistsById} from "../shared/user_exists_by_id";
 import {InvalidCredentialsError, OldPasswordNotMatchError} from "../errors/use_case_errors";
+import {UserMapper} from "../shared/map_to_dto";
+import {UserLookup} from "../shared/user_exists_by_id";
 
 
 export class ChangePasswordUseCase {
     constructor(private readonly userRepoReader: UserRepoReader,
                 private readonly userRepoWriter: UserRepoWriter,
-                private readonly bcrypter: BcryptInterface
+                private readonly bcrypter: BcryptInterface,
+                private readonly mapper: UserMapper,
+                private readonly userLookup: UserLookup
     ) {}
 
     private checkPasswordDifference(oldPassword: string, newPassword: string) {
@@ -34,9 +36,9 @@ export class ChangePasswordUseCase {
 
         this.checkPasswordDifference(oldPasswordValid, newPasswordValid);
 
-        const user = await SHAREDUserExistsById(actorId, this.userRepoReader);
+        const user = await this.userLookup.getUserOrThrow(actorId);
 
-        user.ensureIsActive();
+        user.ensureIsVerifiedAndActive();
 
         await this.comparePasswords(oldPasswordValid, user.getPassword().getHash());
 
@@ -46,6 +48,6 @@ export class ChangePasswordUseCase {
 
         const saved = await this.userRepoWriter.save(user);
 
-        return SHAREDmapToDto(saved);
+        return this.mapper.mapToDto(saved);
     }
 }
