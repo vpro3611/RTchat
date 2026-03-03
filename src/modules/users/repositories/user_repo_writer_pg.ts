@@ -46,6 +46,7 @@ export class UserRepoWriterPg implements UserRepoWriter {
             row.email,
             row.password_hash,
             row.is_active,
+            row.is_verified,
             row.last_seen_at,
             row.created_at,
             row.updated_at,
@@ -61,17 +62,19 @@ export class UserRepoWriterPg implements UserRepoWriter {
                     email,
                     password_hash,
                     is_active,
+                    is_verified,
                     last_seen_at,
                     created_at,
                     updated_at
                 )
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
                     ON CONFLICT (id)
             DO UPDATE SET
                     username = EXCLUDED.username,
                                        email = EXCLUDED.email,
                                        password_hash = EXCLUDED.password_hash,
                                        is_active = EXCLUDED.is_active,
+                                       is_verified = EXCLUDED.is_verified, 
                                        last_seen_at = EXCLUDED.last_seen_at,
                                        updated_at = NOW()
                                        RETURNING *;
@@ -83,6 +86,7 @@ export class UserRepoWriterPg implements UserRepoWriter {
                 user.getEmail().getValue(),
                 user.getPassword().getHash(),
                 user.getIsActive(),
+                user.getIsVerified(),
                 user.getLastSeenAt(),
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
@@ -93,6 +97,19 @@ export class UserRepoWriterPg implements UserRepoWriter {
             const row = result.rows[0];
 
             return this.mapToDomain(row);
+        } catch (error: any) {
+            this.mapSaveError(error);
+        }
+    }
+
+    async markAsVerified(userId: string): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET is_verified = true, updated_at = NOW()
+                WHERE id = $1
+            `;
+            await this.pool.query(query, [userId]);
         } catch (error: any) {
             this.mapSaveError(error);
         }
