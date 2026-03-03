@@ -18,6 +18,7 @@ export class UserRepoReaderPg implements UserRepoReader{
             row.email,
             row.password_hash,
             row.is_active,
+            row.is_verified,
             row.last_seen_at,
             row.created_at,
             row.updated_at,
