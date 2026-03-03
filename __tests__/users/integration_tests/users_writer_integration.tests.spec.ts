@@ -2,6 +2,8 @@ import { Pool, PoolClient } from "pg";
 import { UserRepoWriterPg } from "../../../src/modules/users/repositories/user_repo_writer_pg";
 import { User } from "../../../src/modules/users/domain/user";
 import { Username } from "../../../src/modules/users/domain/Username";
+import { Email } from "../../../src/modules/users/domain/email";
+import { Password } from "../../../src/modules/users/domain/password";
 
 describe("UserRepoWriterPg (integration - transactional)", () => {
     let pool: Pool;
@@ -17,7 +19,7 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
     beforeEach(async () => {
         client = await pool.connect();
         await client.query("BEGIN");
-        repo = new UserRepoWriterPg(client); // per-transaction dependency
+        repo = new UserRepoWriterPg(client);
     });
 
     afterEach(async () => {
@@ -29,14 +31,25 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
         await pool.end();
     });
 
-    function createTestUser(overrides?: Partial<any>): User {
+    function createTestUser(overrides?: Partial<{
+        id: string;
+        username: string;
+        email: string;
+        passwordHash: string;
+        is_active: boolean;
+        is_verified: boolean;
+        last_seen_at: Date | null;
+        created_at: Date;
+        updated_at: Date;
+    }>): User {
         return User.restore(
             overrides?.id ?? "11111111-1111-1111-1111-111111111111",
-            overrides?.username ?? Username.create("testuser").getValue(),
+            overrides?.username ?? "testuser",
             overrides?.email ?? "test@example.com",
-            overrides?.password_hash ?? "hash123",
+            overrides?.passwordHash ?? "hash123",
             overrides?.is_active ?? true,
-            overrides?.last_seen_at ?? null,
+            overrides?.is_verified ?? true,
+            overrides?.last_seen_at ?? new Date(),
             overrides?.created_at ?? new Date(),
             overrides?.updated_at ?? new Date(),
         );
@@ -54,6 +67,7 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
 
         expect(result.rows.length).toBe(1);
         expect(saved.id).toBe(user.id);
+        expect(saved.getUsername().getValue()).toBe("testuser");
     });
 
     it("should update existing user (upsert)", async () => {
@@ -61,7 +75,7 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
         await repo.save(user);
 
         const updatedUser = createTestUser({
-            username: Username.create("updateduser").getValue(),
+            username: "updateduser",
         });
 
         const saved = await repo.save(updatedUser);
@@ -79,18 +93,19 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
     it("should throw USERNAME_ALREADY_EXISTS", async () => {
         const user1 = createTestUser({
             id: "11111111-1111-1111-1111-111111111111",
+            username: "duplicateuser",
         });
 
         const user2 = createTestUser({
             id: "22222222-2222-2222-2222-222222222222",
-            username: Username.create("testuser").getValue(),
+            username: "duplicateuser",
         });
 
         await repo.save(user1);
 
-        await expect(repo.save(user2)).rejects.toThrow(
-            "USERNAME_ALREADY_EXISTS"
-        );
+        await expect(repo.save(user2))
+            .rejects
+            .toThrow("USERNAME_ALREADY_EXISTS");
     });
 
     it("should throw INVALID_UUID_FORMAT", async () => {
@@ -98,8 +113,25 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
             id: "invalid-uuid",
         });
 
-        await expect(repo.save(user)).rejects.toThrow(
-            "INVALID_UUID_FORMAT"
+        await expect(repo.save(user))
+            .rejects
+            .toThrow("INVALID_UUID_FORMAT");
+    });
+
+    it("should mark user as verified", async () => {
+        const user = createTestUser({
+            is_verified: false,
+        });
+
+        await repo.save(user);
+
+        await repo.markAsVerified(user.id);
+
+        const result = await client.query(
+            "SELECT is_verified FROM users WHERE id = $1",
+            [user.id]
         );
+
+        expect(result.rows[0].is_verified).toBe(true);
     });
 });

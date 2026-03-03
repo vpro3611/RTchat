@@ -39,17 +39,19 @@ describe("UserRepoReaderPg (integration - transactional)", () => {
                 email,
                 password_hash,
                 is_active,
+                is_verified,
                 last_seen_at,
                 created_at,
                 updated_at
             )
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
             `,
             [
                 "11111111-1111-1111-1111-111111111111",
                 "readeruser",
                 "reader@example.com",
                 "hash123",
+                true,
                 true,
                 null,
                 new Date(),
