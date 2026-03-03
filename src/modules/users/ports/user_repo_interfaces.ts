@@ -8,4 +8,5 @@ export interface UserRepoReader {
 
 export interface UserRepoWriter {
     save(user: User): Promise<User>;
+    markAsVerified(id: string): Promise<void>;
 }
