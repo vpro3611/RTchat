@@ -1,4 +1,4 @@
-import {BcryptInterface} from "./ports/bcrypt_interface";
+import {BcryptInterface} from "./ports/bcrypter/bcrypt_interface";
 import * as bcrypt from "bcrypt";
 
 export class Bcrypter implements BcryptInterface {
