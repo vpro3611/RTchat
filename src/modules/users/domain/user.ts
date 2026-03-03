@@ -6,13 +6,13 @@ import {Username} from "./Username";
 export class User {
     constructor(
         public readonly id: string,
-        private readonly username: Username,
-        private readonly email: Email,
-        private readonly password: Password,
-        private readonly is_active: boolean,
-        private readonly last_seen_at: Date,
+        private username: Username,
+        private email: Email,
+        private password: Password,
+        private is_active: boolean,
+        private last_seen_at: Date,
         private readonly created_at: Date,
-        private readonly updated_at: Date,
+        private updated_at: Date,
     ) {}
 
     static restore(
@@ -37,6 +37,11 @@ export class User {
         );
     }
 
+    ensureIsActive(): void {
+        if (!this.is_active) {
+            throw new Error('User is not active');
+        }
+    }
 
     static create(
         username: Username,
@@ -54,6 +59,20 @@ export class User {
             new Date(),
         );
     };
+
+
+    setUsername(username: Username): void {
+        this.username = username;
+    }
+    setEmail(email: Email): void {
+        this.email = email;
+    }
+    setPassword(password: Password): void {
+        this.password = password;
+    }
+    setIsActive(): void {
+        this.is_active = !this.is_active;
+    }
 
     getUsername(): Username {
         return this.username;
