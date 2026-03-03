@@ -4,9 +4,9 @@ import {User} from "../domain/user";
 import {
     ColumnNotFoundError,
     DatabaseConnectionError,
-    DatabaseQueryError, InvalidUuidFormatError,
+    DatabaseQueryError,
     TableNotFoundError
-} from "../ports/user_database_error";
+} from "../errors/user_database_error";
 
 export class UserRepoReaderPg implements UserRepoReader{
     constructor(private readonly pool: Pool | PoolClient) {}
@@ -24,7 +24,7 @@ export class UserRepoReaderPg implements UserRepoReader{
         );
     }
 
-    private mapErrorByUsername(error: any): never {
+    private mapError(error: any): never {
         if (error.code === '42P01') {
             throw new TableNotFoundError('TABLE_NOT_FOUND');
         }
@@ -40,25 +40,6 @@ export class UserRepoReaderPg implements UserRepoReader{
         throw new DatabaseQueryError('DATABASE_QUERY_ERROR');
     }
 
-    private mapErrorById(error: any): never {
-        if (error.code === '22P02') {
-            throw new InvalidUuidFormatError('INVALID_UUID_FORMAT');
-        }
-
-        if (error.code === '42P01') {
-            throw new TableNotFoundError('TABLE_NOT_FOUND');
-        }
-
-        if (error.code === '42703') {
-            throw new ColumnNotFoundError('COLUMN_NOT_FOUND');
-        }
-
-        if (error.code?.startsWith('08')) {
-            throw new DatabaseConnectionError('DATABASE_CONNECTION_ERROR');
-        }
-
-        throw new DatabaseQueryError('DATABASE_QUERY_ERROR');
-    }
 
     async getUserById(id: string): Promise<User | null> {
         try {
@@ -77,7 +58,7 @@ export class UserRepoReaderPg implements UserRepoReader{
 
             return user;
         } catch (error: any) {
-            this.mapErrorById(error);
+            this.mapError(error);
         }
     }
 
@@ -98,7 +79,28 @@ export class UserRepoReaderPg implements UserRepoReader{
 
             return user;
         } catch (error: any) {
-            this.mapErrorByUsername(error);
+            this.mapError(error);
+        }
+    }
+
+    async getUserByEmail(email: string): Promise<User | null> {
+        try {
+            const query = `SELECT *
+                           FROM users
+                           WHERE email = $1`;
+            const result = await this.pool.query(query, [email]);
+
+            if (result.rows.length === 0) {
+                return null;
+            }
+
+            const row = result.rows[0];
+
+            const user = this.mapDoDomain(row);
+
+            return user;
+        } catch (error: any) {
+            this.mapError(error);
         }
     }
 }
