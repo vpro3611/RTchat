@@ -1,6 +1,12 @@
 import {Email} from "./email";
 import {Password} from "./password";
 import {Username} from "./Username";
+import {
+    CannotChangeEmailError,
+    CannotChangeUsernameError, CannotLoginError, NotActiveOrVerifiedError,
+    UserIsNotVerifiedError,
+    UserNotActiveError
+} from "../errors/user_domain_errors";
 
 
 export class User {
@@ -10,6 +16,7 @@ export class User {
         private email: Email,
         private password: Password,
         private is_active: boolean,
+        private is_verified: boolean,
         private last_seen_at: Date,
         private readonly created_at: Date,
         private updated_at: Date,
@@ -21,6 +28,7 @@ export class User {
         email: string,
         password: string,
         is_active: boolean,
+        is_verified: boolean,
         last_seen_at: Date,
         created_at: Date,
         updated_at: Date,
@@ -31,6 +39,7 @@ export class User {
             Email.create(email),
             Password.fromHash(password),
             is_active,
+            is_verified,
             last_seen_at,
             created_at,
             updated_at,
@@ -39,7 +48,50 @@ export class User {
 
     ensureIsActive(): void {
         if (!this.is_active) {
-            throw new Error('User is not active');
+            throw new UserNotActiveError(`User: ${this.getUsername().getValue()} is not active`);
+        }
+    }
+
+    ensureIsVerified(): void {
+        if (!this.is_verified) {
+            throw new UserIsNotVerifiedError(`User: ${this.getUsername().getValue()} is not verified`);
+        }
+    }
+
+    canChangeUsername(newUsername: Username): void {
+        if (
+            this.username.getValue() === newUsername.getValue() ||
+            !this.is_active ||
+            !this.is_verified
+        )
+        {
+            throw new CannotChangeUsernameError(`New username: ${newUsername.getValue()} cannot be the same as the old one: ${this.getUsername().getValue()},
+             or user is not active or not verified`
+            );
+        }
+    }
+    canChangeEmail(newEmail: Email): void {
+        if (
+            this.email.getValue() === newEmail.getValue() ||
+            !this.is_active ||
+            !this.is_verified
+        )
+        {
+            throw new CannotChangeEmailError(`New email: ${newEmail.getValue()} cannot be the same as the old one: ${this.getEmail().getValue()},
+             or user is not active or not verified`
+            );
+        }
+    }
+
+    ensureIsVerifiedAndActive(): void {
+        if (!this.is_active || !this.is_verified) {
+            throw new NotActiveOrVerifiedError(`User ${this.getUsername().getValue()} is not active or not verified`);
+        }
+    }
+
+    canLogin(): void {
+        if (!this.is_active || !this.is_verified) {
+            throw new CannotLoginError(`User: ${this.getUsername().getValue()} is not active or not verified thus cannot login`);
         }
     }
 
@@ -54,6 +106,7 @@ export class User {
             email,
             password,
             true,
+            false,
             new Date(),
             new Date(),
             new Date(),
@@ -62,16 +115,26 @@ export class User {
 
 
     setUsername(username: Username): void {
+        this.canChangeUsername(username);
         this.username = username;
     }
     setEmail(email: Email): void {
+        this.canChangeEmail(email);
         this.email = email;
     }
     setPassword(password: Password): void {
+        this.ensureIsVerifiedAndActive()
         this.password = password;
     }
     setIsActive(): void {
+        this.ensureIsVerified();
         this.is_active = !this.is_active;
+    }
+    setLastSeenAt(date: Date): void {
+        this.last_seen_at = date;
+    }
+    setUpdatedAt(date: Date): void {
+        this.updated_at = date;
     }
 
     getUsername(): Username {
@@ -85,6 +148,9 @@ export class User {
     }
     getIsActive(): boolean {
         return this.is_active;
+    }
+    getIsVerified(): boolean {
+        return this.is_verified;
     }
     getLastSeenAt(): Date {
         return this.last_seen_at;
