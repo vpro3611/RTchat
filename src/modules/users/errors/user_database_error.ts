@@ -32,9 +32,3 @@ export class DatabaseQueryError extends UserDatabaseError {
 }
 
 
-export class InvalidUuidFormatError extends UserDatabaseError {
-    constructor(message: string) {
-        super(message);
-    }
-}
-
