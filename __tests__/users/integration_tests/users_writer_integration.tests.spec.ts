@@ -108,14 +108,14 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
             .toThrow("USERNAME_ALREADY_EXISTS");
     });
 
-    it("should throw INVALID_UUID_FORMAT", async () => {
+    it("should throw DATABASE_QUERY_ERROR", async () => { // the contract has changed, and now we do not have invalid uuid
         const user = createTestUser({
-            id: "invalid-uuid",
+            id: "invalid-query",
         });
 
         await expect(repo.save(user))
             .rejects
-            .toThrow("INVALID_UUID_FORMAT");
+            .toThrow("DATABASE_QUERY_ERROR");
     });
 
     it("should mark user as verified", async () => {
