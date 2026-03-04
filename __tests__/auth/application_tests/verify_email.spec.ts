@@ -1,6 +1,4 @@
 import { EmailVerificationUseCase } from "../../../src/modules/infrasctructure/ports/email_verif_infra/email_verif_service/email_verification_use_case";
-import { EmailVerificationTokenRepoPg } from "../../../src/modules/infrasctructure/ports/email_verif_infra/email_verification_token_repo/email_verification_token_repo_pg";
-import { UserRepoWriterPg } from "../../../src/modules/users/repositories/user_repo_writer_pg";
 import {AuthService} from "../../../src/modules/authentification/auth_service";
 
 jest.mock("../../../src/modules/infrasctructure/ports/email_verif_infra/email_verification_token_repo/email_verification_token_repo_pg");
