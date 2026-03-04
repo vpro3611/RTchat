@@ -1,36 +1,37 @@
+import {AuthorizationError, ConflictError} from "../../../http_errors_base";
 
 
-export class UserNotActiveError extends Error {
+export class UserNotActiveError extends AuthorizationError {
     constructor(message: string) {
         super(message);
     }
 }
 
-export class UserIsNotVerifiedError extends Error {
+export class UserIsNotVerifiedError extends AuthorizationError {
     constructor(message: string) {
         super(message);
     }
 }
 
-export class CannotChangeUsernameError extends Error {
+export class CannotChangeUsernameError extends ConflictError {
     constructor(message: string) {
         super(message);
     }
 }
 
-export class CannotChangeEmailError extends Error {
+export class CannotChangeEmailError extends ConflictError {
     constructor(message: string) {
         super(message);
     }
 }
 
-export class NotActiveOrVerifiedError extends Error {
+export class NotActiveOrVerifiedError extends AuthorizationError {
     constructor(message: string) {
         super(message);
     }
 }
 
-export class CannotLoginError extends Error {
+export class CannotLoginError extends AuthorizationError {
     constructor(message: string) {
         super(message);
     }

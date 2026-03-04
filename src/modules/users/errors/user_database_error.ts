@@ -1,6 +1,7 @@
+import {InternalServerError} from "../../../http_errors_base";
 
 
-export class UserDatabaseError extends Error {
+export class UserDatabaseError extends InternalServerError {
     constructor(message: string) {
         super(message);
     }
@@ -31,4 +32,20 @@ export class DatabaseQueryError extends UserDatabaseError {
     }
 }
 
+export class DatabaseUniqueConstraintError extends UserDatabaseError {
+    constructor(message: string) {
+        super(message);
+    }
+}
 
+export class EmailAlreadyExistDatabaseError extends UserDatabaseError {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
+export class UsernameAlreadyExistDatabaseError extends UserDatabaseError {
+    constructor(message: string) {
+        super(message);
+    }
+}
