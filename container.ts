@@ -105,6 +105,9 @@ export function assembleContainer()
         changeUsernameController,
         toggleStatusController,
 
+        // jwt token service
+        jwtTokenService,
+
         // auth
         loginEmailController,
         loginUsernameController,
