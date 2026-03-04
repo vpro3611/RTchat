@@ -7,7 +7,7 @@ export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
 
-    // loger middleware here.
+    // TODO : loger middleware here.
 
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
@@ -19,5 +19,7 @@ export function createApp(dependencies: AppContainer): Express
     app.use("/public", publicRouter);
     app.use("/private", privateRouter);
 
+    // TODO : ROUTES
+    // TODO : MIDDLEWARES
     return app;
 }
