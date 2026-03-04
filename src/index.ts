@@ -1,4 +1,5 @@
 import {pool} from "./database";
+import {startServer} from "./server";
 
 
 
@@ -9,6 +10,8 @@ async function main() {
     console.log(process.env.DATABASE_URL)
     const res = await pool.query('SELECT NOW()');
     console.log(res.rows[0]);
+
+    await startServer();
 }
 
 main().catch((err) => {
