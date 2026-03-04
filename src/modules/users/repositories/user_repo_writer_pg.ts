@@ -1,6 +1,12 @@
 import {UserRepoWriter} from "../ports/user_repo_interfaces";
 import {Pool, PoolClient} from "pg";
 import {User} from "../domain/user";
+import {
+    DatabaseConnectionError,
+    DatabaseQueryError,
+    DatabaseUniqueConstraintError, EmailAlreadyExistDatabaseError,
+    TableNotFoundError, UsernameAlreadyExistDatabaseError
+} from "../errors/user_database_error";
 
 
 export class UserRepoWriterPg implements UserRepoWriter {
@@ -8,35 +14,31 @@ export class UserRepoWriterPg implements UserRepoWriter {
 
 
     private mapSaveError(error: any): never {
-        if (error.code === '22P02') {
-            throw new Error('INVALID_UUID_FORMAT');
-        }
-
         // unique violation
         if (error.code === '23505') {
 
             if (error.constraint?.includes('username')) {
-                throw new Error('USERNAME_ALREADY_EXISTS');
+                throw new UsernameAlreadyExistDatabaseError('USERNAME_ALREADY_EXISTS');
             }
 
             if (error.constraint?.includes('email')) {
-                throw new Error('EMAIL_ALREADY_EXISTS');
+                throw new EmailAlreadyExistDatabaseError('EMAIL_ALREADY_EXISTS');
             }
 
-            throw new Error('UNIQUE_CONSTRAINT_VIOLATION');
+            throw new DatabaseUniqueConstraintError('UNIQUE_CONSTRAINT_VIOLATION');
         }
 
         // table not found
         if (error.code === '42P01') {
-            throw new Error('TABLE_NOT_FOUND');
+            throw new TableNotFoundError('TABLE_NOT_FOUND');
         }
 
         // connection errors
         if (error.code?.startsWith('08')) {
-            throw new Error('DATABASE_CONNECTION_ERROR');
+            throw new DatabaseConnectionError('DATABASE_CONNECTION_ERROR');
         }
 
-        throw new Error('DATABASE_QUERY_ERROR');
+        throw new DatabaseQueryError('DATABASE_QUERY_ERROR');
     }
 
     private mapToDomain(row: any): User {
