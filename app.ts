@@ -80,8 +80,8 @@ export function createApp(dependencies: AppContainer): Express
         dependencies.toggleStatusController.toggleStatusController
     );
 
-    // TODO : ROUTES
-    // TODO : MIDDLEWARES
+
+
 
     app.use(errorMiddleware());
     return app;
