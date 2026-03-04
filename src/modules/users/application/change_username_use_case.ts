@@ -3,6 +3,7 @@ import {Username} from "../domain/Username";
 import {UsernameAlreadyExistsError} from "../errors/username_errors";
 import {UserMapper} from "../shared/map_to_dto";
 import {UserLookup} from "../shared/user_exists_by_id";
+import {UsernameAlreadyExistDatabaseError} from "../errors/user_database_error";
 
 
 export class ChangeUsernameUseCase {
@@ -22,16 +23,23 @@ export class ChangeUsernameUseCase {
     }
 
     async changeUsernameUseCase(actorId: string, newUsername: string) {
-        const usernameValid = Username.create(newUsername);
+        try {
+            const usernameValid = Username.create(newUsername);
 
-        const user = await this.userLookup.getUserOrThrow(actorId);
+            const user = await this.userLookup.getUserOrThrow(actorId);
 
-        await this.checkUserWithSameUsername(usernameValid.getValue());
+            await this.checkUserWithSameUsername(usernameValid.getValue());
 
-        user.setUsername(usernameValid);
+            user.setUsername(usernameValid);
 
-        const saved = await this.userRepoWriter.save(user);
+            const saved = await this.userRepoWriter.save(user);
 
-        return this.mapper.mapToDto(saved)
+            return this.mapper.mapToDto(saved)
+        } catch (error) {
+            if (error instanceof UsernameAlreadyExistDatabaseError) {
+                throw new UsernameAlreadyExistsError(`Your chosen username already exists!`);
+            }
+            throw error;
+        }
     }
 }
