@@ -1,15 +1,15 @@
 import {AppContainer} from "./container";
 import express, {Express} from "express";
 import cookieParser from "cookie-parser";
-import {authMiddleware} from "./src/modules/authentification/auth_middleware/auth_middleware";
-import {validateBody} from "./src/modules/middlewares/validate_body";
-import {RegisterBodySchema} from "./src/modules/authentification/controllers/register_controller";
-import {LoginEmailBodySchema} from "./src/modules/authentification/controllers/login_email_controller";
-import {LoginUsernameBodySchema} from "./src/modules/authentification/controllers/login_username_controller";
-import {errorMiddleware} from "./src/modules/middlewares/error_middleware";
-import {ChangeEmailBodySchema} from "./src/modules/users/controllers/change_email_controller";
-import {ChangePasswordBodySchema} from "./src/modules/users/controllers/change_password_controller";
-import {ChangeUsernameBodySchema} from "./src/modules/users/controllers/change_username_controller";
+import {authMiddleware} from "./modules/authentification/auth_middleware/auth_middleware";
+import {validateBody} from "./modules/middlewares/validate_body";
+import {RegisterBodySchema} from "./modules/authentification/controllers/register_controller";
+import {LoginEmailBodySchema} from "./modules/authentification/controllers/login_email_controller";
+import {LoginUsernameBodySchema} from "./modules/authentification/controllers/login_username_controller";
+import {errorMiddleware} from "./modules/middlewares/error_middleware";
+import {ChangeEmailBodySchema} from "./modules/users/controllers/change_email_controller";
+import {ChangePasswordBodySchema} from "./modules/users/controllers/change_password_controller";
+import {ChangeUsernameBodySchema} from "./modules/users/controllers/change_username_controller";
 
 
 export function createApp(dependencies: AppContainer): Express
