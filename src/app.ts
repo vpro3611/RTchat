@@ -10,14 +10,22 @@ import {errorMiddleware} from "./modules/middlewares/error_middleware";
 import {ChangeEmailBodySchema} from "./modules/users/controllers/change_email_controller";
 import {ChangePasswordBodySchema} from "./modules/users/controllers/change_password_controller";
 import {ChangeUsernameBodySchema} from "./modules/users/controllers/change_username_controller";
-
+import pinoHttp from "pino-http";
 
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
 
     // TODO : loger middleware here.
-
+    app.use(pinoHttp({
+        transport: {
+            target: 'pino-pretty',
+            options: {
+                colorize: true,
+                translateTime: 'SYS:standard',
+            }
+        },
+    }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use(cookieParser());
@@ -80,9 +88,7 @@ export function createApp(dependencies: AppContainer): Express
         dependencies.toggleStatusController.toggleStatusController
     );
 
-
-
-
     app.use(errorMiddleware());
+
     return app;
 }
