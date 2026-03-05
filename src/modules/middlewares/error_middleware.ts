@@ -23,7 +23,10 @@ const internalServerError = (name: string, message: string): string => {
 }
 
 export const errorMiddleware = () => {
-    return (err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    return (err: Error, req: Request, res: Response, _next: NextFunction) => {
+
+        req.log.error(err);
+
         if (err instanceof ZodError) {
             return res.status(400).json(
                 {
