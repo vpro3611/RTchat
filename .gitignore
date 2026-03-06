@@ -8,6 +8,10 @@ yarn-error.log*
 /.pnp
 .pnp.js
 
+./dist
+
 *.env
 .idea
 .vscode/*
+
+/dist
