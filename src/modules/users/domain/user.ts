@@ -117,18 +117,22 @@ export class User {
     setUsername(username: Username): void {
         this.canChangeUsername(username);
         this.username = username;
+        this.setUpdatedAt(new Date());
     }
     setEmail(email: Email): void {
         this.canChangeEmail(email);
         this.email = email;
+        this.setUpdatedAt(new Date());
     }
     setPassword(password: Password): void {
         this.ensureIsVerifiedAndActive()
         this.password = password;
+        this.setUpdatedAt(new Date());
     }
     setIsActive(): void {
         this.ensureIsVerified();
         this.is_active = !this.is_active;
+        this.setUpdatedAt(new Date());
     }
     setLastSeenAt(date: Date): void {
         this.last_seen_at = date;
