@@ -1,4 +1,5 @@
 import {Content} from "./content";
+import {CannotEditMessageError} from "../../application/errors/message_errors/message_errors";
 
 
 export class Message {
@@ -55,7 +56,7 @@ export class Message {
 
     editMessage(newContent: string) {
         if (this.isDeleted) {
-            throw new Error('Cannot edit a deleted message');
+            throw new CannotEditMessageError('Cannot edit a deleted message');
         }
         const evaluated = Content.create(newContent);
         this.content = evaluated;
@@ -65,7 +66,7 @@ export class Message {
 
     deleteMessage() {
         if (this.isDeleted) {
-            throw new Error('Message already deleted');
+            throw new CannotEditMessageError('Message already deleted');
         }
         this.setIsDeleted(true);
         this.setUpdatedAt(new Date());
