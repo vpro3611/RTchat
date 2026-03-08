@@ -1,5 +1,8 @@
 import {ConversationType} from "./conversation_type";
 import {ConversationTitle} from "./conversation_title";
+import {
+    DirectConversationTwoUsersError
+} from "../../application/errors/conversation_errors/conversation_errors_use_case";
 
 export class Conversation {
     constructor(
@@ -13,7 +16,7 @@ export class Conversation {
         private userHigh: string | null,
     ) {
         if (conversationType === ConversationType.DIRECT && !userLow || !userHigh) {
-            throw new Error("Direct conversation must have two users!");
+            throw new DirectConversationTwoUsersError("Direct conversation must have two users!");
         }
     }
 
