@@ -8,8 +8,8 @@ export class EmailSenderNodemailer implements EmailSenderInterface {
 
     constructor() {
         this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
-            port: parseInt(process.env.EMAIL_PORT || "587"),
+            host: process.env.SMTP_HOST,
+            port: parseInt(process.env.SMTP_PORT || "587"),
             secure: false,
             auth: {
                 user: process.env.SMTP_USER,
@@ -25,7 +25,7 @@ export class EmailSenderNodemailer implements EmailSenderInterface {
     ): Promise<void> {
 
         const verificationUrl =
-            `${process.env.APP_URL}/verify-email?token=${token}`;
+            `${process.env.APP_URL}/public/verify-email?token=${token}`;
 
         try {
             await this.transporter.verify();
