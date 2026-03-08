@@ -1,3 +1,4 @@
+import {InvalidMessageError} from "../../application/errors/message_errors/message_errors";
 
 
 export class Content {
@@ -8,7 +9,7 @@ export class Content {
     private static validateMessage(text: string): string {
         const trimmedMessage = text.trim();
         if (trimmedMessage.length < Content.MIN_LENGTH) {
-            throw new Error('Message must be at least 1 character long');
+            throw new InvalidMessageError('Message must be at least 1 character long');
         }
         return trimmedMessage;
     }
