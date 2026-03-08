@@ -40,9 +40,6 @@ export class Message {
         conversationId: string,
         senderId: string,
         content: Content,
-        isEdited: boolean,
-        isDeleted: boolean,
-        updatedAt: Date,
     ) {
         return new Message(
             crypto.randomUUID(),
@@ -67,6 +64,9 @@ export class Message {
     }
 
     deleteMessage() {
+        if (this.isDeleted) {
+            throw new Error('Message already deleted');
+        }
         this.setIsDeleted(true);
         this.setUpdatedAt(new Date());
     }
