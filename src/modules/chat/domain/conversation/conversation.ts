@@ -40,7 +40,6 @@ export class Conversation {
     }
 
     static createDirect(
-        title: ConversationTitle,
         createdBy: string,
         userA: string,
         userB: string,
@@ -51,7 +50,7 @@ export class Conversation {
         return new Conversation(
             crypto.randomUUID(),
             ConversationType.DIRECT,
-            title,
+            ConversationTitle.empty(),
             createdBy,
             new Date(),
             null,
