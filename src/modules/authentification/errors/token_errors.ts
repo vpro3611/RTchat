@@ -18,3 +18,9 @@ export class TokenExpiredError extends AuthentificationError {
         super(message);
     }
 }
+
+export class RefreshTokenNotFound extends AuthentificationError {
+    constructor(message: string) {
+        super(message);
+    }
+}
