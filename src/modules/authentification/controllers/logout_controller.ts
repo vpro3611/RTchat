@@ -1,5 +1,6 @@
 import {AuthService} from "../auth_service";
 import {Request, Response} from "express";
+import {RefreshTokenNotFound} from "../errors/token_errors";
 
 export class LogoutController {
     constructor(private readonly authService: AuthService) {}
@@ -9,7 +10,7 @@ export class LogoutController {
         const refreshToken = req.cookies.refreshToken;
 
         if (!refreshToken) {
-            throw new Error("Refresh token not found");
+            throw new RefreshTokenNotFound("Refresh token not found");
         }
 
         await this.authService.logout(refreshToken);
