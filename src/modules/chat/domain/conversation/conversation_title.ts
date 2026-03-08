@@ -1,4 +1,4 @@
-import {InvalidTitleError} from "../../application/errors/conversation_errors/conversation_errors_use_case";
+import {InvalidTitleError} from "../../application/errors/conversation_errors/conversation_errors";
 
 
 export class ConversationTitle {
