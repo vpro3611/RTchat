@@ -1,3 +1,4 @@
+import {InvalidTitleError} from "../../application/errors/conversation_errors/conversation_errors_use_case";
 
 
 export class ConversationTitle {
@@ -9,10 +10,10 @@ export class ConversationTitle {
     private static validate(title: string) {
         const trimmedTitle = title.trim();
         if (trimmedTitle.length < this.MIN_LENGTH) {
-            throw new Error(`Title must be at least ${this.MIN_LENGTH} characters long`);
+            throw new InvalidTitleError(`Title must be at least ${this.MIN_LENGTH} characters long`);
         }
         if (trimmedTitle.length > this.MAX_LENGTH) {
-            throw new Error(`Title must be at most ${this.MAX_LENGTH} characters long`);
+            throw new InvalidTitleError(`Title must be at most ${this.MAX_LENGTH} characters long`);
         }
         return trimmedTitle;
     }
