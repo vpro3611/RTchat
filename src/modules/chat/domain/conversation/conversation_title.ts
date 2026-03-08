@@ -22,6 +22,9 @@ export class ConversationTitle {
         return new ConversationTitle(title);
     }
 
+    static empty() {
+        return new ConversationTitle('');
+    }
 
     getValue(): string {
         return this.value;
