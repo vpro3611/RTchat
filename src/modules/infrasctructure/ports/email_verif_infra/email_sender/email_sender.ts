@@ -31,7 +31,7 @@ export class EmailSenderNodemailer implements EmailSenderInterface {
             await this.transporter.verify();
 
             await this.transporter.sendMail({
-                from: `"MyApp" <${process.env.SMTP_USER}>`,
+                from: `"${process.env.APP_NAME}" <${process.env.SMTP_USER}>`,
                 to: email,
                 subject: "Verify your email",
                 html: `
