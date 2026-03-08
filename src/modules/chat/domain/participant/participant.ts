@@ -1,4 +1,5 @@
 import {ParticipantRole} from "./participant_role";
+import {InsufficientPermissionsError} from "../../application/errors/participants_errors/participant_errors";
 
 export class Participant {
     constructor(
@@ -66,9 +67,19 @@ export class Participant {
         );
     }
 
+    mute(until: Date | null) {
+        this.canSendMessages = false;
+        this.mutedUntil = until;
+    }
+
+    unmute() {
+        this.canSendMessages = true;
+        this.mutedUntil = null;
+    }
+
     changeRole(actor: Participant, target: Participant) {
         if (!this.canChangeRole(actor, target)) {
-            throw new Error("Only the owner can promote a member to owner");
+            throw new InsufficientPermissionsError("Cannot change role of a participant");
         }
         this.setRole();
     }
