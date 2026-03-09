@@ -5,10 +5,13 @@ import {
     InsufficientPermissionsError, UserIsNotParticipantError
 } from "../errors/participants_errors/participant_errors";
 import {Participant} from "../../domain/participant/participant";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 
 export class RemoveParticipantUseCase {
-    constructor(private readonly participantRepo: ParticipantRepoInterface) {}
+    constructor(private readonly participantRepo: ParticipantRepoInterface,
+                private readonly cacheService: CacheServiceInterface
+    ) {}
 
     private async actorIsParticipant(conversationId: string, actorId: string){
         const actor = await this.participantRepo.findParticipant(conversationId, actorId);
@@ -33,9 +36,17 @@ export class RemoveParticipantUseCase {
     }
 
     private checkTargetRole(target: Participant) {
-        if (target.getRole() !== ParticipantRole.OWNER) {
+        if (target.getRole() === ParticipantRole.OWNER) {
             throw new InsufficientPermissionsError("Only a member can be removed from the conversation");
         }
+    }
+
+    private async invalidateParticipantsCache(conversationId: string) {
+        await this.cacheService.del(`participants:conv:${conversationId}`);
+    }
+
+    private async invalidateUserConversations(userId: string) {
+        await this.cacheService.delByPattern(`conv:user:${userId}:*`);
     }
 
     async removeParticipantUseCase(actorId: string, conversationId: string, targetId: string): Promise<void> {
@@ -48,5 +59,9 @@ export class RemoveParticipantUseCase {
         this.checkTargetRole(target);
 
         await this.participantRepo.remove(conversationId, targetId);
+
+        await this.invalidateParticipantsCache(conversationId);
+
+        await this.invalidateUserConversations(targetId);
     }
 }

@@ -4,6 +4,7 @@ import {
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {ChangeParticipantRoleUseCase} from "../../application/participant/change_participant_role_use_case";
+import {RedisCacheService} from "../../../../container";
 
 
 export class ChangeParticipantRoleTxService {
@@ -14,7 +15,11 @@ export class ChangeParticipantRoleTxService {
             const participantRepo = new ParticipantRepositoryPg(client);
             const participantMapper = new MapToParticipantDto();
 
-            const changeParticipantRoleUseCase = new ChangeParticipantRoleUseCase(participantRepo, participantMapper);
+            const changeParticipantRoleUseCase = new ChangeParticipantRoleUseCase(
+                participantRepo,
+                participantMapper,
+                RedisCacheService
+            );
 
             return await changeParticipantRoleUseCase.changeParticipantRoleUseCase(actorId, conversationId, targetId);
         })

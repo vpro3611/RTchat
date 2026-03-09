@@ -7,11 +7,13 @@ import {
 import {ParticipantRole} from "../../domain/participant/participant_role";
 import {Participant} from "../../domain/participant/participant";
 import {ParticipantDTO} from "../../DTO/participant_dto";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 
 export class UnmuteParticipantUseCase {
     constructor(private readonly participantRepo: ParticipantRepoInterface,
-                private readonly participantMapper: MapToParticipantDto
+                private readonly participantMapper: MapToParticipantDto,
+                private readonly cacheService: CacheServiceInterface
     ) {}
 
     private async actorIsParticipant(conversationId: string, actorId: string){
@@ -36,6 +38,10 @@ export class UnmuteParticipantUseCase {
         }
     }
 
+    private async invalidateParticipantsCache(conversationId: string) {
+        await this.cacheService.del(`participants:conv:${conversationId}`);
+    }
+
     async unmuteParticipantUseCase(actorId: string, targetId: string, conversationId: string): Promise<ParticipantDTO> {
         const actor = await this.actorIsParticipant(conversationId, actorId);
 
@@ -46,6 +52,8 @@ export class UnmuteParticipantUseCase {
         target.unmute();
 
         await this.participantRepo.save(target);
+
+        await this.invalidateParticipantsCache(conversationId);
 
         return this.participantMapper.mapToParticipantDto(target);
     }

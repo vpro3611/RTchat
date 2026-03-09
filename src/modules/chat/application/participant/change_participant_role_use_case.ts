@@ -2,11 +2,14 @@ import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_inte
 import {ParticipantDTO} from "../../DTO/participant_dto";
 import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {ActorIsNotParticipantError, UserIsNotParticipantError} from "../errors/participants_errors/participant_errors";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 
 export class ChangeParticipantRoleUseCase {
     constructor(private readonly participantRepo: ParticipantRepoInterface,
-                private readonly participantMapper: MapToParticipantDto) {}
+                private readonly participantMapper: MapToParticipantDto,
+                private readonly cacheService: CacheServiceInterface
+    ) {}
 
     private async actorIsParticipant(conversationId: string, actorId: string){
         const actor = await this.participantRepo.findParticipant(conversationId, actorId);
@@ -24,6 +27,10 @@ export class ChangeParticipantRoleUseCase {
         return target
     }
 
+    private async invalidateParticipantCache(conversationId: string) {
+        await this.cacheService.del(`participants:conv:${conversationId}`);
+    }
+
     async changeParticipantRoleUseCase(actorId: string, conversationId: string, targetId: string): Promise<ParticipantDTO> {
         const actor = await this.actorIsParticipant(conversationId, actorId);
 
@@ -32,6 +39,8 @@ export class ChangeParticipantRoleUseCase {
         target.changeRole(actor, target)
 
         await this.participantRepo.save(target);
+
+        await this.invalidateParticipantCache(conversationId);
 
         return this.participantMapper.mapToParticipantDto(target);
     }

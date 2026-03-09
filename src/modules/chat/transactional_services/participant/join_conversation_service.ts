@@ -5,6 +5,7 @@ import {ConversationRepositoryPg} from "../../repositories_pg_realization/conver
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {JoinConversationUseCase} from "../../application/participant/join_conversation_use_case";
 import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
+import {RedisCacheService} from "../../../../container";
 
 
 export class JoinConversationTxService {
@@ -17,7 +18,12 @@ export class JoinConversationTxService {
             const participantMapper = new MapToParticipantDto();
             const participantRepo = new ParticipantRepositoryPg(client);
 
-            const joinConversationUseCase = new JoinConversationUseCase(conversationRepo, participantRepo, participantMapper);
+            const joinConversationUseCase = new JoinConversationUseCase(
+                conversationRepo,
+                participantRepo,
+                participantMapper,
+                RedisCacheService
+            );
 
             return await joinConversationUseCase.joinConversationUseCase(actorId, conversationId)
         })

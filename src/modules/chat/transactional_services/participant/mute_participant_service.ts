@@ -5,6 +5,7 @@ import {ParticipantRepositoryPg} from "../../repositories_pg_realization/partici
 import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {MuteParticipantUseCase} from "../../application/participant/mute_participant_use_case";
 import {MuteDuration} from "../../domain/participant/mute_duration";
+import {RedisCacheService} from "../../../../container";
 
 
 export class MuteParticipantTxService {
@@ -15,7 +16,11 @@ export class MuteParticipantTxService {
             const participantRepo = new ParticipantRepositoryPg(client);
             const participantMapper = new MapToParticipantDto();
 
-            const muteParticipantUseCase = new MuteParticipantUseCase(participantRepo, participantMapper);
+            const muteParticipantUseCase = new MuteParticipantUseCase(
+                participantRepo,
+                participantMapper,
+                RedisCacheService
+            );
 
             return await muteParticipantUseCase.muteParticipantUseCase(actorId, targetId, conversationId, duration)
         })

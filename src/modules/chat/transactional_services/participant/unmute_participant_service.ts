@@ -4,6 +4,7 @@ import {
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {UnmuteParticipantUseCase} from "../../application/participant/unmute_participant_use_case";
 import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
+import {RedisCacheService} from "../../../../container";
 
 
 export class UnmuteParticipantTxService {
@@ -14,7 +15,11 @@ export class UnmuteParticipantTxService {
             const participantRepo = new ParticipantRepositoryPg(client);
             const participantMapper = new MapToParticipantDto();
 
-            const unmuteParticipantUseCase = new UnmuteParticipantUseCase(participantRepo, participantMapper);
+            const unmuteParticipantUseCase = new UnmuteParticipantUseCase(
+                participantRepo,
+                participantMapper,
+                RedisCacheService
+            );
 
             return await unmuteParticipantUseCase.unmuteParticipantUseCase(actorId, targetId, conversationId);
         })

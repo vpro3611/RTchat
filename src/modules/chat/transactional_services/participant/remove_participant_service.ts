@@ -3,6 +3,7 @@ import {
 } from "../../../infrasctructure/ports/transaction_manager/transaction_manager_interface";
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {RemoveParticipantUseCase} from "../../application/participant/remove_participant_use_case";
+import {RedisCacheService} from "../../../../container";
 
 
 export class RemoveParticipantTxService {
@@ -12,7 +13,10 @@ export class RemoveParticipantTxService {
         return await this.txManager.runInTransaction(async (client) => {
             const participantRepo = new ParticipantRepositoryPg(client);
 
-            const removeParticipantUseCase = new RemoveParticipantUseCase(participantRepo);
+            const removeParticipantUseCase = new RemoveParticipantUseCase(
+                participantRepo,
+                RedisCacheService
+            );
 
             return await removeParticipantUseCase.removeParticipantUseCase(actorId, conversationId, targetId);
         })

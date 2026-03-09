@@ -9,11 +9,13 @@ import {
 import {ParticipantRole} from "../../domain/participant/participant_role";
 import {calculateMuteUntil} from "../../domain/participant/calculate_mute_until";
 import {Participant} from "../../domain/participant/participant";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 
 export class MuteParticipantUseCase {
     constructor(private readonly participantRepo: ParticipantRepoInterface,
-                private readonly participantMapper: MapToParticipantDto
+                private readonly participantMapper: MapToParticipantDto,
+                private readonly cacheService: CacheServiceInterface
     ) {}
 
     private async actorIsParticipant(conversationId: string, actorId: string){
@@ -38,6 +40,10 @@ export class MuteParticipantUseCase {
         }
     }
 
+    private async invalidateParticipantsCache(conversationId: string) {
+        await this.cacheService.del(`participants:conv:${conversationId}`);
+    }
+
     async muteParticipantUseCase(actorId: string, targetId: string, conversationId: string, duration: MuteDuration): Promise<ParticipantDTO> {
         const actor = await this.actorIsParticipant(conversationId, actorId);
 
@@ -50,6 +56,8 @@ export class MuteParticipantUseCase {
         target.mute(mutedUntil);
 
         await this.participantRepo.save(target);
+
+        await this.invalidateParticipantsCache(conversationId);
 
         return this.participantMapper.mapToParticipantDto(target);
     }

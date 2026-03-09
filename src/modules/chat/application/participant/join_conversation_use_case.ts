@@ -10,11 +10,13 @@ import {
 } from "../errors/participants_errors/participant_errors";
 import {Conversation} from "../../domain/conversation/conversation";
 import {ConversationType} from "../../domain/conversation/conversation_type";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 export class JoinConversationUseCase {
     constructor(private readonly conversationRepo: ConversationRepoInterface,
                 private readonly participantRepo: ParticipantRepoInterface,
                 private readonly participantMapper: MapToParticipantDto,
+                private readonly cacheService: CacheServiceInterface,
     ) {}
 
     private async checkIfConversationExists(conversationId: string) {
@@ -39,6 +41,14 @@ export class JoinConversationUseCase {
         }
     }
 
+    private async invalidateParticipantCache(conversationId: string) {
+        await this.cacheService.del(`participants:conv:${conversationId}`);
+    }
+
+    private async invalidateUserConversationCache(userId: string) {
+        await this.cacheService.delByPattern(`conv:user:${userId}:*`);
+    }
+
     async joinConversationUseCase(actorId: string, conversationId: string): Promise<ParticipantDTO> {
         const conversation = await this.checkIfConversationExists(conversationId);
 
@@ -49,6 +59,10 @@ export class JoinConversationUseCase {
         const participant = Participant.createAsMember(conversationId, actorId);
 
         await this.participantRepo.save(participant);
+
+        await this.invalidateParticipantCache(conversationId);
+
+        await this.invalidateUserConversationCache(actorId);
 
         return this.participantMapper.mapToParticipantDto(participant);
     }
