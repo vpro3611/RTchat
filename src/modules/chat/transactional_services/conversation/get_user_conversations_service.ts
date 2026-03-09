@@ -4,6 +4,7 @@ import {
 import {ConversationRepositoryPg} from "../../repositories_pg_realization/conversation_repository_pg";
 import {MapToConversationDto} from "../../shared/map_to_conversation_dto";
 import {GetUserConversationsUseCase} from "../../application/conversation/get_user_conversations_use_case";
+import {RedisCacheService} from "../../../../container";
 
 
 export class GetUserConversationsTxService {
@@ -14,7 +15,11 @@ export class GetUserConversationsTxService {
             const conversationRepo = new ConversationRepositoryPg(client);
             const conversationMapper = new MapToConversationDto();
 
-            const getUserConversationsUseCase = new GetUserConversationsUseCase(conversationRepo, conversationMapper);
+            const getUserConversationsUseCase = new GetUserConversationsUseCase(
+                conversationRepo,
+                conversationMapper,
+                RedisCacheService
+            );
 
             return await getUserConversationsUseCase.getUserConversationsUseCase(actorId, limit, cursor);
         });

@@ -5,6 +5,7 @@ import {ConversationRepositoryPg} from "../../repositories_pg_realization/conver
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {MapToConversationDto} from "../../shared/map_to_conversation_dto";
 import {CreateDirectConversationUseCase} from "../../application/conversation/create_direct_conversation_use_case";
+import {RedisCacheService} from "../../../../container";
 
 
 export class CreateDirectConversationTxService {
@@ -16,7 +17,12 @@ export class CreateDirectConversationTxService {
             const participantRepo = new ParticipantRepositoryPg(client);
             const conversationMapper = new MapToConversationDto();
 
-            const createDirectConversationUseCase = new CreateDirectConversationUseCase(conversationRepo, participantRepo, conversationMapper);
+            const createDirectConversationUseCase = new CreateDirectConversationUseCase(
+                conversationRepo,
+                participantRepo,
+                conversationMapper,
+                RedisCacheService
+            );
 
             return await createDirectConversationUseCase.createDirectConversationUseCase(actorId, targetId);
         });

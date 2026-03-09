@@ -6,6 +6,7 @@ import {CheckIsParticipant} from "../../shared/is_participant";
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {MapToConversationDto} from "../../shared/map_to_conversation_dto";
 import {UpdateConversationTitleUseCase} from "../../application/conversation/update_conversation_title_use_case";
+import {RedisCacheService} from "../../../../container";
 
 
 export class UpdateConversationTitleTxService {
@@ -19,7 +20,13 @@ export class UpdateConversationTitleTxService {
             const checkIsParticipant = new CheckIsParticipant(participantRepo);
             const conversationMapper = new MapToConversationDto();
 
-            const updateConversationTitleUseCase = new UpdateConversationTitleUseCase(conversationRepo, checkIsParticipant, conversationMapper);
+            const updateConversationTitleUseCase = new UpdateConversationTitleUseCase(
+                conversationRepo,
+                checkIsParticipant,
+                conversationMapper,
+                RedisCacheService,
+                participantRepo
+            );
 
             return await updateConversationTitleUseCase.updateConversationTitleUseCase(actorId, conversationId, newTitle);
         })
