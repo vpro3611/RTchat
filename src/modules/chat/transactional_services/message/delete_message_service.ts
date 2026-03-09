@@ -7,6 +7,7 @@ import {CheckIsParticipant} from "../../shared/is_participant";
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {FindMessageById} from "../../shared/find_message_by_id";
 import {DeleteMessageUseCase} from "../../application/message/delete_message_use_case";
+import {RedisCacheService} from "../../../../container";
 
 
 export class DeleteMessageTxService {
@@ -20,7 +21,13 @@ export class DeleteMessageTxService {
             const checkIsParticipant = new CheckIsParticipant(participantRepo);
             const findMessageById = new FindMessageById(messageRepo);
 
-            const deleteMessageUseCase = new DeleteMessageUseCase(messageRepo, messageMapper, checkIsParticipant, findMessageById);
+            const deleteMessageUseCase = new DeleteMessageUseCase(
+                messageRepo,
+                messageMapper,
+                checkIsParticipant,
+                findMessageById,
+                RedisCacheService
+            );
 
             return await deleteMessageUseCase.deleteMessageUseCase(actorId, conversationId, messageId);
         })

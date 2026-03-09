@@ -7,6 +7,7 @@ import {MapToMessage} from "../../shared/map_to_message";
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {CheckIsParticipant} from "../../shared/is_participant";
 import {SendMessageUseCase} from "../../application/message/send_message_use_case";
+import {RedisCacheService} from "../../../../container";
 
 
 export class SendMessageTxService {
@@ -21,7 +22,14 @@ export class SendMessageTxService {
             const participantRepo = new ParticipantRepositoryPg(client);
             const checkIsParticipant = new CheckIsParticipant(participantRepo);
 
-            const sendMessageUseCase = new SendMessageUseCase(messageRepo, conversationRepo, messageMapper, checkIsParticipant);
+            const sendMessageUseCase = new SendMessageUseCase(
+                messageRepo,
+                conversationRepo,
+                messageMapper,
+                checkIsParticipant,
+                RedisCacheService,
+                participantRepo
+            );
 
             return await sendMessageUseCase.sendMessageUseCase(actorId, conversationId, content);
         })

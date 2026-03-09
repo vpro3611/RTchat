@@ -7,6 +7,7 @@ import {ParticipantRepositoryPg} from "../../repositories_pg_realization/partici
 import {CheckIsParticipant} from "../../shared/is_participant";
 import {FindMessageById} from "../../shared/find_message_by_id";
 import {EditMessageUseCase} from "../../application/message/edit_message_use_case";
+import {RedisCacheService} from "../../../../container";
 
 
 export class EditMessageTxService {
@@ -20,7 +21,13 @@ export class EditMessageTxService {
             const checkIsParticipant = new CheckIsParticipant(participantRepo);
             const findMessageById = new FindMessageById(messageRepo);
 
-            const editMessageUseCase = new EditMessageUseCase(messageRepo, messageMapper, checkIsParticipant, findMessageById);
+            const editMessageUseCase = new EditMessageUseCase(
+                messageRepo,
+                messageMapper,
+                checkIsParticipant,
+                findMessageById,
+                RedisCacheService
+            );
 
             return await editMessageUseCase.editMessageUseCase(actorId, conversationId, messageId, newContent);
         })

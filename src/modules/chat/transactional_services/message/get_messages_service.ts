@@ -6,6 +6,7 @@ import {MapToMessage} from "../../shared/map_to_message";
 import {CheckIsParticipant} from "../../shared/is_participant";
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {GetMessagesUseCase} from "../../application/message/get_messages_use_case";
+import {RedisCacheService} from "../../../../container";
 
 
 export class GetMessageTxService {
@@ -19,7 +20,12 @@ export class GetMessageTxService {
             const participantRepo = new ParticipantRepositoryPg(client);
             const checkIsParticipant = new CheckIsParticipant(participantRepo);
 
-            const getMessagesUseCase = new GetMessagesUseCase(messageRepo, messageMapper, checkIsParticipant);
+            const getMessagesUseCase = new GetMessagesUseCase(
+                messageRepo,
+                messageMapper,
+                RedisCacheService,
+                participantRepo
+            );
 
             return await getMessagesUseCase.getMessagesUseCase(actorId, conversationId, limit, cursor);
         })
