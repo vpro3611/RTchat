@@ -7,13 +7,15 @@ import {Message} from "../../domain/message/message";
 import {Participant} from "../../domain/participant/participant";
 import {MessageNotAPartOfConversationError} from "../errors/message_errors/message_errors";
 import {UserIsNotAllowedToPerformError, UserIsNotAnAuthorError} from "../errors/participants_errors/participant_errors";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 
 export class EditMessageUseCase {
     constructor(private readonly messageRepo: MessageRepoInterface,
                 private readonly messageMapper: MapToMessage,
                 private readonly checkIsParticipant: CheckIsParticipant,
-                private readonly findMessageById: FindMessageById
+                private readonly findMessageById: FindMessageById,
+                private readonly cacheService: CacheServiceInterface,
     ) {}
 
     private checkMessage(message: Message, participant: Participant) {
@@ -43,6 +45,8 @@ export class EditMessageUseCase {
         message.editMessage(newContent);
 
         await this.messageRepo.update(message);
+
+        await this.cacheService.delByPattern(`messages:${conversationId}:*`);
 
         return this.messageMapper.mapToMessage(message);
     }

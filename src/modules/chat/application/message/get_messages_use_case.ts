@@ -1,20 +1,40 @@
 import {MessageRepoInterface} from "../../domain/ports/message_repo_interface";
 import {MapToMessage} from "../../shared/map_to_message";
 import {CheckIsParticipant} from "../../shared/is_participant";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
+import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
+import {ActorIsNotParticipantError} from "../errors/participants_errors/participant_errors";
 
 
 export class GetMessagesUseCase {
     constructor(private readonly messageRepo: MessageRepoInterface,
                 private readonly messageMapper: MapToMessage,
-                private readonly checkIsParticipant: CheckIsParticipant
+                private readonly cacheService: CacheServiceInterface,
+                private readonly participantRepo: ParticipantRepoInterface,
     ) {}
 
-    async getMessagesUseCase(actorId: string, conversationId: string, limit?: number, cursor?: string) {
-        const participant = await this.checkIsParticipant.checkIsParticipant(actorId, conversationId);
-        const result = await this.messageRepo.findByConversationId(conversationId, limit, cursor);
-        return {
-            items: result.items.map(message => this.messageMapper.mapToMessage(message)),
-            nextCursor: result.nextCursor,
+    private async actorIsParticipant(actorId: string, conversationId: string) {
+        const exists = await this.participantRepo.exists(conversationId, actorId);
+        if (!exists) {
+            throw new ActorIsNotParticipantError("User is not a member of the conversation")
         }
+    }
+
+    async getMessagesUseCase(actorId: string, conversationId: string, limit?: number, cursor?: string) {
+        const cacheKey = `messages:${conversationId}:limit:${limit ?? 20}:cursor:${cursor ?? "start"}`;
+
+        await this.actorIsParticipant(actorId, conversationId);
+
+        return this.cacheService.remember(
+            cacheKey,
+            60,
+            async () => {
+                const result = await this.messageRepo.findByConversationId(conversationId, limit, cursor);
+                return {
+                    items: result.items.map(message => this.messageMapper.mapToMessage(message)),
+                    nextCursor: result.nextCursor,
+                }
+            }
+        )
     }
 }
