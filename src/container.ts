@@ -37,11 +37,16 @@ import {ExtractUserIdFromReq} from "./modules/users/shared/extract_user_id_from_
 import {ChangePasswordController} from "./modules/users/controllers/change_password_controller";
 import {ChangeUsernameController} from "./modules/users/controllers/change_username_controller";
 import {ToggleStatusController} from "./modules/users/controllers/toggle_status_controller";
+import {CacheService} from "./modules/infrasctructure/ports/cache_service/cache_service";
+import {redisClient} from "./modules/infrasctructure/ports/cache_service/reddis_client";
 
 
 export function assembleContainer()
 {
 
+
+    // TODO : REDIS
+    const redisCacheService = new CacheService(redisClient);
 
     // TODO : TRANSACTION MANAGER
     const txManager = new TransactionManager(pool);
