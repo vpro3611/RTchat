@@ -5,12 +5,14 @@ import {Participant} from "../../domain/participant/participant";
 import {MapToConversationDto} from "../../shared/map_to_conversation_dto";
 import {ConversationDTO} from "../../DTO/conversation_dto";
 import {CannotCreateConversationError} from "../errors/conversation_errors/conversation_errors";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 
 export class CreateDirectConversationUseCase {
     constructor(private readonly conversationRepo: ConversationRepoInterface,
                 private readonly participantRepo: ParticipantRepoInterface,
-                private readonly conversationMapper: MapToConversationDto
+                private readonly conversationMapper: MapToConversationDto,
+                private readonly cacheService: CacheServiceInterface,
     ) {}
 
     private checkForSelf(actorId: string, targetId: string) {
@@ -19,6 +21,11 @@ export class CreateDirectConversationUseCase {
         }
     }
 
+    private async invalidateUserConversationsCache(...userIds: string[]) {
+        for (const id of userIds) {
+            await this.cacheService.delByPattern(`conv:user:${id}:*`);
+        }
+    }
 
     async createDirectConversationUseCase(actorId: string, targetId: string): Promise<ConversationDTO> {
 
@@ -49,6 +56,9 @@ export class CreateDirectConversationUseCase {
 
         await this.participantRepo.save(participantA);
         await this.participantRepo.save(participantB);
+
+        // cache invalidation
+        await this.invalidateUserConversationsCache(actorId, targetId);
 
         return this.conversationMapper.mapToConversationDto(conversation);
     }

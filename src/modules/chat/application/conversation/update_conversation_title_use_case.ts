@@ -9,12 +9,16 @@ import {
     CannotUpdateTitleError,
     ConversationNotFoundError
 } from "../errors/conversation_errors/conversation_errors";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
+import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
 
 
 export class UpdateConversationTitleUseCase {
     constructor(private readonly conversationRepo: ConversationRepoInterface,
                 private readonly checkIsParticipant: CheckIsParticipant,
                 private readonly conversationMapper: MapToConversationDto,
+                private readonly cacheService: CacheServiceInterface,
+                private readonly participantRepo: ParticipantRepoInterface,
     ) {}
 
     private async conversationExists(conversationId: string) {
@@ -40,6 +44,12 @@ export class UpdateConversationTitleUseCase {
         }
     }
 
+    private async invalidateUserConversationCache(userIds: string[]) {
+        for (const id of userIds) {
+            await this.cacheService.delByPattern(`conv:user:${id}:*`);
+        }
+    }
+
     async updateConversationTitleUseCase(actorId: string, conversationId: string, newTitle: string) {
         const participant = await this.checkIsParticipant.checkIsParticipant(actorId, conversationId);
 
@@ -50,6 +60,14 @@ export class UpdateConversationTitleUseCase {
         this.enforceGroupConversationRules(conversation, participant);
 
         conversation.updateTitle(newTitle);
+
+        await this.conversationRepo.update(conversation);
+
+        const participants = await this.participantRepo.getParticipants(conversationId);
+
+        const userIds = participants.items.map(p => p.userId);
+
+        await this.invalidateUserConversationCache(userIds);
 
         return this.conversationMapper.mapToConversationDto(conversation);
     }
