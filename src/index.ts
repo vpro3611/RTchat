@@ -1,5 +1,5 @@
-import {pool} from "./database";
 import {startServer} from "./server";
+import {connectRedis} from "./modules/infrasctructure/ports/cache_service/connect_reddis";
 
 
 
@@ -7,10 +7,7 @@ console.log('Happy developing ✨')
 
 
 async function main() {
-    console.log(process.env.DATABASE_URL)
-    const res = await pool.query('SELECT NOW()');
-    console.log(res.rows[0]);
-
+    await connectRedis();
     await startServer();
 }
 
