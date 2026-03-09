@@ -41,12 +41,14 @@ import {CacheService} from "./modules/infrasctructure/ports/cache_service/cache_
 import {redisClient} from "./modules/infrasctructure/ports/cache_service/reddis_client";
 
 
+export const RedisCacheService = new CacheService(redisClient);
+
 export function assembleContainer()
 {
 
 
     // TODO : REDIS
-    const redisCacheService = new CacheService(redisClient);
+
 
     // TODO : TRANSACTION MANAGER
     const txManager = new TransactionManager(pool);
