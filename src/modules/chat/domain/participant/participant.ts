@@ -61,7 +61,7 @@ export class Participant {
         return (
             actor.getRole() === ParticipantRole.OWNER &&
             actor.canSendMessages &&
-            actor.getConversationId() === target.conversationId &&
+            actor.getConversationId() === target.getConversationId() &&
             actor.userId !== target.userId &&
             target.role === ParticipantRole.MEMBER
         );
