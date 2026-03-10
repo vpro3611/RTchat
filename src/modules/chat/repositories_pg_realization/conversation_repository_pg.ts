@@ -153,4 +153,23 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
         }
     }
 
+    async markRead(conversationId: string, userId: string, messageId: string) {
+        try {
+            await this.pool.query(
+                `
+                INSERT INTO conversation_reads
+                (conversation_id, user_id, last_read_message_id, read_at)
+                VALUES ($1, $2, $3, NOW())
+                ON CONFLICT (conversation_id, user_id)
+                DO UPDATE SET 
+                    last_read_message_id = EXCLUDED.last_read_message_id,
+                    read_at = EXCLUDED.read_at
+                `,
+                [conversationId, userId, messageId]
+            )
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
+
 }
