@@ -1,6 +1,7 @@
 import {ConversationType} from "./conversation_type";
 import {ConversationTitle} from "./conversation_title";
 import {
+    CannotUpdateTitleError,
     DirectConversationTwoUsersError
 } from "../../errors/conversation_errors/conversation_errors";
 
@@ -80,7 +81,7 @@ export class Conversation {
 
     updateTitle(newTitle: string) {
         if (this.conversationType === ConversationType.DIRECT) {
-            throw new DirectConversationTwoUsersError("Direct conversation cannot have a title!");
+            throw new CannotUpdateTitleError("Direct conversation cannot have a title!");
         }
         const checkedTitle = ConversationTitle.create(newTitle);
         this.setTitle(checkedTitle);
