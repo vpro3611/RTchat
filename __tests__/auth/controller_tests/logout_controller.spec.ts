@@ -59,15 +59,15 @@ describe("LogoutController (HTTP)", () => {
     // -------------------------
     // MISSING TOKEN
     // -------------------------
-    it("should return 500 if refresh token missing", async () => {
+    it("should return 401 if refresh token missing", async () => {
         const app = buildApp();
 
         const res = await request(app)
             .post("/logout");
 
-        expect(res.status).toBe(500);
+        expect(res.status).toBe(401);
 
-        expect(res.body.code).toBe("UNEXPECTED_ERROR");
+        expect(res.body.code).toBe("AUTHENTIFICATION_ERROR");
     });
 
     // -------------------------
