@@ -32,7 +32,7 @@ export class MessageRepositoryPg implements MessageRepoInterface {
                     message.id,
                     message.getConversationId(),
                     message.getSenderId(),
-                    message.getContent(),
+                    message.getContent().getContentValue(),
                     message.getIsEdited(),
                     message.getIsDeleted(),
                     message.getCreatedAt(),
@@ -113,7 +113,7 @@ export class MessageRepositoryPg implements MessageRepoInterface {
                                      updated_at = $4
                                  WHERE id = $5`,
                 [
-                    message.getContent(),
+                    message.getContent().getContentValue(),
                     message.getIsEdited(),
                     message.getIsDeleted(),
                     message.getUpdatedAt(),
