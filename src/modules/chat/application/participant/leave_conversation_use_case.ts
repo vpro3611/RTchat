@@ -28,8 +28,10 @@ export class LeaveConversationUseCase {
 
         await this.participantRepo.remove(conversationId, actorId);
 
-        await this.invalidateParticipantsCache(conversationId);
+        await Promise.all([
+            await this.invalidateParticipantsCache(conversationId),
+            await this.invalidateUserConversations(actorId)
+        ]);
 
-        await this.invalidateUserConversations(actorId);
     }
 }
