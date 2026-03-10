@@ -15,7 +15,7 @@ export class Conversation {
         private userLow: string | null,
         private userHigh: string | null,
     ) {
-        if (conversationType === ConversationType.DIRECT && !userLow || !userHigh) {
+        if (conversationType === ConversationType.DIRECT && (!userLow || !userHigh)) {
             throw new DirectConversationTwoUsersError("Direct conversation must have two users!");
         }
     }
@@ -33,7 +33,7 @@ export class Conversation {
         return new Conversation(
             id,
             conversationType,
-            ConversationTitle.create(title),
+            title === "" ? ConversationTitle.empty() : ConversationTitle.create(title),
             createdBy,
             createdAt,
             lastMessageAt,
@@ -79,6 +79,9 @@ export class Conversation {
     }
 
     updateTitle(newTitle: string) {
+        if (this.conversationType === ConversationType.DIRECT) {
+            throw new DirectConversationTwoUsersError("Direct conversation cannot have a title!");
+        }
         const checkedTitle = ConversationTitle.create(newTitle);
         this.setTitle(checkedTitle);
     }
