@@ -39,6 +39,64 @@ import {ChangeUsernameController} from "./modules/users/controllers/change_usern
 import {ToggleStatusController} from "./modules/users/controllers/toggle_status_controller";
 import {CacheService} from "./modules/infrasctructure/ports/cache_service/cache_service";
 import {redisClient} from "./modules/infrasctructure/ports/cache_service/reddis_client";
+import {ConversationRepositoryPg} from "./modules/chat/repositories_pg_realization/conversation_repository_pg";
+import {MessageRepositoryPg} from "./modules/chat/repositories_pg_realization/message_repository_pg";
+import {ParticipantRepositoryPg} from "./modules/chat/repositories_pg_realization/participant_repository_pg";
+import {
+    CreateDirectConversationUseCase
+} from "./modules/chat/application/conversation/create_direct_conversation_use_case";
+import {MapToConversationDto} from "./modules/chat/shared/map_to_conversation_dto";
+import {
+    CreateGroupConversationUseCase
+} from "./modules/chat/application/conversation/create_group_conversation_use_case";
+import {GetUserConversationsUseCase} from "./modules/chat/application/conversation/get_user_conversations_use_case";
+import {MarkConversationReadUseCase} from "./modules/chat/application/conversation/mark_conversation_read_use_case";
+import {
+    UpdateConversationTitleUseCase
+} from "./modules/chat/application/conversation/update_conversation_title_use_case";
+import {CheckIsParticipant} from "./modules/chat/shared/is_participant";
+import {DeleteMessageUseCase} from "./modules/chat/application/message/delete_message_use_case";
+import {MapToMessage} from "./modules/chat/shared/map_to_message";
+import {FindMessageById} from "./modules/chat/shared/find_message_by_id";
+import {EditMessageUseCase} from "./modules/chat/application/message/edit_message_use_case";
+import {GetMessagesUseCase} from "./modules/chat/application/message/get_messages_use_case";
+import {SendMessageUseCase} from "./modules/chat/application/message/send_message_use_case";
+import {ChangeParticipantRoleUseCase} from "./modules/chat/application/participant/change_participant_role_use_case";
+import {MapToParticipantDto} from "./modules/chat/shared/map_to_participant_dto";
+import {GetParticipantsUseCase} from "./modules/chat/application/participant/get_participants_use_case";
+import {JoinConversationUseCase} from "./modules/chat/application/participant/join_conversation_use_case";
+import {LeaveConversationUseCase} from "./modules/chat/application/participant/leave_conversation_use_case";
+import {MuteParticipantUseCase} from "./modules/chat/application/participant/mute_participant_use_case";
+import {RemoveParticipantUseCase} from "./modules/chat/application/participant/remove_participant_use_case";
+import {UnmuteParticipantUseCase} from "./modules/chat/application/participant/unmute_participant_use_case";
+import {
+    CreateDirectConversationTxService
+} from "./modules/chat/transactional_services/conversation/create_direct_conversation_service";
+import {
+    GetUserConversationsTxService
+} from "./modules/chat/transactional_services/conversation/get_user_conversations_service";
+import {
+    CreateGroupConversationTxService
+} from "./modules/chat/transactional_services/conversation/create_group_conversation_service";
+import {
+    MarkConversationReadTxService
+} from "./modules/chat/transactional_services/conversation/mark_conversation_read_service";
+import {
+    UpdateConversationTitleTxService
+} from "./modules/chat/transactional_services/conversation/update_conversation_title_service";
+import {DeleteMessageTxService} from "./modules/chat/transactional_services/message/delete_message_service";
+import {EditMessageTxService} from "./modules/chat/transactional_services/message/edit_message_service";
+import {GetMessageTxService} from "./modules/chat/transactional_services/message/get_messages_service";
+import {SendMessageTxService} from "./modules/chat/transactional_services/message/send_message_service";
+import {
+    ChangeParticipantRoleTxService
+} from "./modules/chat/transactional_services/participant/change_participant_role_service";
+import {GetParticipantsTxService} from "./modules/chat/transactional_services/participant/get_participants_service";
+import {JoinConversationTxService} from "./modules/chat/transactional_services/participant/join_conversation_service";
+import {LeaveConversationTxService} from "./modules/chat/transactional_services/participant/leave_conversation_service";
+import {MuteParticipantTxService} from "./modules/chat/transactional_services/participant/mute_participant_service";
+import {UnmuteParticipantTxService} from "./modules/chat/transactional_services/participant/unmute_participant_service";
+import {RemoveParticipantTxService} from "./modules/chat/transactional_services/participant/remove_participant_service";
 
 
 export const RedisCacheService = new CacheService(redisClient);
@@ -47,7 +105,7 @@ export function assembleContainer()
 {
 
 
-    // TODO : REDIS
+
 
 
     // TODO : TRANSACTION MANAGER
@@ -105,6 +163,140 @@ export function assembleContainer()
     const registerController = new RegisterController(authService);
     const verifyEmailController = new VerifyEmailController(authService);
 
+
+
+
+    // TODO : CHAT
+    const conversationRepo = new ConversationRepositoryPg(pool);
+    const messageRepo = new MessageRepositoryPg(pool);
+    const participantRepo = new ParticipantRepositoryPg(pool);
+
+    // TODO : SHARED FOR CHAT
+    const conversationMapper = new MapToConversationDto();
+    const messageMapper = new MapToMessage();
+    const participantMapper = new MapToParticipantDto();
+    const checkIsParticipant = new CheckIsParticipant(participantRepo);
+    const findMessageById = new FindMessageById(messageRepo);
+
+
+    // TODO : CHAT (USE CASES)
+    const createDirectConversationUseCase = new CreateDirectConversationUseCase(
+        conversationRepo,
+        participantRepo,
+        conversationMapper,
+        RedisCacheService
+    );
+    const createGroupConversationUseCase = new CreateGroupConversationUseCase(
+        conversationRepo,
+        participantRepo,
+        conversationMapper,
+        RedisCacheService
+    );
+    const getUserConversationsUseCase = new GetUserConversationsUseCase(
+        conversationRepo,
+        conversationMapper,
+        RedisCacheService
+    );
+    const markConversationReadUseCase = new MarkConversationReadUseCase(
+        conversationRepo,
+        participantRepo,
+    );
+    const updateConversationTitleUseCase = new UpdateConversationTitleUseCase(
+        conversationRepo,
+        checkIsParticipant,
+        conversationMapper,
+        RedisCacheService,
+        participantRepo
+    );
+    // ____ //
+    const deleteMessageUseCase = new DeleteMessageUseCase(
+        messageRepo,
+        messageMapper,
+        checkIsParticipant,
+        findMessageById,
+        RedisCacheService
+    );
+    const editMessageUseCase = new EditMessageUseCase(
+        messageRepo,
+        messageMapper,
+        checkIsParticipant,
+        findMessageById,
+        RedisCacheService,
+    );
+    const getMessagesUseCase = new GetMessagesUseCase(
+        messageRepo,
+        messageMapper,
+        RedisCacheService,
+        participantRepo,
+    );
+    const sendMessageUseCase = new SendMessageUseCase(
+        messageRepo,
+        conversationRepo,
+        messageMapper,
+        checkIsParticipant,
+        RedisCacheService,
+        participantRepo
+    );
+    // ____ //
+    const changeParticipantRoleUseCase = new ChangeParticipantRoleUseCase(
+        participantRepo,
+        participantMapper,
+        RedisCacheService,
+    );
+    const getParticipantsRoleUseCase = new GetParticipantsUseCase(
+        participantRepo,
+        participantMapper,
+        RedisCacheService,
+    );
+    const joinConversationUseCase = new JoinConversationUseCase(
+        conversationRepo,
+        participantRepo,
+        participantMapper,
+        RedisCacheService
+    );
+    const leaveConversationUseCase = new LeaveConversationUseCase(
+        participantRepo,
+        RedisCacheService
+    );
+    const muteParticipantUseCase = new MuteParticipantUseCase(
+        participantRepo,
+        participantMapper,
+        RedisCacheService
+    );
+    const removeParticipantUseCase = new RemoveParticipantUseCase(
+        participantRepo,
+        RedisCacheService
+    );
+    const unmuteParticipantUseCase = new UnmuteParticipantUseCase(
+        participantRepo,
+        participantMapper,
+        RedisCacheService
+    );
+
+    // TODO : CHAT (SERVICES)
+    const createDirectConversationService = new CreateDirectConversationTxService(txManager);
+    const createGroupConversationService = new CreateGroupConversationTxService(txManager);
+    const getUserConversationsService = new GetUserConversationsTxService(txManager);
+    const markConversationReadService = new MarkConversationReadTxService(txManager);
+    const updateConversationTitleService = new UpdateConversationTitleTxService(txManager);
+
+    // ____ //
+
+    const deleteMessageService = new DeleteMessageTxService(txManager);
+    const editMessageService = new EditMessageTxService(txManager);
+    const getMessagesService = new GetMessageTxService(txManager);
+    const sendMessageService = new SendMessageTxService(txManager);
+
+    // ____ //
+
+    const changeParticipantRoleService = new ChangeParticipantRoleTxService(txManager);
+    const getParticipantsService = new GetParticipantsTxService(txManager);
+    const joinConversationService = new JoinConversationTxService(txManager);
+    const leaveConversationService = new LeaveConversationTxService(txManager);
+    const muteParticipantService = new MuteParticipantTxService(txManager);
+    const removeParticipantService = new RemoveParticipantTxService(txManager);
+    const unmuteParticipantService = new UnmuteParticipantTxService(txManager);
+
     return {
         // user
         changeEmailController,
@@ -122,6 +314,13 @@ export function assembleContainer()
         refreshController,
         registerController,
         verifyEmailController,
+
+        // services for web socket
+        sendMessageService,
+        editMessageService,
+        deleteMessageService,
+        getUserConversationsService,
+        markConversationReadService,
     }
 }
 
