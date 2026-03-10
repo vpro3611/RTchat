@@ -63,7 +63,8 @@ export function mapPgError(err: unknown): Error {
         case "42883":
             return new CustomDatabaseError("Undefined function in query");
 
-
+        case "42601":
+            return new CustomDatabaseError("SQL syntax error");
         // transaction errors
 
 
