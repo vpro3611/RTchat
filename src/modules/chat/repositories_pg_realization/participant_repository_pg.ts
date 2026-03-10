@@ -25,11 +25,10 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
                     INSERT INTO conversation_participants
                     (conversation_id, user_id, role, can_send_messages, muted_until, joined_at)
                     VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (conversation_id, user_id) 
-            DO
-                    UPDATE SET
+                    DO UPDATE SET
                         role = EXCLUDED.role,
                         can_send_messages = EXCLUDED.can_send_messages,
-                        muted_until = EXCLUDED.muted_until,
+                        muted_until = EXCLUDED.muted_until
                 `,
                 [
                     participant.getConversationId(),
@@ -105,7 +104,7 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
 
             if (cursor) {
                 params.push(cursor);
-                cursorCondition = `AND joined_at > $${params.length}`;
+                cursorCondition = `AND joined_at < $${params.length}`;
             }
 
             params.push(limit + 1);
