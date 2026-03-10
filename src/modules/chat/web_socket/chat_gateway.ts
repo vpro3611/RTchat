@@ -4,7 +4,6 @@ import {Server as HTTPServer} from "http"
 import {SendMessageTxService} from "../transactional_services/message/send_message_service";
 import {EditMessageTxService} from "../transactional_services/message/edit_message_service";
 import {DeleteMessageTxService} from "../transactional_services/message/delete_message_service";
-import {JoinConversationTxService} from "../transactional_services/participant/join_conversation_service";
 import {AuthentificationError} from "../../../http_errors_base";
 import {TokenServiceJWT} from "../../authentification/jwt_token_service/token_service";
 import {UserIdError} from "../../authentification/errors/user_auth_error";
