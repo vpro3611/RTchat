@@ -5,8 +5,8 @@ import {CheckIsParticipant} from "../../shared/is_participant";
 import {FindMessageById} from "../../shared/find_message_by_id";
 import {Message} from "../../domain/message/message";
 import {Participant} from "../../domain/participant/participant";
-import {MessageNotAPartOfConversationError} from "../errors/message_errors/message_errors";
-import {UserIsNotAllowedToPerformError, UserIsNotAnAuthorError} from "../errors/participants_errors/participant_errors";
+import {MessageNotAPartOfConversationError} from "../../errors/message_errors/message_errors";
+import {UserIsNotAllowedToPerformError, UserIsNotAnAuthorError} from "../../errors/participants_errors/participant_errors";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 

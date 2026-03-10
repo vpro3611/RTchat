@@ -1,5 +1,5 @@
 import {ParticipantRepoInterface} from "../domain/ports/participant_repo_interface";
-import {ParticipantNotFoundError} from "../application/errors/participants_errors/participant_errors";
+import {ParticipantNotFoundError} from "../errors/participants_errors/participant_errors";
 
 
 export class CheckIsParticipant {

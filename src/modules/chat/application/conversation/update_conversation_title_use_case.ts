@@ -8,7 +8,7 @@ import {ParticipantRole} from "../../domain/participant/participant_role";
 import {
     CannotUpdateTitleError,
     ConversationNotFoundError
-} from "../errors/conversation_errors/conversation_errors";
+} from "../../errors/conversation_errors/conversation_errors";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
 

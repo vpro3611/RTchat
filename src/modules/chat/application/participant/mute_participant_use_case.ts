@@ -5,7 +5,7 @@ import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {
     ActorIsNotParticipantError,
     InsufficientPermissionsError
-} from "../errors/participants_errors/participant_errors";
+} from "../../errors/participants_errors/participant_errors";
 import {ParticipantRole} from "../../domain/participant/participant_role";
 import {calculateMuteUntil} from "../../domain/participant/calculate_mute_until";
 import {Participant} from "../../domain/participant/participant";

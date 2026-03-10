@@ -3,7 +3,7 @@ import {MapToMessage} from "../../shared/map_to_message";
 import {CheckIsParticipant} from "../../shared/is_participant";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
-import {ActorIsNotParticipantError} from "../errors/participants_errors/participant_errors";
+import {ActorIsNotParticipantError} from "../../errors/participants_errors/participant_errors";
 
 
 export class GetMessagesUseCase {

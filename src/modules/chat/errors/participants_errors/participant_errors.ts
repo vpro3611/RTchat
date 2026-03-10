@@ -1,4 +1,4 @@
-import {AuthorizationError, ConflictError, NotFoundError} from "../../../../../http_errors_base";
+import {AuthorizationError, ConflictError, NotFoundError} from "../../../../http_errors_base";
 
 
 export class ParticipantNotFoundError extends NotFoundError {

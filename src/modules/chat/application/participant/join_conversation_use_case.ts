@@ -1,13 +1,13 @@
 import {ConversationRepoInterface} from "../../domain/ports/conversation_repo_interface";
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
-import {ConversationNotFoundError} from "../errors/conversation_errors/conversation_errors";
+import {ConversationNotFoundError} from "../../errors/conversation_errors/conversation_errors";
 import {Participant} from "../../domain/participant/participant";
 import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {ParticipantDTO} from "../../DTO/participant_dto";
 import {
     CannotJoinDirectConversationError,
     UserAlreadyParticipantError
-} from "../errors/participants_errors/participant_errors";
+} from "../../errors/participants_errors/participant_errors";
 import {Conversation} from "../../domain/conversation/conversation";
 import {ConversationType} from "../../domain/conversation/conversation_type";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";

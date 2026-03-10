@@ -1,6 +1,6 @@
 import {ConversationRepoInterface} from "../../domain/ports/conversation_repo_interface";
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
-import {ActorIsNotParticipantError} from "../errors/participants_errors/participant_errors";
+import {ActorIsNotParticipantError} from "../../errors/participants_errors/participant_errors";
 
 
 export class MarkConversationReadUseCase {

@@ -1,4 +1,4 @@
-import {ConflictError, NotFoundError, ValidationError} from "../../../../../http_errors_base";
+import {ConflictError, NotFoundError, ValidationError} from "../../../../http_errors_base";
 
 
 export class CannotCreateConversationError extends ValidationError {

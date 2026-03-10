@@ -1,7 +1,7 @@
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
 import {ParticipantDTO} from "../../DTO/participant_dto";
 import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
-import {ActorIsNotParticipantError, UserIsNotParticipantError} from "../errors/participants_errors/participant_errors";
+import {ActorIsNotParticipantError, UserIsNotParticipantError} from "../../errors/participants_errors/participant_errors";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 

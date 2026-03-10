@@ -3,7 +3,7 @@ import {ParticipantRole} from "../../domain/participant/participant_role";
 import {
     ActorIsNotParticipantError,
     InsufficientPermissionsError, UserIsNotParticipantError
-} from "../errors/participants_errors/participant_errors";
+} from "../../errors/participants_errors/participant_errors";
 import {Participant} from "../../domain/participant/participant";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 

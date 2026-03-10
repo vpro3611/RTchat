@@ -1,5 +1,5 @@
 import {ParticipantRole} from "./participant_role";
-import {InsufficientPermissionsError} from "../../application/errors/participants_errors/participant_errors";
+import {InsufficientPermissionsError} from "../../errors/participants_errors/participant_errors";
 
 export class Participant {
     constructor(

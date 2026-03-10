@@ -4,7 +4,7 @@ import {Conversation} from "../../domain/conversation/conversation";
 import {Participant} from "../../domain/participant/participant";
 import {MapToConversationDto} from "../../shared/map_to_conversation_dto";
 import {ConversationDTO} from "../../DTO/conversation_dto";
-import {CannotCreateConversationError} from "../errors/conversation_errors/conversation_errors";
+import {CannotCreateConversationError} from "../../errors/conversation_errors/conversation_errors";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 

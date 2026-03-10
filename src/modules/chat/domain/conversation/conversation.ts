@@ -2,7 +2,7 @@ import {ConversationType} from "./conversation_type";
 import {ConversationTitle} from "./conversation_title";
 import {
     DirectConversationTwoUsersError
-} from "../../application/errors/conversation_errors/conversation_errors";
+} from "../../errors/conversation_errors/conversation_errors";
 
 export class Conversation {
     constructor(

@@ -1,5 +1,5 @@
 import {MessageRepoInterface} from "../domain/ports/message_repo_interface";
-import {MessageNotFoundError} from "../application/errors/message_errors/message_errors";
+import {MessageNotFoundError} from "../errors/message_errors/message_errors";
 
 
 export class FindMessageById {

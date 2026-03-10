@@ -1,5 +1,5 @@
 import {Content} from "./content";
-import {CannotEditMessageError} from "../../application/errors/message_errors/message_errors";
+import {CannotEditMessageError} from "../../errors/message_errors/message_errors";
 
 
 export class Message {

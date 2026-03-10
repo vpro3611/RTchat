@@ -1,4 +1,4 @@
-import {AuthorizationError, ConflictError, NotFoundError, ValidationError} from "../../../../../http_errors_base";
+import {AuthorizationError, ConflictError, NotFoundError, ValidationError} from "../../../../http_errors_base";
 
 export class MessageNotFoundError extends NotFoundError {
     constructor(message: string) {

@@ -5,7 +5,7 @@ import {Message} from "../../domain/message/message";
 import {Content} from "../../domain/message/content";
 import {MapToMessage} from "../../shared/map_to_message";
 import {CheckIsParticipant} from "../../shared/is_participant";
-import {UserIsNotAllowedToPerformError} from "../errors/participants_errors/participant_errors";
+import {UserIsNotAllowedToPerformError} from "../../errors/participants_errors/participant_errors";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
 import {Participant} from "../../domain/participant/participant";

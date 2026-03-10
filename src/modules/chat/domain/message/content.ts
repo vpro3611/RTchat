@@ -1,4 +1,4 @@
-import {InvalidMessageError} from "../../application/errors/message_errors/message_errors";
+import {InvalidMessageError} from "../../errors/message_errors/message_errors";
 
 
 export class Content {
