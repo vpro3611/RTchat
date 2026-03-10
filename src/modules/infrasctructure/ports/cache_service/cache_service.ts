@@ -36,7 +36,7 @@ export class CacheService implements CacheServiceInterface {
     async remember<T>(key: string, ttl: number, callback: () => Promise<T>): Promise<T> {
         const cached = await this.get<T>(key);
 
-        if (cached) {
+        if (cached !== null) {
             return cached;
         }
         const result = await callback();
