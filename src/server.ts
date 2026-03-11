@@ -15,11 +15,13 @@ export async function startServer() {
     new ChatGateway(
         server,
         dependencies.jwtTokenService,
-        dependencies.sendMessageService,
-        dependencies.editMessageService,
-        dependencies.deleteMessageService,
+        dependencies.sendMessageController,
+        dependencies.editMessageController,
+        dependencies.deleteMessageController,
+        dependencies.readMessageController,
         dependencies.getUserConversationsService,
-        dependencies.markConversationReadService,
+        dependencies.startTypingController,
+        dependencies.stopTypingController
     )
 
     server.listen(port, () => {
