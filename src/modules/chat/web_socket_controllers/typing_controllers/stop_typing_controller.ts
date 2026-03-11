@@ -8,15 +8,20 @@ export const StopTypingSchema = z.object({
 
 
 export class StopTypingController {
-    constructor(private readonly io: Server) {}
 
 
-    stopTypingController = async (socket: AuthSocket, conversationId: string) => {
-        const userId = socket.data.userId;
+    stopTypingController =
+        async (
+            socket: AuthSocket,
+            conversationId: string,
+            io: Server
+        ) =>
+        {
+            const userId = socket.data.userId;
 
-        this.io.to(conversationId).emit("typing:stopped", {
-            userId: userId.sub,
-            conversationId: conversationId,
-        });
+            io.to(conversationId).emit("typing:stopped", {
+                userId: userId.sub,
+                conversationId: conversationId,
+            });
     }
 }

@@ -8,14 +8,18 @@ export const StartTypingSchema = z.object({
 
 export class StartTypingController {
 
-    constructor(private io: Server) {}
+    startTypingController =
+        async (
+            socket: AuthSocket,
+            conversationId: string,
+            io: Server
+        )=>
+        {
+            const userId = socket.data.userId;
 
-    startTypingController = async (socket: AuthSocket, conversationId: string)=>  {
-        const userId = socket.data.userId;
-
-        this.io.to(conversationId).emit("typing:started", {
-            userId: userId.sub,
-            conversationId: conversationId,
-        });
+            io.to(conversationId).emit("typing:started", {
+                userId: userId.sub,
+                conversationId: conversationId,
+            });
     }
 }

@@ -10,15 +10,14 @@ export const EditMessageSchema = z.object({
 })
 
 export class EditMessageController {
-    constructor(private readonly editMessageService: EditMessageTxService,
-                private readonly io: Server
-    ) {}
+    constructor(private readonly editMessageService: EditMessageTxService) {}
 
     editMessageController = async (
         socket: AuthSocket,
         conversationId: string,
         messageId: string,
-        newContent: string
+        newContent: string,
+        io: Server
     ) => {
         const userId = socket.data.userId;
 
@@ -29,7 +28,7 @@ export class EditMessageController {
             newContent
         );
 
-        this.io.to(conversationId).emit("message:edited", {
+        io.to(conversationId).emit("message:edited", {
            message: message
         });
     }

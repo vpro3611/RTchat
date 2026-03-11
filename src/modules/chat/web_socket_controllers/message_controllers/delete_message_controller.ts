@@ -10,21 +10,26 @@ export const DeleteMessageSchema = z.object({
 
 
 export class DeleteMessageController {
-    constructor(private readonly deleteMessageService: DeleteMessageTxService,
-                private io: Server
-    ) {}
+    constructor(private readonly deleteMessageService: DeleteMessageTxService) {}
 
-    deleteMessageController = async (socket: AuthSocket, conversationId: string, messageId: string) => {
-        const userId = socket.data.userId;
+    deleteMessageController =
+        async (
+            socket: AuthSocket,
+            conversationId: string,
+            messageId: string,
+            io: Server
+        ) =>
+        {
+            const userId = socket.data.userId;
 
-        const message = await this.deleteMessageService.deleteMessageTxService(
-            userId.sub,
-            conversationId,
-            messageId
-        );
+            const message = await this.deleteMessageService.deleteMessageTxService(
+                userId.sub,
+                conversationId,
+                messageId
+            );
 
-        this.io.to(conversationId).emit("message:deleted", {
-            message: message
-        });
+            io.to(conversationId).emit("message:deleted", {
+                message: message
+            });
     }
 }

@@ -10,19 +10,24 @@ export const ReadMessageSchema = z.object({
 })
 
 export class MarkConversationAsReadController {
-    constructor(private readonly markConversationReadTxService: MarkConversationReadTxService,
-                private io: Server
-    ) {}
+    constructor(private readonly markConversationReadTxService: MarkConversationReadTxService) {}
 
-    readMessageController = async (socket: AuthSocket, conversationId: string, messageId: string) => {
-        const userId = socket.data.userId;
+    readMessageController =
+        async (
+            socket: AuthSocket,
+            conversationId: string,
+            messageId: string,
+            io: Server
+        ) =>
+        {
+            const userId = socket.data.userId;
 
-        await this.markConversationReadTxService.markConversationReadTxService(userId.sub, conversationId, messageId);
+            await this.markConversationReadTxService.markConversationReadTxService(userId.sub, conversationId, messageId);
 
-        this.io.to(conversationId).emit("message:read", {
-            userId: userId.sub,
-            conversationId: conversationId,
-            messageId: messageId,
+            io.to(conversationId).emit("message:read", {
+                userId: userId.sub,
+                conversationId: conversationId,
+                messageId: messageId,
         });
     }
 }

@@ -11,15 +11,15 @@ export const SendMessageSchema = z.object({
 
 
 export class SendMessageController {
-    constructor(private readonly sendMessageService: SendMessageTxService,
-                private readonly io: Server
-    ) {}
+    constructor(private readonly sendMessageService: SendMessageTxService) {}
 
     sendMessageController = async (
         socket: AuthSocket,
         conversationId: string,
-        content: string
-    ) => {
+        content: string,
+        io: Server
+    ) =>
+    {
 
         const userId = socket.data.userId;
 
@@ -30,7 +30,6 @@ export class SendMessageController {
                 content
             );
 
-        this.io.to(conversationId).emit("message:new", message);
-
+        io.to(conversationId).emit("message:new", message);
     }
 }
