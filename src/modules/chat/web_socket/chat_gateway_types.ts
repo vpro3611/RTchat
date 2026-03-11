@@ -1,5 +1,6 @@
 import {MessageDTO} from "../DTO/message_dto";
 import {AccessTokenPayload} from "../../authentification/payloads/payloads";
+import {Socket} from "socket.io";
 
 export interface ClientToServerEvents {
 
@@ -57,3 +58,5 @@ export interface ServerToClientEvents {
 export interface SocketData {
     userId: AccessTokenPayload,
 }
+
+export type AuthSocket = Socket<ClientToServerEvents, ServerToClientEvents, {}, SocketData>
