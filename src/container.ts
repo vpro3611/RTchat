@@ -97,7 +97,16 @@ import {LeaveConversationTxService} from "./modules/chat/transactional_services/
 import {MuteParticipantTxService} from "./modules/chat/transactional_services/participant/mute_participant_service";
 import {UnmuteParticipantTxService} from "./modules/chat/transactional_services/participant/unmute_participant_service";
 import {RemoveParticipantTxService} from "./modules/chat/transactional_services/participant/remove_participant_service";
-
+import {
+    DeleteMessageController
+} from "./modules/chat/web_socket_controllers/message_controllers/delete_message_controller";
+import {EditMessageController} from "./modules/chat/web_socket_controllers/message_controllers/edit_message_controller";
+import {SendMessageController} from "./modules/chat/web_socket_controllers/message_controllers/send_message_controller";
+import {
+    MarkConversationAsReadController
+} from "./modules/chat/web_socket_controllers/message_controllers/read_message_controller";
+import {StartTypingController} from "./modules/chat/web_socket_controllers/typing_controllers/start_typing_controller";
+import {StopTypingController} from "./modules/chat/web_socket_controllers/typing_controllers/stop_typing_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -297,6 +306,17 @@ export function assembleContainer()
     const removeParticipantService = new RemoveParticipantTxService(txManager);
     const unmuteParticipantService = new UnmuteParticipantTxService(txManager);
 
+
+    // TODO : CONTROLLERS (MESSAGE)
+    const deleteMessageController = new DeleteMessageController(deleteMessageService);
+    const editMessageController = new EditMessageController(editMessageService);
+    const readMessageController = new MarkConversationAsReadController(markConversationReadService);
+    const sendMessageController = new SendMessageController(sendMessageService);
+
+    // TODO : CONTROLLERS (TYPING)
+    const startTypingController = new StartTypingController();
+    const stopTypingController = new StopTypingController();
+
     return {
         // user
         changeEmailController,
@@ -321,6 +341,15 @@ export function assembleContainer()
         deleteMessageService,
         getUserConversationsService,
         markConversationReadService,
+
+        // controllers for web socket
+        sendMessageController,
+        editMessageController,
+        deleteMessageController,
+        readMessageController,
+
+        startTypingController,
+        stopTypingController,
     }
 }
 
