@@ -1,14 +1,16 @@
-import {Server, Socket} from "socket.io";
-import {ClientToServerEvents, ServerToClientEvents, SocketData} from "./chat_gateway_types";
+import {Server} from "socket.io";
+import {AuthSocket, ClientToServerEvents, ServerToClientEvents, SocketData} from "./chat_gateway_types";
 import {Server as HTTPServer} from "http"
-import {SendMessageTxService} from "../transactional_services/message/send_message_service";
-import {EditMessageTxService} from "../transactional_services/message/edit_message_service";
-import {DeleteMessageTxService} from "../transactional_services/message/delete_message_service";
 import {AuthentificationError} from "../../../http_errors_base";
 import {TokenServiceJWT} from "../../authentification/jwt_token_service/token_service";
 import {UserIdError} from "../../authentification/errors/user_auth_error";
 import {GetUserConversationsTxService} from "../transactional_services/conversation/get_user_conversations_service";
-import {MarkConversationReadTxService} from "../transactional_services/conversation/mark_conversation_read_service";
+import {SendMessageController, SendMessageSchema} from "../web_socket_controllers/send_message_controller";
+import {EditMessageController, EditMessageSchema} from "../web_socket_controllers/edit_message_controller";
+import {DeleteMessageController, DeleteMessageSchema} from "../web_socket_controllers/delete_message_controller";
+import {MarkConversationAsReadController, ReadMessageSchema} from "../web_socket_controllers/read_message_controller";
+import {StartTypingController, StartTypingSchema} from "../web_socket_controllers/start_typing_controller";
+import {StopTypingController, StopTypingSchema} from "../web_socket_controllers/stop_typing_controller";
 
 export class ChatGateway {
     private io: Server<ClientToServerEvents, ServerToClientEvents, {}, SocketData>
@@ -18,11 +20,13 @@ export class ChatGateway {
     constructor(
         server: HTTPServer,
         private tokenServiceJWT: TokenServiceJWT,
-        private sendMessageService: SendMessageTxService,
-        private editMessageService: EditMessageTxService,
-        private deleteMessageService: DeleteMessageTxService,
+        private sendMessageController: SendMessageController,
+        private editMessageController: EditMessageController,
+        private deleteMessageController: DeleteMessageController,
+        private markConversationAsReadController: MarkConversationAsReadController,
         private getUserConversationsService: GetUserConversationsTxService,
-        private markConversationAsReadService: MarkConversationReadTxService,
+        private startTypingController: StartTypingController,
+        private stopTypingController: StopTypingController,
     ) {
         this.io = new Server(server, {
             cors: {
@@ -32,7 +36,7 @@ export class ChatGateway {
         this.initialize();
     }
 
-    private extractUserIdSocket(socket: Socket<ClientToServerEvents, ServerToClientEvents, {}, SocketData>) {
+    private extractUserIdSocket(socket: AuthSocket) {
         if (!socket.data.userId) {
             throw new UserIdError("Authentification error")
         }
@@ -48,12 +52,11 @@ export class ChatGateway {
 
     private initialize() {
         this.io.use(this.authenticate);
-
         this.io.on("connection", this.onConnection);
     }
 
     private authenticate =
-        (socket: Socket<ClientToServerEvents, ServerToClientEvents, {}, SocketData>, next: (err?: Error) => void) => {
+        (socket: AuthSocket, next: (err?: Error) => void) => {
             try {
                 const token = socket.handshake.auth?.token;
                 if (!token || typeof token !== "string") {
@@ -72,7 +75,7 @@ export class ChatGateway {
             }
         }
 
-    private async autoJoinConversations(socket: Socket<ClientToServerEvents, ServerToClientEvents, {}, SocketData>) {
+    private async autoJoinConversations(socket: AuthSocket) {
         const userId = this.extractUserIdSocket(socket);
 
         const {items} = await this.getUserConversationsService.getUserConversationTxService(userId.sub);
@@ -83,7 +86,7 @@ export class ChatGateway {
     }
 
     private onConnection =
-        async (socket: Socket<ClientToServerEvents, ServerToClientEvents, {}, SocketData>) =>
+        async (socket: AuthSocket) =>
         {
             const userId = this.extractUserIdSocket(socket);
 
@@ -102,7 +105,7 @@ export class ChatGateway {
             socket.on("disconnect", () => this.handleDisconnect(socket));
         }
 
-    private handleDisconnect = (socket: Socket<ClientToServerEvents, ServerToClientEvents, {}, SocketData>) => {
+    private handleDisconnect = (socket: AuthSocket) => {
         const userId = this.extractUserIdSocket(socket);
 
         const sockets = this.ONLINE_USERS.get(userId.sub);
@@ -119,11 +122,9 @@ export class ChatGateway {
         }
     }
 
-    private registerEvents(socket: Socket<ClientToServerEvents, ServerToClientEvents, {}, SocketData>) {
+    private registerEvents(socket: AuthSocket) {
         socket.on("conversation:join", ({ conversationId }) => {
-
             socket.join(conversationId)
-
         })
 
         socket.on("disconnect", (reason) => {
@@ -131,56 +132,50 @@ export class ChatGateway {
             console.log(`Socket disconnected: ${userId.sub} because of ${reason}`);
         })
 
-        socket.on("message:send", async ({conversationId, content }) => {
+        socket.on("message:send", async (payload) => {
             try {
-                const userId = this.extractUserIdSocket(socket);
+                const parsed = SendMessageSchema.parse(payload);
 
-                const message = await this.sendMessageService.sendMessageTxService(
-                    userId.sub,
-                    conversationId,
-                    content
+                await this.sendMessageController.sendMessageController(
+                    socket,
+                    parsed.conversationId,
+                    parsed.content
                 );
-
-                this.io.to(conversationId).emit("message:new", message);
-            } catch (error: unknown) {
+            } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to send message");
                 socket.emit("error", {
                     message: msg
-                })
+                });
             }
         })
 
-        socket.on("message:edit", async ({conversationId, messageId, newContent}) => {
+        socket.on("message:edit", async (payload) => {
             try {
-                const userId = this.extractUserIdSocket(socket);
+                const parsed = EditMessageSchema.parse(payload)
 
-                const message = await this.editMessageService.editMessageTxService(
-                    userId.sub,
-                    conversationId,
-                    messageId,
-                    newContent
+                await this.editMessageController.editMessageController(
+                    socket,
+                    parsed.conversationId,
+                    parsed.messageId,
+                    parsed.newContent
                 );
-
-                this.io.to(conversationId).emit("message:edited", message)
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to edit message");
                 socket.emit("error", {
                     message: msg
-                })
+                });
             }
         })
 
-        socket.on("message:delete", async ({conversationId, messageId}) => {
+        socket.on("message:delete", async (payload) => {
             try {
-                const userId = this.extractUserIdSocket(socket);
+                const parsed = DeleteMessageSchema.parse(payload);
 
-                const message = await this.deleteMessageService.deleteMessageTxService(
-                    userId.sub,
-                    conversationId,
-                    messageId
+                await this.deleteMessageController.deleteMessageController(
+                    socket,
+                    parsed.conversationId,
+                    parsed.messageId
                 );
-
-                this.io.to(conversationId).emit("message:deleted", message);
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to delete message")
                 socket.emit("error", {
@@ -189,21 +184,16 @@ export class ChatGateway {
             }
         })
 
-        socket.on("message:read", async ({conversationId, messageId}) => {
+        socket.on("message:read", async (payload) => {
             try {
-                const userId = this.extractUserIdSocket(socket);
 
-                await this.markConversationAsReadService.markConversationReadTxService(
-                    userId.sub,
-                    conversationId,
-                    messageId
+                const parsed = ReadMessageSchema.parse(payload);
+
+                await this.markConversationAsReadController.readMessageController(
+                    socket,
+                    parsed.conversationId,
+                    parsed.messageId
                 );
-
-                this.io.to(conversationId).emit("message:read", {
-                    userId: userId.sub,
-                    conversationId: conversationId,
-                    messageId: messageId
-                });
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to mark as read")
                 socket.emit("error", {
@@ -212,20 +202,36 @@ export class ChatGateway {
             }
         })
 
-        socket.on("typing:start", ({conversationId}) => {
-            const userId = this.extractUserIdSocket(socket);
-            socket.to(conversationId).emit("typing:start", {
-                userId: userId.sub,
-                conversationId: conversationId
-            });
+        socket.on("typing:start", async (payload) => {
+            try {
+                const parsed = StartTypingSchema.parse(payload);
+
+                await this.startTypingController.startTypingController(
+                    socket,
+                    parsed.conversationId
+                );
+            } catch (error) {
+                const msg = this.evaluateErrors(error, "Failed to indicate typing start..");
+                socket.emit("error", {
+                    message: msg,
+                });
+            }
         });
 
-        socket.on("typing:stop", ({conversationId}) => {
-            const userId = this.extractUserIdSocket(socket);
-            socket.to(conversationId).emit("typing:stop", {
-                userId: userId.sub,
-                conversationId: conversationId
-            });
+        socket.on("typing:stop", async (payload) => {
+            try {
+                const parsed = StopTypingSchema.parse(payload);
+
+                await this.stopTypingController.stopTypingController(
+                    socket,
+                    parsed.conversationId
+                )
+            } catch (error) {
+                const msg = this.evaluateErrors(error, "Failed to indicate typing stop..")
+                socket.emit("error", {
+                    message: msg
+                });
+            }
         });
     }
 }
