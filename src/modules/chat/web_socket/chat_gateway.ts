@@ -139,7 +139,8 @@ export class ChatGateway {
                 await this.sendMessageController.sendMessageController(
                     socket,
                     parsed.conversationId,
-                    parsed.content
+                    parsed.content,
+                    this.io
                 );
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to send message");
@@ -157,7 +158,8 @@ export class ChatGateway {
                     socket,
                     parsed.conversationId,
                     parsed.messageId,
-                    parsed.newContent
+                    parsed.newContent,
+                    this.io
                 );
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to edit message");
@@ -174,7 +176,8 @@ export class ChatGateway {
                 await this.deleteMessageController.deleteMessageController(
                     socket,
                     parsed.conversationId,
-                    parsed.messageId
+                    parsed.messageId,
+                    this.io
                 );
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to delete message")
@@ -192,7 +195,8 @@ export class ChatGateway {
                 await this.markConversationAsReadController.readMessageController(
                     socket,
                     parsed.conversationId,
-                    parsed.messageId
+                    parsed.messageId,
+                    this.io
                 );
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to mark as read")
@@ -208,7 +212,8 @@ export class ChatGateway {
 
                 await this.startTypingController.startTypingController(
                     socket,
-                    parsed.conversationId
+                    parsed.conversationId,
+                    this.io
                 );
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to indicate typing start..");
@@ -224,7 +229,8 @@ export class ChatGateway {
 
                 await this.stopTypingController.stopTypingController(
                     socket,
-                    parsed.conversationId
+                    parsed.conversationId,
+                    this.io
                 )
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to indicate typing stop..")
