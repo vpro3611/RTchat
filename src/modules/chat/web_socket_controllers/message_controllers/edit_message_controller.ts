@@ -1,6 +1,6 @@
-import {EditMessageTxService} from "../transactional_services/message/edit_message_service";
+import {EditMessageTxService} from "../../transactional_services/message/edit_message_service";
 import {Server} from "socket.io";
-import {AuthSocket} from "../web_socket/chat_gateway_types";
+import {AuthSocket} from "../../web_socket/chat_gateway_types";
 import {z} from "zod";
 
 export const EditMessageSchema = z.object({

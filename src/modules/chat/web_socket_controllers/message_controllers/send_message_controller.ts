@@ -1,6 +1,6 @@
-import {SendMessageTxService} from "../transactional_services/message/send_message_service";
+import {SendMessageTxService} from "../../transactional_services/message/send_message_service";
 import {Server} from "socket.io";
-import {AuthSocket} from "../web_socket/chat_gateway_types";
+import {AuthSocket} from "../../web_socket/chat_gateway_types";
 
 import {z} from "zod"
 

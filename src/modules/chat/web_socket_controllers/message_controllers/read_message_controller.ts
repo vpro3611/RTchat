@@ -1,6 +1,6 @@
-import {MarkConversationReadTxService} from "../transactional_services/conversation/mark_conversation_read_service";
+import {MarkConversationReadTxService} from "../../transactional_services/conversation/mark_conversation_read_service";
 import {Server} from "socket.io";
-import {AuthSocket} from "../web_socket/chat_gateway_types";
+import {AuthSocket} from "../../web_socket/chat_gateway_types";
 import {z} from "zod";
 
 

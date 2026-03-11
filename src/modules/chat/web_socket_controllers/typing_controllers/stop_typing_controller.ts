@@ -1,5 +1,5 @@
 import {Server} from "socket.io";
-import {AuthSocket} from "../web_socket/chat_gateway_types";
+import {AuthSocket} from "../../web_socket/chat_gateway_types";
 import {z} from "zod";
 
 export const StopTypingSchema = z.object({

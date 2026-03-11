@@ -5,12 +5,12 @@ import {AuthentificationError} from "../../../http_errors_base";
 import {TokenServiceJWT} from "../../authentification/jwt_token_service/token_service";
 import {UserIdError} from "../../authentification/errors/user_auth_error";
 import {GetUserConversationsTxService} from "../transactional_services/conversation/get_user_conversations_service";
-import {SendMessageController, SendMessageSchema} from "../web_socket_controllers/send_message_controller";
-import {EditMessageController, EditMessageSchema} from "../web_socket_controllers/edit_message_controller";
-import {DeleteMessageController, DeleteMessageSchema} from "../web_socket_controllers/delete_message_controller";
-import {MarkConversationAsReadController, ReadMessageSchema} from "../web_socket_controllers/read_message_controller";
-import {StartTypingController, StartTypingSchema} from "../web_socket_controllers/start_typing_controller";
-import {StopTypingController, StopTypingSchema} from "../web_socket_controllers/stop_typing_controller";
+import {SendMessageController, SendMessageSchema} from "../web_socket_controllers/message_controllers/send_message_controller";
+import {EditMessageController, EditMessageSchema} from "../web_socket_controllers/message_controllers/edit_message_controller";
+import {DeleteMessageController, DeleteMessageSchema} from "../web_socket_controllers/message_controllers/delete_message_controller";
+import {MarkConversationAsReadController, ReadMessageSchema} from "../web_socket_controllers/message_controllers/read_message_controller";
+import {StartTypingController, StartTypingSchema} from "../web_socket_controllers/typing_controllers/start_typing_controller";
+import {StopTypingController, StopTypingSchema} from "../web_socket_controllers/typing_controllers/stop_typing_controller";
 
 export class ChatGateway {
     private io: Server<ClientToServerEvents, ServerToClientEvents, {}, SocketData>
