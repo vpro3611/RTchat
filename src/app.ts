@@ -11,6 +11,33 @@ import {ChangeEmailBodySchema} from "./modules/users/controllers/change_email_co
 import {ChangePasswordBodySchema} from "./modules/users/controllers/change_password_controller";
 import {ChangeUsernameBodySchema} from "./modules/users/controllers/change_username_controller";
 import pinoHttp from "pino-http";
+import {validateParams} from "./modules/middlewares/validate_params";
+import {
+    CreateDirectConversationParamsSchema
+} from "./modules/chat/controllers/conversation/create_direct_conversation_controller";
+import {
+    CreateGroupConversationBodySchema
+} from "./modules/chat/controllers/conversation/create_group_conversation_controller";
+import {
+    UpdateConversationTitleBodySchema,
+    UpdateConversationTitleParamsSchema
+} from "./modules/chat/controllers/conversation/update_conversation_title_controller";
+import {GetMessagesParamsSchema} from "./modules/chat/controllers/message/get_messages_controller";
+import {
+    ChangeParticipantRoleParamsSchema
+} from "./modules/chat/controllers/participant/change_participant_role_controller";
+import {
+    GetParticipantsController,
+    GetParticipantsParamsSchema
+} from "./modules/chat/controllers/participant/get_participants_controller";
+import {JoinConversationParamsSchema} from "./modules/chat/controllers/participant/join_conversation_controller";
+import {LeaveConversationParamsSchema} from "./modules/chat/controllers/participant/leave_conversation_controller";
+import {
+    MuteParticipantBodySchema,
+    MuteParticipantParamsSchema
+} from "./modules/chat/controllers/participant/mute_participant_controller";
+import {RemoveParticipantParamsSchema} from "./modules/chat/controllers/participant/remove_participant_controller";
+import {UnmuteParticipantParamsSchema} from "./modules/chat/controllers/participant/unmute_participant_controller";
 
 export function createApp(dependencies: AppContainer): Express
 {
@@ -86,6 +113,67 @@ export function createApp(dependencies: AppContainer): Express
 
     privateRouter.patch("/toggle-status",
         dependencies.toggleStatusController.toggleStatusController
+    );
+
+    privateRouter.post("/direct-conv/:targetId/create",
+        validateParams(CreateDirectConversationParamsSchema),
+        dependencies.createDirectConversationController.createDirectConversationCont
+    );
+
+    privateRouter.post("/group-conv/create",
+        validateBody(CreateGroupConversationBodySchema),
+        dependencies.createGroupConversationController.createGroupConversationCont
+    );
+
+    privateRouter.get("/conversations",
+        dependencies.getUserConversationController.getUserConversationCont
+    );
+
+    privateRouter.patch("/conversation/:conversationId/title",
+        validateParams(UpdateConversationTitleParamsSchema),
+        validateBody(UpdateConversationTitleBodySchema),
+        dependencies.updateConversationTitleController.updateConversationTitleCont
+    );
+
+    privateRouter.get("/conversation/:conversationId/messages",
+        validateParams(GetMessagesParamsSchema),
+        dependencies.getMessagesController.getMessagesCont
+    );
+
+    privateRouter.patch("/conversation/:conversationId/:targetId/role",
+        validateParams(ChangeParticipantRoleParamsSchema),
+        dependencies.changeParticipantRoleController.changeParticipantRoleCont
+    );
+
+    privateRouter.get("/conversation/:conversationId/participants",
+        validateParams(GetParticipantsParamsSchema),
+        dependencies.getParticipantsController.getParticipantsCont
+    );
+
+    privateRouter.post("/conversation/:conversationId/join",
+        validateParams(JoinConversationParamsSchema),
+        dependencies.joinConversationController.joinConversationCont
+    );
+
+    privateRouter.delete("/conversation/:conversationId/leave",
+        validateParams(LeaveConversationParamsSchema),
+        dependencies.leaveConversationController.leaveConversationCont
+    );
+
+    privateRouter.patch("/conversation/:conversationId/:targetId/mute",
+        validateParams(MuteParticipantParamsSchema),
+        validateBody(MuteParticipantBodySchema),
+        dependencies.muteParticipantController.muteParticipantCont
+    );
+
+    privateRouter.delete("/conversation/:conversationId/:targetId/kick",
+        validateParams(RemoveParticipantParamsSchema),
+        dependencies.removeParticipantController.removeParticipantCont
+    );
+
+    privateRouter.patch("/conversation/:conversationId/:targetId/unmute",
+        validateParams(UnmuteParticipantParamsSchema),
+        dependencies.unmuteParticipantController.unmuteParticipantCont
     );
 
     app.use(errorMiddleware());
