@@ -107,6 +107,26 @@ import {
 } from "./modules/chat/web_socket_controllers/message_controllers/read_message_controller";
 import {StartTypingController} from "./modules/chat/web_socket_controllers/typing_controllers/start_typing_controller";
 import {StopTypingController} from "./modules/chat/web_socket_controllers/typing_controllers/stop_typing_controller";
+import {ExtractActorId} from "./modules/chat/shared/extract_actor_id_req";
+import {
+    CreateDirectConversationController
+} from "./modules/chat/controllers/conversation/create_direct_conversation_controller";
+import {
+    CreateGroupConversationController
+} from "./modules/chat/controllers/conversation/create_group_conversation_controller";
+import {JoinConversationController} from "./modules/chat/controllers/participant/join_conversation_controller";
+import {GetUserConversationController} from "./modules/chat/controllers/conversation/get_user_conversation_controller";
+import {
+    UpdateConversationTitleController
+} from "./modules/chat/controllers/conversation/update_conversation_title_controller";
+import {GetMessagesController} from "./modules/chat/controllers/message/get_messages_controller";
+import {
+    ChangeParticipantRoleController
+} from "./modules/chat/controllers/participant/change_participant_role_controller";
+import {LeaveConversationController} from "./modules/chat/controllers/participant/leave_conversation_controller";
+import {MuteParticipantController} from "./modules/chat/controllers/participant/mute_participant_controller";
+import {RemoveParticipantController} from "./modules/chat/controllers/participant/remove_participant_controller";
+import {UnmuteParticipantController} from "./modules/chat/controllers/participant/unmute_participant_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -307,7 +327,7 @@ export function assembleContainer()
     const unmuteParticipantService = new UnmuteParticipantTxService(txManager);
 
 
-    // TODO : CONTROLLERS (MESSAGE)
+    // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
     const editMessageController = new EditMessageController(editMessageService);
     const readMessageController = new MarkConversationAsReadController(markConversationReadService);
@@ -316,6 +336,60 @@ export function assembleContainer()
     // TODO : CONTROLLERS (TYPING)
     const startTypingController = new StartTypingController();
     const stopTypingController = new StopTypingController();
+
+    // TODO : SHARED FOR CONTROLLERS
+    const extractActorId = new ExtractActorId();
+
+
+    // TODO : HTTP CONTROLLERS
+    const createDirectConversationController = new CreateDirectConversationController(
+        createDirectConversationService,
+        extractActorId
+    );
+    const createGroupConversationController = new CreateGroupConversationController(
+        createGroupConversationService,
+        extractActorId
+    );
+    const getUserConversationController = new GetUserConversationController(
+        getUserConversationsService,
+        extractActorId
+    );
+    const updateConversationTitleController = new UpdateConversationTitleController(
+        updateConversationTitleService,
+        extractActorId
+    );
+
+    const getMessagesController = new GetMessagesController(
+        getMessagesService,
+        extractActorId
+    );
+    const changeParticipantRoleController = new ChangeParticipantRoleController(
+        changeParticipantRoleService,
+        extractActorId
+    );
+    const joinConversationController = new JoinConversationController(
+        joinConversationService,
+        extractActorId
+    );
+    const leaveConversationController = new LeaveConversationController(
+        leaveConversationService,
+        extractActorId
+    );
+    const muteParticipantController = new MuteParticipantController(
+        muteParticipantService,
+        extractActorId
+    );
+    const removeParticipantController = new RemoveParticipantController(
+        removeParticipantService,
+        extractActorId
+    );
+    const unmuteParticipantController = new UnmuteParticipantController(
+        unmuteParticipantService,
+        extractActorId
+    );
+
+
+
 
     return {
         // user
@@ -350,6 +424,19 @@ export function assembleContainer()
 
         startTypingController,
         stopTypingController,
+
+        createDirectConversationController,
+        createGroupConversationController,
+        getUserConversationController,
+        updateConversationTitleController,
+
+        getMessagesController,
+        changeParticipantRoleController,
+        joinConversationController,
+        leaveConversationController,
+        muteParticipantController,
+        removeParticipantController,
+        unmuteParticipantController,
     }
 }
 
