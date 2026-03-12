@@ -425,6 +425,7 @@ export function assembleContainer()
         startTypingController,
         stopTypingController,
 
+        // HTTP Controllers
         createDirectConversationController,
         createGroupConversationController,
         getUserConversationController,
