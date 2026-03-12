@@ -127,6 +127,7 @@ import {LeaveConversationController} from "./modules/chat/controllers/participan
 import {MuteParticipantController} from "./modules/chat/controllers/participant/mute_participant_controller";
 import {RemoveParticipantController} from "./modules/chat/controllers/participant/remove_participant_controller";
 import {UnmuteParticipantController} from "./modules/chat/controllers/participant/unmute_participant_controller";
+import {GetParticipantsController} from "./modules/chat/controllers/participant/get_participants_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -367,6 +368,10 @@ export function assembleContainer()
         changeParticipantRoleService,
         extractActorId
     );
+    const getParticipantsController = new GetParticipantsController(
+        getParticipantsService,
+        extractActorId
+    );
     const joinConversationController = new JoinConversationController(
         joinConversationService,
         extractActorId
@@ -433,6 +438,7 @@ export function assembleContainer()
 
         getMessagesController,
         changeParticipantRoleController,
+        getParticipantsController,
         joinConversationController,
         leaveConversationController,
         muteParticipantController,
