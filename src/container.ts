@@ -138,6 +138,9 @@ import {
 import {GetSpecificMessageUseCase} from "./modules/chat/application/message/get_specific_message_use_case";
 import {GetSpecificMessageService} from "./modules/chat/transactional_services/message/get_specific_message_service";
 import {GetSpecificMessageController} from "./modules/chat/controllers/message/get_specific_message_controller";
+import {GetSelfProfileUseCase} from "./modules/users/application/get_self_profile_use_case";
+import {GetSelfProfileTxService} from "./modules/users/transactional_services/get_self_profile_tx_service";
+import {GetSelfProfileController} from "./modules/users/controllers/get_self_profile_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -180,18 +183,21 @@ export function assembleContainer()
     const loginUsernameUseCase = new LoginUsernameUseCase(userRepoReaderPG, bcrypter, userMapper);
     const registerUseCase = new RegisterUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, emailSender, emailVerificationTokenRepoPG, userMapper);
     const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriterPG, userMapper, userLookup);
+    const getSelfProfileUseCase = new GetSelfProfileUseCase(userLookup);
 
     // TODO : USER SERVICES
     const changeEmailService = new ChangeEmailTxService(txManager);
     const changePasswordService = new ChangePasswordTxService(txManager);
     const changeUsernameService = new ChangeUsernameTxService(txManager);
     const toggleStatusService = new ToggleStatusTxService(txManager);
+    const getSelfProfileService = new GetSelfProfileTxService(txManager);
 
     // TODO : USER CONTROLLERS
     const changeEmailController = new ChangeEmailController(changeEmailService, extractUserId);
     const changePasswordController = new ChangePasswordController(changePasswordService, extractUserId);
     const changeUsernameController = new ChangeUsernameController(changeUsernameService, extractUserId);
     const toggleStatusController = new ToggleStatusController(toggleStatusService, extractUserId);
+    const getSelfProfileController = new GetSelfProfileController(getSelfProfileService, extractUserId);
 
     // TODO : AUTHENTIFICATION
     const authService = new AuthService(refreshTokenRepoPG, jwtTokenService, txManager);
@@ -433,6 +439,7 @@ export function assembleContainer()
         changePasswordController,
         changeUsernameController,
         toggleStatusController,
+        getSelfProfileController,
 
         // jwt token service
         jwtTokenService,
