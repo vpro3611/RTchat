@@ -2,6 +2,7 @@ import {ParticipantRepoInterface} from "../domain/ports/participant_repo_interfa
 import {Pool, PoolClient} from "pg";
 import {Participant} from "../domain/participant/participant";
 import {mapPgError} from "../../error_mapper/pg_error_mapper";
+import {FullParticipantDto} from "../DTO/full_participant_dto";
 
 
 export class ParticipantRepositoryPg implements ParticipantRepoInterface {
@@ -16,6 +17,23 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
             row.muted_until,
             row.joined_at,
         );
+    }
+
+    private mapToJoined(row: any): FullParticipantDto {
+        return {
+            conversationId: row.conversation_id,
+            userId: row.user_id,
+            role: row.role,
+            canSendMessages: row.can_send_messages,
+            mutedUntil: row.muted_until,
+            joinedAt: row.joined_at,
+            username: row.username,
+            email: row.email,
+            isActive: row.is_active,
+            lastSeenAt: row.last_seen_at,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+        }
     }
 
     async save(participant: Participant): Promise<void> {
@@ -133,6 +151,27 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
             const items = rows.map(row => this.mapToParticipant(row));
 
             return {items, nextCursor};
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
+    async getSpecificParticipant(conversationId: string, participantId: string): Promise<FullParticipantDto | null> {
+        try {
+            const query = `
+            SELECT p.*, u.username, u.email, u.is_active, u.last_seen_at, u.created_at, u.updated_at 
+            FROM conversation_participants p 
+            JOIN users u ON p.user_id = u.id
+            WHERE p.conversation_id = $1 AND p.user_id = $2
+            `
+
+            const result = await this.pool.query(query, [conversationId, participantId]);
+            if (!result.rows.length) {
+                return null;
+            }
+
+            const row = result.rows[0];
+
+            return this.mapToJoined(row);
         } catch (error) {
             throw mapPgError(error);
         }
