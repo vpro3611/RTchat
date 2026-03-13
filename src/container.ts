@@ -135,6 +135,9 @@ import {
 import {
     GetSpecificParticipantController
 } from "./modules/chat/controllers/participant/get_specific_participant_controller";
+import {GetSpecificMessageUseCase} from "./modules/chat/application/message/get_specific_message_use_case";
+import {GetSpecificMessageService} from "./modules/chat/transactional_services/message/get_specific_message_service";
+import {GetSpecificMessageController} from "./modules/chat/controllers/message/get_specific_message_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -274,6 +277,12 @@ export function assembleContainer()
         RedisCacheService,
         participantRepo
     );
+    const getSpecificMessageUseCase = new GetSpecificMessageUseCase(
+        messageMapper,
+        findMessageById,
+        participantRepo,
+        RedisCacheService,
+    );
     // ____ //
     const changeParticipantRoleUseCase = new ChangeParticipantRoleUseCase(
         participantRepo,
@@ -327,6 +336,7 @@ export function assembleContainer()
     const editMessageService = new EditMessageTxService(txManager);
     const getMessagesService = new GetMessageTxService(txManager);
     const sendMessageService = new SendMessageTxService(txManager);
+    const getSpecificMessageService = new GetSpecificMessageService(txManager);
 
     // ____ //
 
@@ -376,6 +386,11 @@ export function assembleContainer()
         getMessagesService,
         extractActorId
     );
+    const getSpecificMessageController = new GetSpecificMessageController(
+        getSpecificMessageService,
+        extractActorId
+    );
+
     const changeParticipantRoleController = new ChangeParticipantRoleController(
         changeParticipantRoleService,
         extractActorId
@@ -453,6 +468,8 @@ export function assembleContainer()
         updateConversationTitleController,
 
         getMessagesController,
+        getSpecificMessageController,
+
         changeParticipantRoleController,
         getParticipantsController,
         joinConversationController,
