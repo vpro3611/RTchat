@@ -3,6 +3,7 @@ import type {User} from "../types/register_response.ts";
 import {fetchJson, fetchJsonNoError} from "../fetch/generinc_fetcher.ts";
 import type {LoginByEmailResponse} from "../types/login_by_email_response.ts";
 import type {LoginByUsernameResponse} from "../types/login_by_username_response.ts";
+import {AuthStore} from "../../stores/auth_store.ts";
 
 
 export const AuthApi = {
@@ -50,6 +51,9 @@ export const AuthApi = {
     me() {
         return fetchJson<User>(`${BaseUrl.apiBaseUrl}/private/me`, {
             method: "GET",
+            headers: {
+                Authorization: `Bearer ${AuthStore.accessToken}`
+            }
         })
     }
 }
