@@ -31,8 +31,8 @@ describe("ParticipantRepositoryPg (integration)", () => {
         await client.query(`
             INSERT INTO users (id, username, email, password_hash, is_active, is_verified, created_at, updated_at)
             VALUES
-            ($1,'userA','a@test.com','hash',true,true,NOW(),NOW()),
-            ($2,'userB','b@test.com','hash',true,true,NOW(),NOW())
+                ($1,'userA','a@test.com','hash',true,true,NOW(),NOW()),
+                ($2,'userB','b@test.com','hash',true,true,NOW(),NOW())
         `, [USER_A, USER_B]);
 
         // conversation
@@ -168,6 +168,41 @@ describe("ParticipantRepositoryPg (integration)", () => {
         );
 
         expect(exists).toBe(false);
+    });
+
+    // =========================
+    // getSpecificParticipant
+    // =========================
+
+    it("should return joined participant with user data", async () => {
+
+        const participant = createParticipant(USER_A);
+
+        await repo.save(participant);
+
+        const result = await repo.getSpecificParticipant(
+            CONVERSATION_ID,
+            USER_A
+        );
+
+        expect(result).not.toBeNull();
+
+        expect(result?.conversationId).toBe(CONVERSATION_ID);
+        expect(result?.userId).toBe(USER_A);
+
+        expect(result?.username).toBe("userA");
+        expect(result?.email).toBe("a@test.com");
+        expect(result?.isActive).toBe(true);
+    });
+
+    it("should return null if participant not found in getSpecificParticipant", async () => {
+
+        const result = await repo.getSpecificParticipant(
+            CONVERSATION_ID,
+            USER_A
+        );
+
+        expect(result).toBeNull();
     });
 
     // =========================
