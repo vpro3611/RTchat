@@ -25,8 +25,7 @@ export class EmailSenderNodemailer implements EmailSenderInterface {
     ): Promise<void> {
 
         const verificationUrl =
-            `${process.env.APP_URL}/public/verify-email?token=${token}`;
-
+            `${process.env.API_URL}/public/verify-email?token=${token}`;
         try {
             await this.transporter.verify();
 
