@@ -1,6 +1,7 @@
 import {AuthService} from "../auth_service";
 import {Request, Response} from "express";
 import {z} from "zod";
+import {InternalServerError} from "../../../http_errors_base";
 
 export const VerifyEmailQuerySchema = z.object({
     token: z.string(),
@@ -8,7 +9,14 @@ export const VerifyEmailQuerySchema = z.object({
 
 
 export class VerifyEmailController {
-    constructor(private readonly authService: AuthService) {}
+    constructor(private readonly authService: AuthService) {
+        if (!process.env.FRONTEND_URL) {
+            const msg = process.env.NODE_ENV === "production"
+                ? "FRONTEND_URL is not defined"
+                : "Something wrong with the server";
+            throw new InternalServerError(msg);
+        }
+    }
 
 
     verifyEmailController = async (req: Request, res: Response) => {
@@ -17,9 +25,9 @@ export class VerifyEmailController {
 
             await this.authService.verifyEmail(token.token);
 
-            return res.status(200).json({message: "Email verified successfully"});
+            res.redirect(`${process.env.FRONTEND_URL}/email-verified?status=success`);
         } catch (error) {
-            return res.status(400).json({message: "Invalid or expired token"});
+            res.redirect(`${process.env.FRONTEND_URL}/email-verification?status=error`);
         }
     }
 }
