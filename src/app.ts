@@ -41,6 +41,7 @@ import {UnmuteParticipantParamsSchema} from "./modules/chat/controllers/particip
 import {
     GetSpecificParticipantParamsSchema
 } from "./modules/chat/controllers/participant/get_specific_participant_controller";
+import {GetSpecificMessageParamsSchema} from "./modules/chat/controllers/message/get_specific_message_controller";
 
 export function createApp(dependencies: AppContainer): Express
 {
@@ -141,6 +142,11 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.get("/conversation/:conversationId/messages",
         validateParams(GetMessagesParamsSchema),
         dependencies.getMessagesController.getMessagesCont
+    );
+
+    privateRouter.get("/conversation/:conversationId/:messageId/view",
+        validateParams(GetSpecificMessageParamsSchema),
+        dependencies.getSpecificMessageController.getSpecificMessageCont
     );
 
     privateRouter.patch("/conversation/:conversationId/:targetId/role",
