@@ -8,6 +8,12 @@ yarn-error.log*
 /.pnp
 .pnp.js
 
+./dist
+
 *.env
 .idea
 .vscode/*
+
+/dist
+
+chat_app_database_plan.md
