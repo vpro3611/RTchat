@@ -38,6 +38,9 @@ import {
 } from "./modules/chat/controllers/participant/mute_participant_controller";
 import {RemoveParticipantParamsSchema} from "./modules/chat/controllers/participant/remove_participant_controller";
 import {UnmuteParticipantParamsSchema} from "./modules/chat/controllers/participant/unmute_participant_controller";
+import {
+    GetSpecificParticipantParamsSchema
+} from "./modules/chat/controllers/participant/get_specific_participant_controller";
 
 export function createApp(dependencies: AppContainer): Express
 {
@@ -143,6 +146,11 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.patch("/conversation/:conversationId/:targetId/role",
         validateParams(ChangeParticipantRoleParamsSchema),
         dependencies.changeParticipantRoleController.changeParticipantRoleCont
+    );
+
+    privateRouter.get("/conversation/:conversationId/:targetId/get-full",
+        validateParams(GetSpecificParticipantParamsSchema),
+        dependencies.getSpecificParticipantController.getSpecificParticipantController
     );
 
     privateRouter.get("/conversation/:conversationId/participants",
