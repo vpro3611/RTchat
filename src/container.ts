@@ -128,6 +128,13 @@ import {MuteParticipantController} from "./modules/chat/controllers/participant/
 import {RemoveParticipantController} from "./modules/chat/controllers/participant/remove_participant_controller";
 import {UnmuteParticipantController} from "./modules/chat/controllers/participant/unmute_participant_controller";
 import {GetParticipantsController} from "./modules/chat/controllers/participant/get_participants_controller";
+import {GetSpecificParticipantUseCase} from "./modules/chat/application/participant/get_specific_participant_use_case";
+import {
+    GetSpecificParticipantService
+} from "./modules/chat/transactional_services/participant/get_specific_participant_service";
+import {
+    GetSpecificParticipantController
+} from "./modules/chat/controllers/participant/get_specific_participant_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -278,6 +285,10 @@ export function assembleContainer()
         participantMapper,
         RedisCacheService,
     );
+    const getSpecificParticipantUseCase = new GetSpecificParticipantUseCase(
+        participantRepo,
+        RedisCacheService
+    );
     const joinConversationUseCase = new JoinConversationUseCase(
         conversationRepo,
         participantRepo,
@@ -321,6 +332,7 @@ export function assembleContainer()
 
     const changeParticipantRoleService = new ChangeParticipantRoleTxService(txManager);
     const getParticipantsService = new GetParticipantsTxService(txManager);
+    const getSpecificParticipantService = new GetSpecificParticipantService(txManager);
     const joinConversationService = new JoinConversationTxService(txManager);
     const leaveConversationService = new LeaveConversationTxService(txManager);
     const muteParticipantService = new MuteParticipantTxService(txManager);
@@ -372,6 +384,10 @@ export function assembleContainer()
         getParticipantsService,
         extractActorId
     );
+    const getSpecificParticipantController = new GetSpecificParticipantController(
+        getSpecificParticipantService,
+        extractActorId
+    )
     const joinConversationController = new JoinConversationController(
         joinConversationService,
         extractActorId
@@ -444,6 +460,7 @@ export function assembleContainer()
         muteParticipantController,
         removeParticipantController,
         unmuteParticipantController,
+        getSpecificParticipantController
     }
 }
 
