@@ -2,11 +2,14 @@
 
 import {ref} from "vue";
 import {AuthApi} from "../api/apis/auth_api.ts";
+import {useRouter} from "vue-router";
 const email = ref('');
 const password = ref('');
 const username = ref('');
 const error = ref<string | null>(null);
 const isLoading = ref(false);
+const router = useRouter();
+
 
 const handleSubmit = async () => {
   if (isLoading.value) return;
@@ -16,7 +19,8 @@ const handleSubmit = async () => {
     error.value = null;
 
     const response = await AuthApi.register(username.value, email.value, password.value);
-    console.log("registered, now please, confirm your email");
+    console.log(`registered, now please, confirm your email, hello, ${response.username} | ${response.email}`);
+    await router.push('/verify-email');
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e);
   } finally {
