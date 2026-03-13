@@ -15,3 +15,5 @@ yarn-error.log*
 .vscode/*
 
 /dist
+
+chat_app_database_plan.md
