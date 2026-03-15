@@ -1,9 +1,9 @@
-import {BaseUrl} from "../../base_url/base_url.ts";
+import {BaseUrl} from "src/base_url/base_url";
 import type {User} from "../types/register_response.ts";
-import {fetchJson, fetchJsonNoError} from "../fetch/generinc_fetcher.ts";
+import {fetchJson, fetchJsonNoError} from "../fetch/generinc_fetcher";
 import type {LoginByEmailResponse} from "../types/login_by_email_response.ts";
 import type {LoginByUsernameResponse} from "../types/login_by_username_response.ts";
-import {AuthStore} from "../../stores/auth_store.ts";
+import {AuthStore} from "src/stores/auth_store";
 
 
 export const AuthApi = {
