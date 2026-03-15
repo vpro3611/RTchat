@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import {useRouter} from "vue-router";
   import {ref} from "vue";
-  import {AuthStore} from "../stores/auth_store.ts";
+  import {AuthStore} from "../stores/auth_store";
 
   const router = useRouter();
   const error = ref<string | null>(null);

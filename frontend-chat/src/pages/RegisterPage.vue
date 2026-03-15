@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import {ref} from "vue";
-import {AuthApi} from "../api/apis/auth_api.ts";
+import {AuthApi} from "../api/apis/auth_api";
 import {useRouter} from "vue-router";
 const email = ref('');
 const password = ref('');

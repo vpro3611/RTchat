@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {onMounted} from "vue";
-import {AuthApi} from "./api/apis/auth_api.ts";
-import {AuthStore} from "./stores/auth_store.ts";
+import {AuthApi} from "src/api/apis/auth_api";
+import {AuthStore} from "src/stores/auth_store";
 
 onMounted(async () => {
   try {
@@ -23,8 +23,6 @@ onMounted(async () => {
     AuthStore.finishBootstrapping();
   }
 })
-
-
 </script>
 
 
