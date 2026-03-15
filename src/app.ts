@@ -61,6 +61,7 @@ export function createApp(dependencies: AppContainer): Express
     const allowedOrigins = [
         "http://localhost:3000",
         "http://localhost:5173",
+        "http://localhost:9000",
     ];
 
     app.use(cors({
