@@ -7,7 +7,7 @@ const router = useRouter()
 const status = route.query.status
 
 setTimeout(() => {
-  router.push("/auth")
+  void router.push("/auth")
 }, 4000)
 </script>
 
