@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {onMounted} from "vue";
 import {AuthApi} from "src/api/apis/auth_api";
-import {AuthStore} from "src/stores/auth_store";
+import {AuthStore} from "stores/auth_store";
 
 onMounted(async () => {
   try {
