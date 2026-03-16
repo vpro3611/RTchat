@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { AuthStore } from "stores/auth_store"
 import LogoutComponent from "components/LogoutComponent.vue";
+import ChangePasswordForm from "components/ChangePasswordForm.vue";
+import ChangeUsernameForm from "components/ChangeUsernameForm.vue";
+import ChangeEmailForm from "components/ChangeEmailForm.vue";
+import DeactivateAccountButton from "components/DeactivateAccountButton.vue";
 
 
 </script>
@@ -66,6 +70,21 @@ import LogoutComponent from "components/LogoutComponent.vue";
           <LogoutComponent />
         </div>
 
+        <div class="q-mb-sm">
+          <ChangePasswordForm />
+        </div>
+
+        <div class="q-mb-sm">
+          <ChangeUsernameForm />
+        </div>
+
+        <div class="q-mb-sm">
+          <ChangeEmailForm />
+        </div>
+
+        <div class="q-mb-sm">
+          <DeactivateAccountButton />
+        </div>
       </q-card-section>
 
     </q-card>
