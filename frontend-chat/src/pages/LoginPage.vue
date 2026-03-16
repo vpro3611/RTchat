@@ -3,6 +3,7 @@ import LoginForm from "src/components/LoginForm.vue"
 import {useRouter} from "vue-router";
 import {ref} from "vue";
 import {AuthApi} from "src/api/apis/auth_api";
+import {AuthStore} from "stores/auth_store";
 
 const router = useRouter();
 
@@ -20,6 +21,9 @@ async function loginByEmail(data: { identifier: string; password: string }) {
       data.identifier,
       data.password
     );
+
+
+    AuthStore.setToken(response.accessToken, response.user);
 
     console.log("email login", response.user.email)
 
@@ -42,6 +46,8 @@ async function loginByUsername(data: { identifier: string; password: string }) {
       data.identifier,
       data.password
     );
+
+    AuthStore.setToken(response.accessToken, response.user);
 
     console.log("username login", response.user.username);
 
