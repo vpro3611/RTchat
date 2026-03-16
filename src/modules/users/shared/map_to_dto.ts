@@ -12,7 +12,7 @@ export class UserMapper {
             isVerified: user.getIsVerified(),
             lastSeenAt: user.getLastSeenAt().toISOString(),
             createdAt: user.getCreatedAt().toISOString(),
-            updated_at: user.getUpdatedAt().toISOString(),
+            updatedAt: user.getUpdatedAt().toISOString(),
         }
     }
 }

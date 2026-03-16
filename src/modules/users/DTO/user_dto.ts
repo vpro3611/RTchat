@@ -8,5 +8,5 @@ export type UserDTO = {
     isVerified: boolean;
     lastSeenAt: string,
     createdAt: string,
-    updated_at: string,
+    updatedAt: string,
 }
