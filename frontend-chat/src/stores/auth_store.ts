@@ -14,7 +14,7 @@ export const AuthStore = reactive({
         }
     },
 
-    setUser(user: User) {
+    setUser(user: User | null) {
         this.user = user;
     },
 
