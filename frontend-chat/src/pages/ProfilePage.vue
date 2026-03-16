@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AuthStore } from "stores/auth_store"
+import LogoutComponent from "components/LogoutComponent.vue";
 
 
 </script>
@@ -59,6 +60,10 @@ import { AuthStore } from "stores/auth_store"
         <div class="q-mb-sm">
           <strong>Updated at:</strong>
           {{ new Date(AuthStore.user.updatedAt).toLocaleString() }}
+        </div>
+
+        <div class="q-mb-sm">
+          <LogoutComponent />
         </div>
 
       </q-card-section>
