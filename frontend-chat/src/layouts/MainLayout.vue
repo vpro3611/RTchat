@@ -8,22 +8,19 @@ const drawer = ref(false)
 
 const router = useRouter();
 const $q = useQuasar();
+const error = ref<string | null>(null)
 
 
 const handleLogout = () => {
-
   $q.dialog({
     title: "Logout",
     message: "Are you sure you want to logout?",
     cancel: true,
     persistent: true
   }).onOk(() => {
-
     AuthStore.clearToken()
     AuthStore.setUser(null)
-
     void router.replace("/auth")
-
   })
 }
 
@@ -85,6 +82,7 @@ const handleLogout = () => {
           <q-item-section>
             Logout
           </q-item-section>
+          <p v-if="error" class="text-negative">{{error}}</p>
         </q-item>
 
       </q-list>
