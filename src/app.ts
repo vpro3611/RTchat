@@ -75,7 +75,7 @@ export function createApp(dependencies: AppContainer): Express
             return callback(null, false);
         },
         credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allowedHeaders: ["Content-Type", "Authorization"],
     }));
 
