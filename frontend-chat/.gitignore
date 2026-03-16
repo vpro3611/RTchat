@@ -33,3 +33,5 @@ README.md
 
 # local .env files
 .env.local*
+
+../chat_app_database_plan.md
