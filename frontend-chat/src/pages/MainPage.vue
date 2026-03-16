@@ -1,35 +1,16 @@
 <script setup lang="ts">
-
-import LogoutPage from "pages/LogoutPage.vue";
-import {onMounted} from "vue";
-import {AuthApi} from "../api/apis/auth_api";
-import {AuthStore} from "../stores/auth_store";
-
-
-onMounted(async () => {
-  try {
-    const user = await AuthApi.me();
-    if (!user || !user.isVerified || !user.isActive) {
-      AuthStore.clearToken();
-      return;
-    }
-    AuthStore.setUser(user);
-  } catch (e) {
-    AuthStore.clearToken();
-    console.error(e);
-  } finally {
-    AuthStore.finishBootstrapping();
-  }
-})
-
+import {AuthStore} from "stores/auth_store";
 </script>
 
 <template>
-  <div>Hello, i am main page</div>
-  <p>Logout</p>
-  <LogoutPage />
+
+  <q-page class="q-pa-md">
+
+    Main page
+
+    <h1>Hello, {{AuthStore.user?.username}}</h1>
+    <p>Under construction</p>
+
+  </q-page>
+
 </template>
-
-<style scoped>
-
-</style>
