@@ -40,9 +40,9 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     }
 
     if (to.meta.requireAuth && (!AuthStore.accessToken || !AuthStore.user)) {
-      next("/auth")
+      return next("/auth")
     } else {
-      next()
+      return next()
     }
   })
 
