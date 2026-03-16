@@ -37,7 +37,7 @@ CREATE TABLE users (
   last_seen_at TIMESTAMP,
 
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+  updatedAt TIMESTAMP NOT NULL DEFAULT NOW()
 );
 ```
 
@@ -141,7 +141,7 @@ CREATE TABLE messages (
   is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
 
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP
+  updatedAt TIMESTAMP
 );
 ```
 
