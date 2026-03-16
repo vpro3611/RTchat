@@ -6,7 +6,7 @@ export interface User {
     email: string;
     isActive: boolean;
     isVerified: boolean;
-    lastSeenAt: Date;
-    createdAt: Date;
-    updatedAt: Date;
+    lastSeenAt: string;
+    createdAt: string;
+    updatedAt: string;
 }
