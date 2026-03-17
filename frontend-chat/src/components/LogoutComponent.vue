@@ -3,6 +3,7 @@ import { ref } from "vue"
 import { useRouter } from "vue-router"
 import { useQuasar } from "quasar"
 import { AuthStore } from "stores/auth_store"
+import {ChatStore} from "stores/chat_store";
 
 const router = useRouter()
 const $q = useQuasar()
@@ -25,6 +26,7 @@ function handleLogout() {
         AuthStore.clearToken()
         AuthStore.setUser(null)
 
+        ChatStore.clearChats();
         void router.replace("/auth")
       } finally {
         isLoading.value = false
