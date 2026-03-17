@@ -86,6 +86,18 @@ export const UserApi =
           Authorization: `Bearer ${AuthStore.accessToken}`
         },
       })
+    },
+
+    updateGroupConversationTitle(title: string, conversationId: string)
+    {
+      return fetchJson<CreateGroupChatResponse>(`${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/title`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+        body: JSON.stringify({title}),
+      })
     }
 
     // createDirectConversation()
