@@ -66,6 +66,28 @@ export const UserApi =
       });
     },
 
+    getUserConversations(params: {
+      limit?: number,
+      cursor?: string,
+    }) {
+      const queryParams = new URLSearchParams();
+
+      if (params.limit) {
+        queryParams.append('limit', params.limit.toString());
+      }
+
+      if (params.cursor) {
+        queryParams.append('cursor', params.cursor);
+      }
+
+      return fetchJson<{items: CreateGroupChatResponse[], nextCursor: string}>(`${BaseUrl.apiBaseUrl}/private/conversations?${queryParams.toString()}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      })
+    }
+
     // createDirectConversation()
     // {
     //   return fetchJson<>(`${BaseUrl.apiBaseUrl}/private/create-direct-conversation`, {
