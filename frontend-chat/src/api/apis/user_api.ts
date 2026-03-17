@@ -2,6 +2,7 @@ import {fetchJson} from "src/api/fetch/generinc_fetcher";
 import {BaseUrl} from "src/base_url/base_url";
 import {AuthStore} from "stores/auth_store";
 import type {User} from "src/api/types/register_response";
+import type {CreateGroupChatResponse} from "src/api/types/create_group_chat_response";
 
 
 export const UserApi =
@@ -51,5 +52,28 @@ export const UserApi =
           Authorization: `Bearer ${AuthStore.accessToken}`
         },
       });
-    }
+    },
+
+    createGroupConversation(title: string)
+    {
+      return fetchJson<CreateGroupChatResponse>(`${BaseUrl.apiBaseUrl}/private/group-conv/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+        body: JSON.stringify({title}),
+      });
+    },
+
+    // createDirectConversation()
+    // {
+    //   return fetchJson<>(`${BaseUrl.apiBaseUrl}/private/create-direct-conversation`, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: `Bearer ${AuthStore.accessToken}`
+    //     },
+    //   });
+    // }
   }
