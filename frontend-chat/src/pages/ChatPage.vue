@@ -3,6 +3,7 @@ import { useRoute } from "vue-router"
 import {computed, ref} from "vue";
 import {ChatStore} from "stores/chat_store";
 import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
+import LeaveGroupButton from "components/LeaveGroupButton.vue";
 
 
 const message = ref("")
@@ -46,6 +47,11 @@ function send() {
     />
 
     <EditGroupTitleDialog ref="dialogRef" />
+
+    <LeaveGroupButton
+      v-if="chat?.conversationType === 'group'"
+      :chatId="chat.id"
+    />
 
     <!-- MESSAGES -->
     <div class="col q-pa-md">
