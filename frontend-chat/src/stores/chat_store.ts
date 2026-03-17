@@ -50,6 +50,17 @@ export const ChatStore = reactive({
     }
   },
 
+  updateChat(updated: CreateGroupChatResponse) {
+    const index = this.chats.findIndex(c => c.id === updated.id);
+    if (index !== -1) {
+      this.chats[index] = updated;
+    }
+  },
+
+  findById(id: string) {
+    return this.chats.find(c => c.id === id);
+  },
+
   finishBootstrapping() {
     this.isBootstrapping = false;
   }
