@@ -35,6 +35,7 @@ const routes = [
 
       { path: 'profile', component: () => import('pages/ProfilePage.vue') },
 
+      { path: 'chat/:id', component: () => import('pages/ChatPage.vue')},
     ]
   }
 
