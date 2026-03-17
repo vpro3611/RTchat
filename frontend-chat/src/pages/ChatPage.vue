@@ -1,8 +1,18 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router"
-import {ref} from "vue";
+import {computed, ref} from "vue";
+import {ChatStore} from "stores/chat_store";
+import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
+
+
 const message = ref("")
 const route = useRoute()
+
+const dialogRef = ref();
+
+const chat = computed(() => {
+  return ChatStore.findById(route.params.id as string);
+})
 
 function send() {
   if (!message.value.trim()) return
@@ -22,7 +32,20 @@ function send() {
       <div class="text-h6">
         Chat {{ route.params.id }}
       </div>
+      <div class="text-subtitle2">
+        Chat Title {{ chat?.title }}
+      </div>
     </div>
+
+    <q-btn
+      v-if="chat?.conversationType === 'group'"
+      icon="edit"
+      flat
+      round
+      @click="dialogRef.openDialog(chat.id, chat.title)"
+    />
+
+    <EditGroupTitleDialog ref="dialogRef" />
 
     <!-- MESSAGES -->
     <div class="col q-pa-md">
