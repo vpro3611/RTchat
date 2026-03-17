@@ -98,6 +98,17 @@ export const UserApi =
         },
         body: JSON.stringify({title}),
       })
+    },
+
+    leaveGroupConversation(conversationId: string)
+    {
+      // conversation/:conversationId/leave
+      return fetchJson<void>(`${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/leave`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        }
+      })
     }
 
     // createDirectConversation()
