@@ -1,13 +1,32 @@
 import {reactive} from "vue";
-import {CreateGroupChatResponse} from "src/api/types/create_group_chat_response";
+import type {CreateGroupChatResponse} from "src/api/types/create_group_chat_response";
 
 
 export const ChatStore = reactive({
   chats: [] as CreateGroupChatResponse[],
   isBootstrapping: true,
+  isLoading: false,
+  nextCursor: null as string | null,
+  hasMore: true,
 
-  setChat(chats: CreateGroupChatResponse[]) {
+  setChats(chats: CreateGroupChatResponse[], cursor: string | null) {
     this.chats = chats;
+    this.nextCursor = cursor;
+    this.hasMore = !!cursor;
+  },
+
+  clearChats() {
+    this.chats = [];
+    this.nextCursor = null;
+    this.hasMore = true;
+    this.isLoading = false;
+    this.isBootstrapping = true;
+  },
+
+  appendChats(chats: CreateGroupChatResponse[], cursor: string | null) {
+    this.chats.push(...chats);
+    this.nextCursor = cursor;
+    this.hasMore = !!cursor;
   },
 
   addChat(chat: CreateGroupChatResponse) {
