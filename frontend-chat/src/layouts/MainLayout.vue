@@ -1,35 +1,64 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import {useRouter} from "vue-router";
-import {AuthStore} from "stores/auth_store";
-import {useQuasar} from "quasar";
+import { onMounted, ref } from "vue"
+import {useRoute} from "vue-router"
+import { useQuasar } from "quasar"
+import { ChatStore } from "stores/chat_store"
+import { UserApi } from "src/api/apis/user_api"
 
-const drawer = ref(false)
+import ChatList from "components/ChatList.vue"
+import ChatPage from "pages/ChatPage.vue"
+import CreateGroupDialog from "components/CreateGroupDialog.vue"
+import ProfileDialog from "components/ProfileDialog.vue"
 
-const router = useRouter();
-const $q = useQuasar();
+const showProfileDialog = ref(false);
+
+
+const drawer = ref(true)
+
+const route = useRoute()
+const $q = useQuasar()
 const error = ref<string | null>(null)
 
 
-const handleLogout = () => {
-  $q.dialog({
-    title: "Logout",
-    message: "Are you sure you want to logout?",
-    cancel: true,
-    persistent: true
-  }).onOk(() => {
-    AuthStore.clearToken()
-    AuthStore.setUser(null)
-    void router.replace("/auth")
-  })
+const createDialogRef = ref<InstanceType<typeof CreateGroupDialog> | null>(null)
+
+function openCreateGroupDialog() {
+  createDialogRef.value?.openDialog();
 }
 
+async function loadChats() {
+  if (ChatStore.isLoading) return
+
+  ChatStore.isLoading = true
+
+  try {
+    const res = await UserApi.getUserConversations({
+      limit: 20
+    })
+
+    ChatStore.setChats(res.items, res.nextCursor)
+  } catch (e) {
+    console.error(e)
+    error.value = e instanceof Error ? e.message : String(e)
+
+    $q.notify({
+      type: "negative",
+      message: "Failed to load chats"
+    })
+  } finally {
+    ChatStore.isLoading = false
+    ChatStore.finishBootstrapping()
+  }
+}
+
+onMounted(loadChats)
 </script>
 
 <template>
 
   <q-layout view="hHh Lpr fFf">
 
+    <!-- HEADER -->
     <q-header elevated>
       <q-toolbar>
 
@@ -45,55 +74,53 @@ const handleLogout = () => {
           Chat
         </q-toolbar-title>
 
+        <q-space />
+
+        <q-btn
+          flat
+          dense
+          round
+          icon="person"
+          @click="showProfileDialog = true"
+        />
+
+        <q-btn
+          flat
+          dense
+          round
+          icon="add"
+          @click="openCreateGroupDialog"
+        />
+
       </q-toolbar>
     </q-header>
 
-
+    <!-- LEFT: CHAT LIST -->
     <q-drawer
       v-model="drawer"
       side="left"
       bordered
-      overlay
-      :width="300"
+      show-if-above
+      :width="320"
     >
-
-      <q-list padding>
-
-        <q-item clickable to="/main">
-          <q-item-section avatar>
-            <q-icon name="chat"/>
-          </q-item-section>
-          <q-item-section>Chats</q-item-section>
-        </q-item>
-
-        <q-item clickable to="/profile">
-          <q-item-section avatar>
-            <q-icon name="person"/>
-          </q-item-section>
-          <q-item-section>Profile</q-item-section>
-        </q-item>
-
-        <q-separator/>
-
-        <q-item clickable @click="handleLogout" class="text-negative">
-          <q-item-section avatar>
-            <q-icon name="logout"/>
-          </q-item-section>
-          <q-item-section>
-            Logout
-          </q-item-section>
-          <p v-if="error" class="text-negative">{{error}}</p>
-        </q-item>
-
-      </q-list>
-
+      <ChatList />
     </q-drawer>
 
-
+    <!-- RIGHT: CHAT CONTENT -->
     <q-page-container>
-      <router-view/>
+
+      <div v-if="!route.params.id" class="flex flex-center full-height">
+        <div class="text-grey">
+          Select a chat to start messaging
+        </div>
+      </div>
+
+      <ChatPage v-else />
+
     </q-page-container>
 
   </q-layout>
 
+  <CreateGroupDialog ref="createDialogRef" />
+  <ProfileDialog v-model="showProfileDialog" />
 </template>
