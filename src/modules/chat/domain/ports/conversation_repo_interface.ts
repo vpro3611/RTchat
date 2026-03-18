@@ -8,6 +8,7 @@ export interface ConversationRepoInterface {
     getUserConversations(userId: string, limit?: number, cursor?: string): Promise<{items: Conversation[], nextCursor?: string}>;
     updateLastMessage(conversationId: string, date: Date): Promise<void>;
     markRead(conversationId: string, userId: string, messageId: string): Promise<void>;
+    searchConversations(query: string, limit?: number, cursor?: string): Promise<{items: Conversation[], nextCursor?: string}>;
 }
 
 
