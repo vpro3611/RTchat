@@ -23,7 +23,7 @@ export class SearchUsersUseCase {
             async () => {
                 const users = await this.userRepoReader.searchUsers(query, limit, cursor);
                 return {
-                    items: await Promise.all(users.items.map(user => this.userMapper.mapToDto(user))),
+                    items: users.items.map(user => this.userMapper.mapToDto(user)),
                     nextCursor: users.nextCursor,
                 };
             }
