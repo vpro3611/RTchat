@@ -147,6 +147,16 @@ export const UserApi =
           Authorization: `Bearer ${AuthStore.accessToken}`
         },
       })
+    },
+
+    getSpecificUser(targetId: string)
+    {
+      return fetchJson<User>(`${BaseUrl.apiBaseUrl}/private/user/${targetId}/view`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      })
     }
 
     // createDirectConversation()
