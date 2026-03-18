@@ -3,7 +3,7 @@ import {UserDTO} from "../DTO/user_dto";
 
 
 export class UserMapper {
-    async mapToDto(user: User): Promise<UserDTO> {
+     mapToDto(user: User): UserDTO {
         return {
             id: user.id,
             username: user.getUsername().getValue(),
