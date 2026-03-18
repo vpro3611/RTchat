@@ -104,4 +104,41 @@ export class UserRepoReaderPg implements UserRepoReader{
             this.mapError(error);
         }
     }
+
+    async searchUsers(query: string, limit = 20, cursor?: string): Promise<{items: User[], nextCursor?: string}> {
+        try {
+            const result = await this.pool.query(
+                `
+                    WITH users_page AS (SELECT u.*,
+                                                   similarity(u.username, $1) AS score
+                                        FROM users u
+                                        WHERE u.username
+                        ILIKE '%' || $1 || '%'
+                        AND ($2::text IS NULL OR u.username
+                       > $2)
+                        AND u.is_active = true
+                        AND u.is_verified = true
+                    ORDER BY score DESC, u.username ASC
+                        LIMIT $3 + 1
+                        )
+                    SELECT *,
+                           (SELECT username
+                            FROM users_page OFFSET $3
+                        LIMIT 1 ) AS next_cursor
+                    FROM users_page
+                        LIMIT $3
+                `,
+                [query, cursor ?? null, limit]
+            )
+
+            const rows = result.rows
+
+            return {
+                items: rows.map(r => this.mapDoDomain(r)),
+                nextCursor: rows[0]?.next_cursor ?? undefined
+            }
+        } catch (error: any) {
+            this.mapError(error);
+        }
+    }
 }
