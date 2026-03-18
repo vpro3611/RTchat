@@ -1,30 +1,37 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue"
-import {useRoute} from "vue-router"
+import { computed, onMounted, ref } from "vue"
+import { useRoute } from "vue-router"
 import { useQuasar } from "quasar"
+
 import { ChatStore } from "stores/chat_store"
+import { SearchStore } from "stores/conversations_search_store"
 import { UserApi } from "src/api/apis/user_api"
 
 import ChatList from "components/ChatList.vue"
 import ChatPage from "pages/ChatPage.vue"
 import CreateGroupDialog from "components/CreateGroupDialog.vue"
 import ProfileDialog from "components/ProfileDialog.vue"
+import SearchConversationsComponent from "components/SearchConversationsComponent.vue"
+import UserSearchDialog from "components/UserSearchDialog.vue";
 
-const showProfileDialog = ref(false);
-
-
+const showProfileDialog = ref(false)
 const drawer = ref(true)
 
 const route = useRoute()
 const $q = useQuasar()
 const error = ref<string | null>(null)
 
+const showUserSearch = ref(false)
+
 
 const createDialogRef = ref<InstanceType<typeof CreateGroupDialog> | null>(null)
 
 function openCreateGroupDialog() {
-  createDialogRef.value?.openDialog();
+  createDialogRef.value?.openDialog()
 }
+
+//  главный флаг
+const isSearching = computed(() => SearchStore.query.length > 1)
 
 async function loadChats() {
   if (ChatStore.isLoading) return
@@ -32,10 +39,7 @@ async function loadChats() {
   ChatStore.isLoading = true
 
   try {
-    const res = await UserApi.getUserConversations({
-      limit: 20
-    })
-
+    const res = await UserApi.getUserConversations({ limit: 20 })
     ChatStore.setChats(res.items, res.nextCursor)
   } catch (e) {
     console.error(e)
@@ -55,60 +59,40 @@ onMounted(loadChats)
 </script>
 
 <template>
-
   <q-layout view="hHh Lpr fFf">
 
     <!-- HEADER -->
     <q-header elevated>
       <q-toolbar>
-
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          @click="drawer = !drawer"
-        />
+        <q-btn flat dense round icon="menu" @click="drawer = !drawer" />
 
         <q-toolbar-title>
           Chat
         </q-toolbar-title>
 
         <q-space />
-
-        <q-btn
-          flat
-          dense
-          round
-          icon="person"
-          @click="showProfileDialog = true"
-        />
-
-        <q-btn
-          flat
-          dense
-          round
-          icon="add"
-          @click="openCreateGroupDialog"
-        />
-
+        <q-btn flat dense round icon="search" @click="showUserSearch = true" />
+        <q-btn flat dense round icon="person" @click="showProfileDialog = true" />
+        <q-btn flat dense round icon="add" @click="openCreateGroupDialog" />
       </q-toolbar>
     </q-header>
 
-    <!-- LEFT: CHAT LIST -->
-    <q-drawer
-      v-model="drawer"
-      side="left"
-      bordered
-      show-if-above
-      :width="320"
-    >
-      <ChatList />
+    <!-- LEFT -->
+    <q-drawer v-model="drawer" side="left" bordered show-if-above :width="320">
+
+      <div class="q-pa-sm">
+        <SearchConversationsComponent />
+      </div>
+
+      <q-separator />
+
+      <!-- ВОТ ТУТ МАГИЯ -->
+      <ChatList v-if="!isSearching" />
+
     </q-drawer>
 
-    <!-- RIGHT: CHAT CONTENT -->
+    <!-- RIGHT -->
     <q-page-container>
-
       <div v-if="!route.params.id" class="flex flex-center full-height">
         <div class="text-grey">
           Select a chat to start messaging
@@ -116,11 +100,11 @@ onMounted(loadChats)
       </div>
 
       <ChatPage v-else />
-
     </q-page-container>
 
   </q-layout>
 
   <CreateGroupDialog ref="createDialogRef" />
+  <UserSearchDialog v-model="showUserSearch" />
   <ProfileDialog v-model="showProfileDialog" />
 </template>
