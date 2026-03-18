@@ -109,6 +109,44 @@ export const UserApi =
           Authorization: `Bearer ${AuthStore.accessToken}`
         }
       })
+    },
+
+    searchConversations(query: string, cursor?: string, limit = 20)
+    {
+      const queryParams = new URLSearchParams({
+        query,
+        limit: limit.toString(),
+      });
+
+      if (cursor) {
+        queryParams.append('cursor', cursor);
+      }
+
+      return fetchJson<{items: CreateGroupChatResponse[], nextCursor: string}>(`${BaseUrl.apiBaseUrl}/private/search-conversations?${queryParams.toString()}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      })
+    },
+
+    searchUsers(query: string, cursor?: string, limit = 20)
+    {
+      const queryParams = new URLSearchParams({
+        query,
+        limit: limit.toString(),
+      })
+
+      if (cursor) {
+        queryParams.append('cursor', cursor);
+      }
+
+      return fetchJson<{items: User[], nextCursor: string}>(`${BaseUrl.apiBaseUrl}/private/search-users?${queryParams.toString()}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      })
     }
 
     // createDirectConversation()
