@@ -141,6 +141,14 @@ import {GetSpecificMessageController} from "./modules/chat/controllers/message/g
 import {GetSelfProfileUseCase} from "./modules/users/application/get_self_profile_use_case";
 import {GetSelfProfileTxService} from "./modules/users/transactional_services/get_self_profile_tx_service";
 import {GetSelfProfileController} from "./modules/users/controllers/get_self_profile_controller";
+import {SearchConversationUseCase} from "./modules/chat/application/conversation/search_conversations_use_case";
+import {SearchUsersUseCase} from "./modules/users/application/search_users_use_case";
+import {SearchUsersTxService} from "./modules/users/transactional_services/search_users_tx_service";
+import {
+    SearchConversationsService
+} from "./modules/chat/transactional_services/conversation/search_conversations_service";
+import {SearchConversationsController} from "./modules/chat/controllers/conversation/search_conversations_controller";
+import {SearchUsersController} from "./modules/users/controllers/search_users_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -184,6 +192,8 @@ export function assembleContainer()
     const registerUseCase = new RegisterUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, emailSender, emailVerificationTokenRepoPG, userMapper);
     const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriterPG, userMapper, userLookup);
     const getSelfProfileUseCase = new GetSelfProfileUseCase(userLookup);
+    const searchUsersUseCase = new SearchUsersUseCase(userRepoReaderPG, userLookup, userMapper, RedisCacheService);
+
 
     // TODO : USER SERVICES
     const changeEmailService = new ChangeEmailTxService(txManager);
@@ -191,6 +201,7 @@ export function assembleContainer()
     const changeUsernameService = new ChangeUsernameTxService(txManager);
     const toggleStatusService = new ToggleStatusTxService(txManager);
     const getSelfProfileService = new GetSelfProfileTxService(txManager);
+    const searchUsersService = new SearchUsersTxService(txManager);
 
     // TODO : USER CONTROLLERS
     const changeEmailController = new ChangeEmailController(changeEmailService, extractUserId);
@@ -198,6 +209,7 @@ export function assembleContainer()
     const changeUsernameController = new ChangeUsernameController(changeUsernameService, extractUserId);
     const toggleStatusController = new ToggleStatusController(toggleStatusService, extractUserId);
     const getSelfProfileController = new GetSelfProfileController(getSelfProfileService, extractUserId);
+    const searchUsersController = new SearchUsersController(searchUsersService, extractUserId);
 
     // TODO : AUTHENTIFICATION
     const authService = new AuthService(refreshTokenRepoPG, jwtTokenService, txManager);
@@ -254,6 +266,12 @@ export function assembleContainer()
         RedisCacheService,
         participantRepo
     );
+    const searchConversationsUseCase = new SearchConversationUseCase(
+        conversationRepo,
+        userLookup,
+        conversationMapper,
+        RedisCacheService,
+    )
     // ____ //
     const deleteMessageUseCase = new DeleteMessageUseCase(
         messageRepo,
@@ -335,6 +353,7 @@ export function assembleContainer()
     const getUserConversationsService = new GetUserConversationsTxService(txManager);
     const markConversationReadService = new MarkConversationReadTxService(txManager);
     const updateConversationTitleService = new UpdateConversationTitleTxService(txManager);
+    const searchConversationsService = new SearchConversationsService(txManager);
 
     // ____ //
 
@@ -387,6 +406,10 @@ export function assembleContainer()
         updateConversationTitleService,
         extractActorId
     );
+    const searchConversationsController = new SearchConversationsController(
+        searchConversationsService,
+        extractActorId
+    )
 
     const getMessagesController = new GetMessagesController(
         getMessagesService,
@@ -440,6 +463,7 @@ export function assembleContainer()
         changeUsernameController,
         toggleStatusController,
         getSelfProfileController,
+        searchUsersController,
 
         // jwt token service
         jwtTokenService,
@@ -473,6 +497,7 @@ export function assembleContainer()
         createGroupConversationController,
         getUserConversationController,
         updateConversationTitleController,
+        searchConversationsController,
 
         getMessagesController,
         getSpecificMessageController,
