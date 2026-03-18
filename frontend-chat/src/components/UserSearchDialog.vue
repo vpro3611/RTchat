@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { watch } from "vue"
+import {ref, watch} from "vue"
 import { debounce } from "lodash"
 
 import { SearchStoreUser } from "stores/user_search_store"
 import { UserApi } from "src/api/apis/user_api"
+import UserProfileDialog from "components/UserProfileDialog.vue";
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits(["update:modelValue"])
@@ -68,6 +69,15 @@ async function loadMore(index: number, done: (stop?: boolean) => void) {
     SearchStoreUser.setLoading(false)
   }
 }
+
+const showProfile = ref(false);
+const selectedUserId = ref<string | null>(null);
+
+function openUserProfile(userId: string) {
+  selectedUserId.value = userId;
+  showProfile.value = true;
+}
+
 </script>
 
 <template>
@@ -110,7 +120,7 @@ async function loadMore(index: number, done: (stop?: boolean) => void) {
               :key="user.id"
               clickable
             >
-              <q-item-section class="text-black">
+              <q-item-section class="text-black" @click="openUserProfile(user.id)">
                 {{user.username}}
               </q-item-section>
             </q-item>
@@ -135,6 +145,8 @@ async function loadMore(index: number, done: (stop?: boolean) => void) {
       <q-card-actions align="right">
         <q-btn flat label="Close" v-close-popup />
       </q-card-actions>
+
+      <UserProfileDialog v-model="showProfile" :user-id="selectedUserId" />
 
     </q-card>
   </q-dialog>
