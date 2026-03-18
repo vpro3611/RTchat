@@ -172,4 +172,44 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
         }
     }
 
+    async searchConversations(
+        query: string,
+        limit = 20,
+        cursor?: string
+    ): Promise<{ items: Conversation[]; nextCursor?: string }> {
+        try {
+            const result = await this.pool.query(
+                `
+                    WITH groups_page AS (SELECT c.*,
+                                                similarity(c.title, $1) AS score
+                                         FROM conversations c
+                                         WHERE c.conversation_type = 'group'
+                                           AND c.title
+                        ILIKE '%' || $1 || '%'
+                        AND ($2::text IS NULL OR c.title
+                       > $2)
+                    ORDER BY score DESC, c.title ASC
+                        LIMIT $3 + 1
+                        )
+                    SELECT *,
+                           (SELECT title
+                            FROM groups_page OFFSET $3
+                        LIMIT 1 ) AS next_cursor
+                    FROM groups_page
+                        LIMIT $3
+                `,
+                [query, cursor ?? null, limit]
+            )
+
+            const rows = result.rows
+
+            return {
+                items: rows.map(r => this.mapToConversation(r)),
+                nextCursor: rows[0]?.next_cursor ?? undefined
+            }
+        } catch (error: any) {
+            throw mapPgError(error);
+        }
+    }
+
 }
