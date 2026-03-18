@@ -149,6 +149,9 @@ import {
 } from "./modules/chat/transactional_services/conversation/search_conversations_service";
 import {SearchConversationsController} from "./modules/chat/controllers/conversation/search_conversations_controller";
 import {SearchUsersController} from "./modules/users/controllers/search_users_controller";
+import {GetSpecificUserUseCase} from "./modules/users/application/get_specific_user_use_case";
+import {GetSpecificUserTxService} from "./modules/users/transactional_services/get_specific_user_tx_service";
+import {GetSpecificUserController} from "./modules/users/controllers/get_specific_user_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -193,6 +196,7 @@ export function assembleContainer()
     const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriterPG, userMapper, userLookup);
     const getSelfProfileUseCase = new GetSelfProfileUseCase(userLookup);
     const searchUsersUseCase = new SearchUsersUseCase(userRepoReaderPG, userLookup, userMapper, RedisCacheService);
+    const getSpecificUserUseCase = new GetSpecificUserUseCase(userLookup, userMapper);
 
 
     // TODO : USER SERVICES
@@ -202,6 +206,7 @@ export function assembleContainer()
     const toggleStatusService = new ToggleStatusTxService(txManager);
     const getSelfProfileService = new GetSelfProfileTxService(txManager);
     const searchUsersService = new SearchUsersTxService(txManager);
+    const getSpecificUserService = new GetSpecificUserTxService(txManager);
 
     // TODO : USER CONTROLLERS
     const changeEmailController = new ChangeEmailController(changeEmailService, extractUserId);
@@ -210,6 +215,7 @@ export function assembleContainer()
     const toggleStatusController = new ToggleStatusController(toggleStatusService, extractUserId);
     const getSelfProfileController = new GetSelfProfileController(getSelfProfileService, extractUserId);
     const searchUsersController = new SearchUsersController(searchUsersService, extractUserId);
+    const getSpecificUserController = new GetSpecificUserController(getSpecificUserService, extractUserId);
 
     // TODO : AUTHENTIFICATION
     const authService = new AuthService(refreshTokenRepoPG, jwtTokenService, txManager);
@@ -464,6 +470,7 @@ export function assembleContainer()
         toggleStatusController,
         getSelfProfileController,
         searchUsersController,
+        getSpecificUserController,
 
         // jwt token service
         jwtTokenService,
