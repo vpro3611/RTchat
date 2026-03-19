@@ -18,6 +18,7 @@ import {
     EmailVerificationUseCase
 } from "../infrasctructure/ports/email_verif_infra/email_verif_service/email_verification_use_case";
 import {InvalidTokenJWTError, TokenExpiredError} from "./errors/token_errors";
+import {SendVerifEmailShared} from "../users/shared/send_verif_email_shared";
 
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -81,7 +82,15 @@ export class AuthService {
             const emailVerifRepo = new EmailVerificationTokenRepoPg(client);
             const mapper = new UserMapper();
 
-            const registerUseCase = new RegisterUseCase(userRepoReader, userRepoWriter, bcrypter, emailSender, emailVerifRepo, mapper);
+            const sendVerifEmailShared = new SendVerifEmailShared(emailSender, emailVerifRepo);
+
+            const registerUseCase = new RegisterUseCase(
+                userRepoReader,
+                userRepoWriter,
+                bcrypter,
+                mapper,
+                sendVerifEmailShared
+            );
 
             const user = await registerUseCase.registerUseCase(username, email, password);
 
