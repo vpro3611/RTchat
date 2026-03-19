@@ -43,6 +43,7 @@ import {
 } from "./modules/chat/controllers/participant/get_specific_participant_controller";
 import {GetSpecificMessageParamsSchema} from "./modules/chat/controllers/message/get_specific_message_controller";
 import cors from "cors";
+import {GetSpecificUserParamsSchema} from "./modules/users/controllers/get_specific_user_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
@@ -98,72 +99,72 @@ export function createApp(dependencies: AppContainer): Express
     publicRouter.post("/register",
         validateBody(RegisterBodySchema),
         dependencies.registerController.registerController
-    );
+    ); //
 
     publicRouter.post("/login-email",
         validateBody(LoginEmailBodySchema),
         dependencies.loginEmailController.loginEmailController
-    );
+    ); //
 
     publicRouter.post("/login-username",
         validateBody(LoginUsernameBodySchema),
         dependencies.loginUsernameController.loginUsernameController
-    );
+    ); //
 
     publicRouter.get("/verify-email",
         dependencies.verifyEmailController.verifyEmailController
-    );
+    ); //
 
     publicRouter.post("/refresh",
         dependencies.refreshController.refreshController
-    );
+    ); //
 
     privateRouter.post("/logout",
         dependencies.logoutController.logoutController
-    );
+    ); //
 
     privateRouter.get("/me",
         dependencies.getSelfProfileController.getSelfProfileCont
-    );
+    ); //
 
     privateRouter.patch("/change-email",
         validateBody(ChangeEmailBodySchema),
         dependencies.changeEmailController.changeEmailController
-    );
+    ); //
 
     privateRouter.patch("/change-password",
         validateBody(ChangePasswordBodySchema),
         dependencies.changePasswordController.changePasswordController
-    );
+    ); //
 
     privateRouter.patch("/change-username",
         validateBody(ChangeUsernameBodySchema),
         dependencies.changeUsernameController.changeUsernameController
-    );
+    ); //
 
     privateRouter.patch("/toggle-status",
         dependencies.toggleStatusController.toggleStatusController
-    );
+    ); //
 
     privateRouter.post("/direct-conv/:targetId/create",
         validateParams(CreateDirectConversationParamsSchema),
         dependencies.createDirectConversationController.createDirectConversationCont
-    );
+    ); //
 
     privateRouter.post("/group-conv/create",
         validateBody(CreateGroupConversationBodySchema),
         dependencies.createGroupConversationController.createGroupConversationCont
-    );
+    ); //
 
     privateRouter.get("/conversations",
         dependencies.getUserConversationController.getUserConversationCont
-    );
+    ); //
 
     privateRouter.patch("/conversation/:conversationId/title",
         validateParams(UpdateConversationTitleParamsSchema),
         validateBody(UpdateConversationTitleBodySchema),
         dependencies.updateConversationTitleController.updateConversationTitleCont
-    );
+    ); //
 
     privateRouter.get("/conversation/:conversationId/messages",
         validateParams(GetMessagesParamsSchema),
@@ -198,7 +199,7 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.delete("/conversation/:conversationId/leave",
         validateParams(LeaveConversationParamsSchema),
         dependencies.leaveConversationController.leaveConversationCont
-    );
+    ); //
 
     privateRouter.patch("/conversation/:conversationId/:targetId/mute",
         validateParams(MuteParticipantParamsSchema),
@@ -215,6 +216,19 @@ export function createApp(dependencies: AppContainer): Express
         validateParams(UnmuteParticipantParamsSchema),
         dependencies.unmuteParticipantController.unmuteParticipantCont
     );
+
+    privateRouter.get("/search-conversations",
+        dependencies.searchConversationsController.searchConversationsCont
+    ); //
+
+    privateRouter.get("/search-users",
+        dependencies.searchUsersController.searchUsersController
+    ); //
+
+    privateRouter.get("/user/:targetId/view",
+        validateParams(GetSpecificUserParamsSchema),
+        dependencies.getSpecificUserController.getSpecificUserController
+    ); // 
 
     app.use(errorMiddleware());
 
