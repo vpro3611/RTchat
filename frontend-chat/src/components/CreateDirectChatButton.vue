@@ -5,6 +5,7 @@ import { useQuasar } from "quasar"
 
 import { UserApi } from "src/api/apis/user_api"
 import {ChatStore} from "stores/chat_store";
+import {AuthStore} from "stores/auth_store";
 
 const props = defineProps<{
   userId: string
@@ -50,6 +51,7 @@ async function createChat() {
     label="Message"
     color="primary"
     :loading="isLoading"
+    :disable="AuthStore.user?.id === userId"
     @click="createChat"
     class="full-width"
   />
