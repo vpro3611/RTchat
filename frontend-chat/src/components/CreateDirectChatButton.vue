@@ -24,7 +24,7 @@ async function createChat() {
 
     const res = await UserApi.createDirectConversation(props.userId)
 
-    //  предполагаем, что сервер возвращает chatId
+    //  предполагаем, что сервер возвращает id
     const chatId = res.id
 
     ChatStore.addChat(res);
