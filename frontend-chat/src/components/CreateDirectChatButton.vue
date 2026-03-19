@@ -34,7 +34,6 @@ async function createChat() {
 
   } catch (e) {
     console.error(e)
-
     $q.notify({
       type: "negative",
       message: "Failed to create chat"
