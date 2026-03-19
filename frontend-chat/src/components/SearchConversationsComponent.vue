@@ -4,6 +4,8 @@ import { debounce } from "lodash"
 
 import { SearchStore } from "stores/conversations_search_store"
 import { UserApi } from "src/api/apis/user_api"
+import { AuthStore } from "stores/auth_store"
+import { UserCacheStore } from "stores/user_cache_store"
 
 const query = ref("")
 
@@ -57,6 +59,33 @@ async function loadMore(index: number, done: (stop?: boolean) => void) {
     SearchStore.setLoading(false)
   }
 }
+
+function getOpponentId(chat: { conversationType: string, userLow: string | null, userHigh: string | null }) {
+  if (chat.conversationType === "group") return null
+  if (!chat.userLow || !chat.userHigh) return null
+
+  const me = AuthStore.user?.id
+  if (!me) return null
+
+  return chat.userLow === me ? chat.userHigh : chat.userLow
+}
+
+function getChatTitle(chat: { title: string, conversationType: string, userLow: string | null, userHigh: string | null }) {
+  const opponentId = getOpponentId(chat)
+  if (!opponentId) return chat.title
+
+  const name = UserCacheStore.getUsername(opponentId)
+  return name ?? chat.title
+}
+
+watch(
+  () => SearchStore.items,
+  (list) => {
+    const opponentIds = list.map(getOpponentId).filter(Boolean) as string[]
+    void UserCacheStore.ensureUsers(opponentIds)
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <template>
@@ -86,7 +115,7 @@ async function loadMore(index: number, done: (stop?: boolean) => void) {
             clickable
           >
             <q-item-section>
-              {{ chat.title }}
+              {{ getChatTitle(chat) }}
             </q-item-section>
           </q-item>
 

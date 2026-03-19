@@ -1,13 +1,33 @@
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, watch } from "vue"
 import { useRouter, useRoute } from "vue-router"
 import { ChatStore } from "stores/chat_store"
 import { UserApi } from "src/api/apis/user_api"
+import { AuthStore } from "stores/auth_store"
+import { UserCacheStore } from "stores/user_cache_store"
 
 const router = useRouter()
 const route = useRoute()
 
 const chats = computed(() => ChatStore.chats)
+
+function getOpponentId(chat: { conversationType: string, userLow: string | null, userHigh: string | null }) {
+  if (chat.conversationType === "group") return null
+  if (!chat.userLow || !chat.userHigh) return null
+
+  const me = AuthStore.user?.id
+  if (!me) return null
+
+  return chat.userLow === me ? chat.userHigh : chat.userLow
+}
+
+function getChatTitle(chat: { title: string, conversationType: string, userLow: string | null, userHigh: string | null }) {
+  const opponentId = getOpponentId(chat)
+  if (!opponentId) return chat.title
+
+  const name = UserCacheStore.getUsername(opponentId)
+  return name ?? chat.title
+}
 
 function openChat(chatId: string) {
   void router.push(`/chat/${chatId}`)
@@ -29,6 +49,15 @@ async function loadMoreChats() {
     ChatStore.isLoading = false
   }
 }
+
+watch(
+  () => ChatStore.chats,
+  (list) => {
+    const opponentIds = list.map(getOpponentId).filter(Boolean) as string[]
+    void UserCacheStore.ensureUsers(opponentIds)
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <template>
@@ -44,12 +73,12 @@ async function loadMoreChats() {
     >
       <q-item-section avatar>
         <q-avatar color="primary" text-color="white">
-          {{ chat.title?.[0]?.toUpperCase() || "?" }}
+          {{ getChatTitle(chat)?.[0]?.toUpperCase() || "?" }}
         </q-avatar>
       </q-item-section>
 
       <q-item-section>
-        <q-item-label>{{ chat.title }}</q-item-label>
+        <q-item-label>{{ getChatTitle(chat) }}</q-item-label>
         <q-item-label caption lines="1">
           {{ chat.lastMessageAt ?? "No messages" }}
         </q-item-label>
