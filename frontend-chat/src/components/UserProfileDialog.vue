@@ -2,6 +2,7 @@
 import { ref, watch } from "vue"
 import { UserApi } from "src/api/apis/user_api"
 import type {User} from "src/api/types/register_response"
+import CreateDirectChatButton from "components/CreateDirectChatButton.vue";
 const props = defineProps<{
   modelValue: boolean
   userId: string | null
@@ -90,6 +91,10 @@ watch(
             Last seen at: {{ user.lastSeenAt }}
           </div>
 
+          <div class="text-grey">
+            <CreateDirectChatButton :userId="user.id" />
+          </div>
+
           <!-- сюда потом можно добавить -->
           <!-- avatar, bio, last seen и т.д. -->
 
@@ -100,6 +105,7 @@ watch(
       <q-card-actions align="right">
         <q-btn flat label="Close" v-close-popup />
       </q-card-actions>
+
 
     </q-card>
   </q-dialog>
