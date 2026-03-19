@@ -30,6 +30,7 @@ export const ChatStore = reactive({
   },
 
   addChat(chat: CreateGroupChatResponse) {
+    if (this.chats.find(c => c.id === chat.id)) return;
     this.chats.unshift(chat);
   },
 
