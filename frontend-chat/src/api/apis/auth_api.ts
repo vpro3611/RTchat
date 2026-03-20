@@ -5,10 +5,15 @@ import type {LoginByEmailResponse} from "../types/login_by_email_response.ts";
 import type {LoginByUsernameResponse} from "../types/login_by_username_response.ts";
 import {AuthStore} from "src/stores/auth_store";
 
+type RegisterResponse = {
+    message: string;
+    user: User;
+}
+
 
 export const AuthApi = {
     register(username: string, email: string, password: string) {
-        return fetchJson<User>(`${BaseUrl.apiBaseUrl}/public/register`, {
+        return fetchJson<RegisterResponse>(`${BaseUrl.apiBaseUrl}/public/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
