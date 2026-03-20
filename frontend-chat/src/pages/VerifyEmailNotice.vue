@@ -14,7 +14,7 @@
     </p>
 
     <p>
-      After verifying your email you can login.
+      After verifying your email you can continue using this application.
     </p>
 
   </section>

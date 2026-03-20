@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import { AuthStore } from "stores/auth_store"
-import {UserApi} from "src/api/apis/user_api";
+import { UserApi } from "src/api/apis/user_api"
 
 const newEmail = ref(AuthStore.user?.email ?? "")
 
@@ -24,11 +24,13 @@ async function handleSubmit() {
     error.value = null
     success.value = null
 
-    const user = await UserApi.changeEmail(email)
+    //  ДОБАВЬ ЭТУ СТРОКУ
+    localStorage.setItem("email-flow", "change")
 
-    AuthStore.setUser(user)
+    await UserApi.changeEmail(email)
 
-    success.value = "Email updated successfully"
+    success.value = "Verification email sent. Please check your inbox."
+    newEmail.value = ""
 
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)
@@ -64,10 +66,15 @@ async function handleSubmit() {
         @click="handleSubmit"
       />
 
+      <!-- SUCCESS -->
       <div v-if="success" class="text-positive q-mt-sm">
         {{ success }}
+        <div class="text-caption">
+          Don't forget to check your spam folder
+        </div>
       </div>
 
+      <!-- ERROR -->
       <div v-if="error" class="text-negative q-mt-sm">
         {{ error }}
       </div>
