@@ -59,7 +59,7 @@ export class RegisterUseCase {
 
         const saved = await this.userRepoWriter.save(user);
 
-        await this.sendVerifEmailShared.sendIt(emailValid.getValue(), saved);
+        await this.sendVerifEmailShared.sendIt(emailValid.getValue(), saved, "/public/verify-email");
 
         // const rawToken = crypto.randomBytes(32).toString('hex');
         //
