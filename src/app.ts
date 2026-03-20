@@ -115,6 +115,10 @@ export function createApp(dependencies: AppContainer): Express
         dependencies.verifyEmailController.verifyEmailController
     ); //
 
+    publicRouter.get("/confirm-email-change",
+        dependencies.confirmEmailChangeController.confirmEmailChangeCont
+    );
+
     publicRouter.post("/refresh",
         dependencies.refreshController.refreshController
     ); //
@@ -228,7 +232,7 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.get("/user/:targetId/view",
         validateParams(GetSpecificUserParamsSchema),
         dependencies.getSpecificUserController.getSpecificUserController
-    ); // 
+    ); //
 
     app.use(errorMiddleware());
 
