@@ -31,13 +31,13 @@ export class SendVerifEmailShared {
         })
     }
 
-    async sendIt(email: string, saved: User ) {
+    async sendIt(email: string, saved: User, path: string ) {
         const rawToken = this.createToken();
 
         const tokenHash = this.createTokenHash(rawToken);
 
         await this.saveToRepo(tokenHash, saved);
 
-        await this.emailSender.sendVerificationEmail(email, rawToken);
+        await this.emailSender.sendVerificationEmail(email, rawToken, path);
     }
 }
