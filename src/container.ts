@@ -152,6 +152,20 @@ import {SearchUsersController} from "./modules/users/controllers/search_users_co
 import {GetSpecificUserUseCase} from "./modules/users/application/get_specific_user_use_case";
 import {GetSpecificUserTxService} from "./modules/users/transactional_services/get_specific_user_tx_service";
 import {GetSpecificUserController} from "./modules/users/controllers/get_specific_user_controller";
+import {SendVerifEmailShared} from "./modules/users/shared/send_verif_email_shared";
+import {ConfirmEmailChangeController} from "./modules/users/controllers/confirm_email_change_controller";
+import {
+    ConfirmEmailChangeUseCase
+} from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/confirm_email_change_use_case";
+import {
+    ResendVerificationService
+} from "./modules/infrasctructure/ports/email_verif_infra/email_sender/resend_verification_service";
+import {
+    ResendRegisterVerificationController
+} from "./modules/users/controllers/resend_register_verification_controller";
+import {
+    ResendChangeEmailVerificationController
+} from "./modules/users/controllers/resend_change_email_verification_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -185,19 +199,20 @@ export function assembleContainer()
 
     const jwtTokenService = new TokenServiceJWT();
 
+    const sendEmailVerifShared = new SendVerifEmailShared(emailSender, emailVerificationTokenRepoPG);
 
     // TODO : USER USE CASES
-    const changeEmailUseCase = new ChangeEmailUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup);
+    const changeEmailUseCase = new ChangeEmailUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup, sendEmailVerifShared);
     const changePasswordUseCase = new ChangePasswordUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, userMapper, userLookup);
     const changeUsernameUseCase = new ChangeUsernameUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup);
     const loginEmailUseCase = new LoginEmailUseCase(userRepoReaderPG, bcrypter, userMapper);
     const loginUsernameUseCase = new LoginUsernameUseCase(userRepoReaderPG, bcrypter, userMapper);
-    const registerUseCase = new RegisterUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, emailSender, emailVerificationTokenRepoPG, userMapper);
+    const registerUseCase = new RegisterUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, userMapper, sendEmailVerifShared);
     const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriterPG, userMapper, userLookup);
     const getSelfProfileUseCase = new GetSelfProfileUseCase(userLookup);
     const searchUsersUseCase = new SearchUsersUseCase(userRepoReaderPG, userLookup, userMapper, RedisCacheService);
     const getSpecificUserUseCase = new GetSpecificUserUseCase(userLookup, userMapper);
-
+    const confirmEmailChangeUseCase = new ConfirmEmailChangeUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
 
     // TODO : USER SERVICES
     const changeEmailService = new ChangeEmailTxService(txManager);
@@ -216,6 +231,8 @@ export function assembleContainer()
     const getSelfProfileController = new GetSelfProfileController(getSelfProfileService, extractUserId);
     const searchUsersController = new SearchUsersController(searchUsersService, extractUserId);
     const getSpecificUserController = new GetSpecificUserController(getSpecificUserService, extractUserId);
+    const confirmEmailChangeController = new ConfirmEmailChangeController(confirmEmailChangeUseCase);
+
 
     // TODO : AUTHENTIFICATION
     const authService = new AuthService(refreshTokenRepoPG, jwtTokenService, txManager);
@@ -228,6 +245,19 @@ export function assembleContainer()
     const verifyEmailController = new VerifyEmailController(authService);
 
 
+    const resendVerificationService = new ResendVerificationService(
+        userRepoReaderPG,
+        sendEmailVerifShared,
+        emailVerificationTokenRepoPG
+    );
+
+    const resendVerificationRegisterController = new ResendRegisterVerificationController(
+        resendVerificationService
+    );
+    const resendVerificationChangeEmailController = new ResendChangeEmailVerificationController(
+        resendVerificationService,
+        extractUserId
+    );
 
 
     // TODO : CHAT
@@ -463,6 +493,9 @@ export function assembleContainer()
 
 
     return {
+        resendVerificationRegisterController,
+        resendVerificationChangeEmailController,
+
         // user
         changeEmailController,
         changePasswordController,
@@ -471,6 +504,7 @@ export function assembleContainer()
         getSelfProfileController,
         searchUsersController,
         getSpecificUserController,
+        confirmEmailChangeController,
 
         // jwt token service
         jwtTokenService,

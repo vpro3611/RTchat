@@ -116,4 +116,30 @@ export class UserRepoWriterPg implements UserRepoWriter {
             this.mapSaveError(error);
         }
     }
+
+    async setPendingEmail(userId: string, email: string): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET pending_email = $1, updated_at = NOW()
+                WHERE id = $2
+            `;
+            await this.pool.query(query, [email, userId]);
+        } catch (error: any) {
+            this.mapSaveError(error);
+        }
+    }
+
+    async confirmPendingEmail(userId: string): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET email = pending_email, updated_at = NOW(), pending_email = NULL
+                WHERE id = $1 AND pending_email IS NOT NULL
+            `;
+            await this.pool.query(query, [userId]);
+        } catch (error: any) {
+            this.mapSaveError(error);
+        }
+    }
 }

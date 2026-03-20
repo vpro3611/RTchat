@@ -170,5 +170,13 @@ export const UserApi =
           Authorization: `Bearer ${AuthStore.accessToken}`
         },
       });
+    },
+    resendChangeEmailVerification() {
+      return fetchJson<{ok: boolean}>(`${BaseUrl.apiBaseUrl}/private/resend-change-email`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        }
+      })
     }
   }

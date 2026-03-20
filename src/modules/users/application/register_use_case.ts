@@ -15,15 +15,15 @@ import {
     EmailVerificationInterface
 } from "../../infrasctructure/ports/email_verif_infra/email_verification/email_verification_interface";
 import {UserMapper} from "../shared/map_to_dto";
+import {SendVerifEmailShared} from "../shared/send_verif_email_shared";
 
 
 export class RegisterUseCase {
     constructor(private readonly userRepoReader: UserRepoReader,
                 private readonly userRepoWriter: UserRepoWriter,
                 private readonly bcrypter: BcryptInterface,
-                private readonly emailSender: EmailSenderInterface,
-                private readonly emailVerificationRepo: EmailVerificationInterface,
-                private readonly mapper: UserMapper
+                private readonly mapper: UserMapper,
+                private readonly sendVerifEmailShared: SendVerifEmailShared,
     ) {}
 
 
@@ -59,19 +59,21 @@ export class RegisterUseCase {
 
         const saved = await this.userRepoWriter.save(user);
 
-        const rawToken = crypto.randomBytes(32).toString('hex');
+        await this.sendVerifEmailShared.sendIt(emailValid.getValue(), saved, "/public/verify-email", "register");
 
-        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-
-        await this.emailVerificationRepo.saveToken({
-            id: crypto.randomUUID(),
-            userId: saved.id,
-            tokenHash: tokenHash,
-            createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 1000 * 60 * 60),
-        })
-
-        await this.emailSender.sendVerificationEmail(emailValid.getValue(), rawToken);
+        // const rawToken = crypto.randomBytes(32).toString('hex');
+        //
+        // const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+        //
+        // await this.emailVerificationRepo.saveToken({
+        //     id: crypto.randomUUID(),
+        //     userId: saved.id,
+        //     tokenHash: tokenHash,
+        //     createdAt: new Date(),
+        //     expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+        // })
+        //
+        // await this.emailSender.sendVerificationEmail(emailValid.getValue(), rawToken);
 
         return this.mapper.mapToDto(saved);
     }
