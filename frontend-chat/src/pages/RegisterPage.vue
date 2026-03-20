@@ -28,10 +28,13 @@ async function handleRegister(data: {
     )
 
     console.log(
-      `registered ${response.username} ${response.email}`
+      `registered ${response.user.username} ${response.user.email}`
     )
 
-    await router.push("/verify-email")
+    await router.push({
+      path: "/verify-email",
+      query: { email: response.user.email }
+    })
 
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : String(e)
