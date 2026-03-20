@@ -55,5 +55,15 @@ export const AuthApi = {
                 Authorization: `Bearer ${AuthStore.accessToken}`
             }
         })
+    },
+
+    resendVerificationRegister(email: string) {
+        return fetchJson<{ok: boolean}>(`${BaseUrl.apiBaseUrl}/public/resend-register`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({email}),
+       })
     }
 }
