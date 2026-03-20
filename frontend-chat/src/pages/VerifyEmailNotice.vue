@@ -47,7 +47,7 @@ async function handleResend() {
       <q-input
         v-model="email"
         type="email"
-        label="Email used for registration"
+        label="Email used for registration."
         outlined
         dense
       />
