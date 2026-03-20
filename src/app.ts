@@ -44,6 +44,9 @@ import {
 import {GetSpecificMessageParamsSchema} from "./modules/chat/controllers/message/get_specific_message_controller";
 import cors from "cors";
 import {GetSpecificUserParamsSchema} from "./modules/users/controllers/get_specific_user_controller";
+import {
+    ResendRegisterVerificationBodySchema
+} from "./modules/users/controllers/resend_register_verification_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
@@ -94,12 +97,17 @@ export function createApp(dependencies: AppContainer): Express
 
     publicRouter.get("/health", (req, res) => {
         res.status(200).json({message: "OK"});
-    })
+    }); //
 
     publicRouter.post("/register",
         validateBody(RegisterBodySchema),
         dependencies.registerController.registerController
     ); //
+
+    publicRouter.post("/resend-register",
+        validateBody(ResendRegisterVerificationBodySchema),
+        dependencies.resendVerificationRegisterController.resendRegisterVerificationCont
+    );
 
     publicRouter.post("/login-email",
         validateBody(LoginEmailBodySchema),
@@ -117,7 +125,7 @@ export function createApp(dependencies: AppContainer): Express
 
     publicRouter.get("/confirm-email-change",
         dependencies.confirmEmailChangeController.confirmEmailChangeCont
-    );
+    ); //
 
     publicRouter.post("/refresh",
         dependencies.refreshController.refreshController
@@ -233,6 +241,10 @@ export function createApp(dependencies: AppContainer): Express
         validateParams(GetSpecificUserParamsSchema),
         dependencies.getSpecificUserController.getSpecificUserController
     ); //
+
+    privateRouter.post("/resend-change-email",
+        dependencies.resendVerificationChangeEmailController.resendChangeEmailVerificationCont
+    );
 
     app.use(errorMiddleware());
 
