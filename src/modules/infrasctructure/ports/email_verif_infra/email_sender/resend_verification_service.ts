@@ -2,7 +2,7 @@ import {UserRepoReader} from "../../../../users/ports/user_repo_interfaces";
 import {EmailSenderInterface} from "../email_verification/email_sender_interface";
 import {SendVerifEmailShared} from "../../../../users/shared/send_verif_email_shared";
 import {EmailVerificationInterface} from "../email_verification/email_verification_interface";
-import {UserNotFoundError} from "../../../../users/errors/use_case_errors";
+import {PendingEmailNotFoundError, UserNotFoundError} from "../../../../users/errors/use_case_errors";
 
 
 export class ResendVerificationService {
@@ -46,10 +46,15 @@ export class ResendVerificationService {
 
         user.ensureIsVerifiedAndActive();
 
+        const pendingEmail = await this.userRepoReader.getPendingEmailByUserId(userId);
+        if (!pendingEmail) {
+            throw new PendingEmailNotFoundError("No pending email change found");
+        }
+
         await this.verificationRepo.deleteByUserId(user.id);
 
         await this.sendEmailVerifShared.sendIt(
-            user.getEmail().getValue(),
+            pendingEmail,
             user,
             "/public/confirm-email-change",
             "change"
