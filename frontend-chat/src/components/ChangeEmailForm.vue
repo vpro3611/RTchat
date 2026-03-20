@@ -24,9 +24,6 @@ async function handleSubmit() {
     error.value = null
     success.value = null
 
-    //  ДОБАВЬ ЭТУ СТРОКУ
-    localStorage.setItem("email-flow", "change")
-
     await UserApi.changeEmail(email)
 
     success.value = "Verification email sent. Please check your inbox."

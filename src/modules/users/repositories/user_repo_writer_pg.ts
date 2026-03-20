@@ -121,7 +121,7 @@ export class UserRepoWriterPg implements UserRepoWriter {
         try {
             const query = `
                 UPDATE users
-                SET email = $1, updated_at = NOW()
+                SET pending_email = $1, updated_at = NOW()
                 WHERE id = $2
             `;
             await this.pool.query(query, [email, userId]);

@@ -40,7 +40,7 @@ export class ChangeEmailUseCase {
             await this.checkUserWithSameEmail(newEmailValid.getValue());
 
             await this.sendEmailVerifShared.sendIt(newEmailValid.getValue(), user,
-                "/public/confirm-email-change");
+                "/public/confirm-email-change", "change");
 
             await this.userRepoWriter.setPendingEmail(actorId, newEmailValid.getValue());
 

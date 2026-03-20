@@ -18,16 +18,40 @@ export class VerifyEmailController {
         }
     }
 
+    private getFrontendBaseUrl(): string {
+        const rawUrl = process.env.FRONTEND_URL;
+        const sanitized = rawUrl?.replace(/^\/+(https?:\/\/)/i, "$1").trim();
+
+        if (!sanitized) {
+            throw new InternalServerError("FRONTEND_URL is not defined");
+        }
+
+        return sanitized.endsWith("/") ? sanitized.slice(0, -1) : sanitized;
+    }
+
+    private buildRedirectUrl(status: "success" | "error") {
+        const redirectUrl = new URL("/email-verified", `${this.getFrontendBaseUrl()}/`);
+        redirectUrl.searchParams.set("status", status);
+        redirectUrl.searchParams.set("type", "register");
+        return redirectUrl.toString();
+    }
+
 
     verifyEmailController = async (req: Request, res: Response) => {
         try {
             const token: { token: string } = VerifyEmailQuerySchema.parse(req.query);
 
             await this.authService.verifyEmail(token.token);
-
-            res.redirect(`${process.env.FRONTEND_URL}/email-verified?status=success`);
+            const redirectUrl = this.buildRedirectUrl("success");
+            console.info("[verify-email] redirect success", {redirectUrl});
+            res.redirect(redirectUrl);
         } catch (error) {
-            res.redirect(`${process.env.FRONTEND_URL}/email-verification?status=error`);
+            const redirectUrl = this.buildRedirectUrl("error");
+            console.warn("[verify-email] redirect error", {
+                redirectUrl,
+                error: error instanceof Error ? error.message : String(error),
+            });
+            res.redirect(redirectUrl);
         }
     }
 }

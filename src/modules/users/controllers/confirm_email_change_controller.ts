@@ -10,19 +10,46 @@ export class ConfirmEmailChangeController {
         }
     }
 
+    private getFrontendBaseUrl(): string {
+        const rawUrl = process.env.FRONTEND_URL;
+        const sanitized = rawUrl?.replace(/^\/+(https?:\/\/)/i, "$1").trim();
+
+        if (!sanitized) {
+            throw new Error("FRONTEND_URL is not defined");
+        }
+
+        return sanitized.endsWith("/") ? sanitized.slice(0, -1) : sanitized;
+    }
+
+    private buildRedirectUrl(status: "success" | "error") {
+        const redirectUrl = new URL("/email-verified", `${this.getFrontendBaseUrl()}/`);
+        redirectUrl.searchParams.set("status", status);
+        redirectUrl.searchParams.set("type", "change");
+        return redirectUrl.toString();
+    }
+
 
     confirmEmailChangeCont = async (req: Request, res: Response) => {
         const token = req.query.token as string;
 
         if (!token) {
-            return res.redirect(`${process.env.FRONTEND_URL}/email-verified?status=error`);
+            const redirectUrl = this.buildRedirectUrl("error");
+            console.warn("[confirm-email-change] missing token", {redirectUrl});
+            return res.redirect(redirectUrl);
         }
 
         try {
             await this.confirmEmailChangeUseCase.execute(token);
-            return res.redirect(`${process.env.FRONTEND_URL}/email-verified?status=success`);
+            const redirectUrl = this.buildRedirectUrl("success");
+            console.info("[confirm-email-change] redirect success", {redirectUrl});
+            return res.redirect(redirectUrl);
         } catch (error) {
-            return res.redirect(`${process.env.FRONTEND_URL}/email-verified?status=error`);
+            const redirectUrl = this.buildRedirectUrl("error");
+            console.warn("[confirm-email-change] redirect error", {
+                redirectUrl,
+                error: error instanceof Error ? error.message : String(error),
+            });
+            return res.redirect(redirectUrl);
         }
     }
 

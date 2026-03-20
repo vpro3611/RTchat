@@ -15,13 +15,15 @@ type PageMap = Record<PageType, StatusMap>
 
 const route = useRoute()
 
-const status = computed(() => route.query.status as StatusType)
+const status = computed<StatusType>(() => {
+  const queryStatus = route.query.status
+  return queryStatus === "success" || queryStatus === "error" ? queryStatus : "error"
+})
 
-// ЧИТАЕМ ФЛАГ
-const flow = (localStorage.getItem("email-flow") as PageType) || "register"
-
-// ЧИСТИМ
-localStorage.removeItem("email-flow")
+const flow = computed<PageType>(() => {
+  const queryType = route.query.type
+  return queryType === "change" ? "change" : "register"
+})
 
 const map: PageMap = {
   register: {
@@ -47,7 +49,7 @@ const map: PageMap = {
 }
 
 const content = computed(() => {
-  return map[flow]?.[status.value] || {
+  return map[flow.value][status.value] || {
     title: "Unknown status",
     message: ""
   }
@@ -55,8 +57,8 @@ const content = computed(() => {
 
 // const isRegister = computed(() => flow === "register")
 
-const buttonText = computed(() => flow === "register" ? "Go to login" : "Go to main");
-const redirectTo = computed(() => flow === "register" ? "/auth" : "/main");
+const buttonText = computed(() => flow.value === "register" ? "Go to login" : "Go to main");
+const redirectTo = computed(() => flow.value === "register" ? "/auth" : "/main");
 
 </script>
 
