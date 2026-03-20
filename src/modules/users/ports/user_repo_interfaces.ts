@@ -10,4 +10,6 @@ export interface UserRepoReader {
 export interface UserRepoWriter {
     save(user: User): Promise<User>;
     markAsVerified(id: string): Promise<void>;
+    setPendingEmail(userId: string, email: string): Promise<void>;
+    confirmPendingEmail(userId: string): Promise<void>;
 }
