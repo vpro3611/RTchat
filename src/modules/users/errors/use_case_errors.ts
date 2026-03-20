@@ -18,3 +18,9 @@ export class InvalidCredentialsError extends AuthentificationError {
         super(message);
     }
 }
+
+export class PendingEmailNotFoundError extends ValidationError {
+    constructor(message: string) {
+        super(message);
+    }
+}
