@@ -21,11 +21,14 @@ export class EmailSenderNodemailer implements EmailSenderInterface {
 //
     async sendVerificationEmail(
         email: string,
-        token: string
+        token: string,
+        path: string
     ): Promise<void> {
+        console.log("EMAIL PATH:", path);
 
         const verificationUrl =
-            `${process.env.API_URL}/public/verify-email?token=${token}`;
+            `${process.env.API_URL}${path}?token=${token}`;
+        console.log("FULL URL:", verificationUrl);
         try {
             await this.transporter.verify();
 
@@ -35,7 +38,7 @@ export class EmailSenderNodemailer implements EmailSenderInterface {
                 subject: "Verify your email",
                 html: `
           <h3>Email verification</h3>
-          <p>Click the link below to verify your account:</p>
+          <p>Click the link below to verify your email and account:</p>
           <a href="${verificationUrl}">${verificationUrl}</a>
         `,
             });
