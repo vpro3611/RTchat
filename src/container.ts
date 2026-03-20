@@ -157,6 +157,15 @@ import {ConfirmEmailChangeController} from "./modules/users/controllers/confirm_
 import {
     ConfirmEmailChangeUseCase
 } from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/confirm_email_change_use_case";
+import {
+    ResendVerificationService
+} from "./modules/infrasctructure/ports/email_verif_infra/email_sender/resend_verification_service";
+import {
+    ResendRegisterVerificationController
+} from "./modules/users/controllers/resend_register_verification_controller";
+import {
+    ResendChangeEmailVerificationController
+} from "./modules/users/controllers/resend_change_email_verification_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -236,6 +245,19 @@ export function assembleContainer()
     const verifyEmailController = new VerifyEmailController(authService);
 
 
+    const resendVerificationService = new ResendVerificationService(
+        userRepoReaderPG,
+        sendEmailVerifShared,
+        emailVerificationTokenRepoPG
+    );
+
+    const resendVerificationRegisterController = new ResendRegisterVerificationController(
+        resendVerificationService
+    );
+    const resendVerificationChangeEmailController = new ResendChangeEmailVerificationController(
+        resendVerificationService,
+        extractUserId
+    );
 
 
     // TODO : CHAT
@@ -471,6 +493,9 @@ export function assembleContainer()
 
 
     return {
+        resendVerificationRegisterController,
+        resendVerificationChangeEmailController,
+
         // user
         changeEmailController,
         changePasswordController,
