@@ -4,6 +4,7 @@ import {computed, ref, onMounted, onUnmounted, nextTick, watch} from "vue";
 import {ChatStore} from "stores/chat_store";
 import {MessageStore} from "stores/message_store";
 import {AuthStore} from "stores/auth_store";
+import {UserCacheStore} from "stores/user_cache_store";
 import {MessageApi} from "src/api/apis/message_api";
 import {chatSocket} from "src/services/chat_socket";
 import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
@@ -35,6 +36,10 @@ async function loadMessages() {
     const response = await MessageApi.getMessages(conversationId.value);
     MessageStore.setMessages(response.items, response.nextCursor);
     MessageStore.finishBootstrapping();
+
+    // Загружаем данные об отправителях в кэш
+    const senderIds = response.items.map(m => m.senderId).filter(Boolean);
+    await UserCacheStore.ensureUsers(senderIds);
 
     // Подключаемся к WebSocket и ждём готовности
     chatSocket.connect();
@@ -72,6 +77,10 @@ async function loadMoreMessages() {
       MessageStore.nextCursor ?? undefined
     );
     MessageStore.appendMessages(response.items, response.nextCursor);
+
+    // Загружаем данные об отправителях в кэш
+    const senderIds = response.items.map(m => m.senderId).filter(Boolean);
+    await UserCacheStore.ensureUsers(senderIds);
   } catch (error) {
     console.error('Failed to load more messages:', error);
   } finally {
