@@ -1,10 +1,22 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import type {Message} from "src/api/types/message_response";
+import { UserCacheStore } from "stores/user_cache_store";
 
 const props = defineProps<{
   message: Message;
   isOwn: boolean;
 }>();
+
+// FIX : FIXED - вычисляем senderUsername из кэша
+const senderUsername = computed(() => {
+  // Если есть в сообщении - используем
+  if (props.message.senderUsername) {
+    return props.message.senderUsername;
+  }
+  // Иначе получаем из кэша
+  return UserCacheStore.getUsername(props.message.senderId);
+});
 
 const emit = defineEmits<{
   (e: 'edit', messageId: string, content: string): void;
@@ -49,13 +61,13 @@ function handleDelete() {
       :class="isOwn ? 'bg-primary text-white' : 'bg-grey-2'"
       :style="{ maxWidth: '70%' }"
     >
-      <!-- Username (только для чужих сообщений) - пока скрыт, т.к. бэкенд не возвращает -->
+      <!-- Username (только для чужих сообщений) -->
       <div
-        v-if="!isOwn && (message as any).senderUsername"
+        v-if="!isOwn && senderUsername"
         class="text-caption q-px-sm q-pt-xs"
         :class="isOwn ? 'text-white' : 'text-primary'"
       >
-        {{ (message as any).senderUsername }}
+        {{ senderUsername }}
       </div>
 
       <!-- Content -->
