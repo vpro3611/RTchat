@@ -19,6 +19,10 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
     beforeEach(async () => {
         client = await pool.connect();
         await client.query("BEGIN");
+
+        // Clean up before test - delete all users
+        await client.query(`DELETE FROM users`);
+
         repo = new UserRepoWriterPg(client);
     });
 
@@ -75,7 +79,9 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
         await repo.save(user);
 
         const updatedUser = createTestUser({
+            id: user.id,
             username: "updateduser",
+            email: "test@example.com",
         });
 
         const saved = await repo.save(updatedUser);
@@ -111,6 +117,7 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
     it("should throw DATABASE_QUERY_ERROR", async () => { // the contract has changed, and now we do not have invalid uuid
         const user = createTestUser({
             id: "invalid-query",
+            email: "invalidquery@test.com",
         });
 
         await expect(repo.save(user))

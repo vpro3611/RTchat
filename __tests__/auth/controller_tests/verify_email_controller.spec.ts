@@ -36,11 +36,11 @@ describe("VerifyEmailController (HTTP)", () => {
             .get("/verify-email")
             .query({ token: "valid-token" });
 
-        expect(res.status).toBe(200);
+        expect(res.status).toBe(302);
 
-        expect(res.body).toEqual({
-            message: "Email verified successfully"
-        });
+        expect(res.headers.location).toContain("email-verified");
+        expect(res.headers.location).toContain("status=success");
+        expect(res.headers.location).toContain("type=register");
 
         expect(authService.verifyEmail)
             .toHaveBeenCalledWith("valid-token");
@@ -50,25 +50,25 @@ describe("VerifyEmailController (HTTP)", () => {
     // INVALID TOKEN FORMAT
     // -------------------------
 
-    it("should return 400 if token missing", async () => {
+    it("should return 302 with error if token missing", async () => {
 
         const app = buildApp();
 
         const res = await request(app)
             .get("/verify-email");
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(302);
 
-        expect(res.body).toEqual({
-            message: "Invalid or expired token"
-        });
+        expect(res.headers.location).toContain("email-verified");
+        expect(res.headers.location).toContain("status=error");
+        expect(res.headers.location).toContain("type=register");
     });
 
     // -------------------------
     // SERVICE ERROR
     // -------------------------
 
-    it("should return 400 if verification fails", async () => {
+    it("should return 302 with error if verification fails", async () => {
 
         const app = buildApp();
 
@@ -80,11 +80,11 @@ describe("VerifyEmailController (HTTP)", () => {
             .get("/verify-email")
             .query({ token: "expired-token" });
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(302);
 
-        expect(res.body).toEqual({
-            message: "Invalid or expired token"
-        });
+        expect(res.headers.location).toContain("email-verified");
+        expect(res.headers.location).toContain("status=error");
+        expect(res.headers.location).toContain("type=register");
     });
 
 });

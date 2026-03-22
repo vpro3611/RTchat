@@ -59,7 +59,7 @@ describe("ChangePasswordController (HTTP)", () => {
         isVerified: true,
         lastSeenAt: "",
         createdAt: "",
-        updated_at: ""
+        updatedAt: ""
     };
 
     // -------------------------

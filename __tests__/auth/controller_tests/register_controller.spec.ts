@@ -51,7 +51,7 @@ describe("RegisterController (HTTP)", () => {
         isVerified: false,
         lastSeenAt: "",
         createdAt: "",
-        updated_at: ""
+        updatedAt: ""
     };
 
     // -------------------------

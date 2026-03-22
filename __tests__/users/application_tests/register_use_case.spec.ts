@@ -7,9 +7,8 @@ describe("RegisterUseCase", () => {
     let reader: any;
     let writer: any;
     let bcrypter: any;
-    let emailSender: any;
-    let emailVerificationRepo: any;
     let mapper: any;
+    let sendVerifEmailShared: any;
     let useCase: RegisterUseCase;
 
     const validUsername = "testuser";
@@ -30,25 +29,20 @@ describe("RegisterUseCase", () => {
             hash: jest.fn(),
         };
 
-        emailSender = {
-            sendVerificationEmail: jest.fn(),
-        };
-
-        emailVerificationRepo = {
-            saveToken: jest.fn(),
-        };
-
         mapper = {
             mapToDto: jest.fn(),
+        };
+
+        sendVerifEmailShared = {
+            sendIt: jest.fn(),
         };
 
         useCase = new RegisterUseCase(
             reader,
             writer,
             bcrypter,
-            emailSender,
-            emailVerificationRepo,
-            mapper
+            mapper,
+            sendVerifEmailShared
         );
     });
 
@@ -59,8 +53,7 @@ describe("RegisterUseCase", () => {
 
         writer.save.mockImplementation(async (user: User) => user);
 
-        emailVerificationRepo.saveToken.mockResolvedValue(undefined);
-        emailSender.sendVerificationEmail.mockResolvedValue(undefined);
+        sendVerifEmailShared.sendIt.mockResolvedValue(undefined);
 
         mapper.mapToDto.mockReturnValue({ id: "user-id" });
 
@@ -77,8 +70,12 @@ describe("RegisterUseCase", () => {
 
         expect(writer.save).toHaveBeenCalled();
 
-        expect(emailVerificationRepo.saveToken).toHaveBeenCalled();
-        expect(emailSender.sendVerificationEmail).toHaveBeenCalled();
+        expect(sendVerifEmailShared.sendIt).toHaveBeenCalledWith(
+            validEmail,
+            expect.any(User),
+            "/public/verify-email",
+            "register"
+        );
 
         expect(mapper.mapToDto).toHaveBeenCalled();
         expect(result).toEqual({ id: "user-id" });
@@ -168,14 +165,14 @@ describe("RegisterUseCase", () => {
         expect(writer.save).not.toHaveBeenCalled();
     });
 
-    it("should propagate email verification repo error", async () => {
+    it("should propagate email verification error", async () => {
         reader.getUserByUsername.mockResolvedValue(null);
         reader.getUserByEmail.mockResolvedValue(null);
         bcrypter.hash.mockResolvedValue("hashedPassword");
 
         writer.save.mockImplementation(async (user: User) => user);
 
-        emailVerificationRepo.saveToken.mockRejectedValue(
+        sendVerifEmailShared.sendIt.mockRejectedValue(
             new Error("verification error")
         );
 
@@ -187,6 +184,6 @@ describe("RegisterUseCase", () => {
             )
         ).rejects.toThrow("verification error");
 
-        expect(emailSender.sendVerificationEmail).not.toHaveBeenCalled();
+        expect(mapper.mapToDto).not.toHaveBeenCalled();
     });
 });
