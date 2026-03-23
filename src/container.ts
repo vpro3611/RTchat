@@ -351,7 +351,6 @@ export function assembleContainer()
     );
     const getParticipantsRoleUseCase = new GetParticipantsUseCase(
         participantRepo,
-        participantMapper,
         RedisCacheService,
     );
     const getSpecificParticipantUseCase = new GetSpecificParticipantUseCase(
