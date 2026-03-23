@@ -5,10 +5,12 @@ import {ChatStore} from "stores/chat_store";
 import {MessageStore} from "stores/message_store";
 import {AuthStore} from "stores/auth_store";
 import {UserCacheStore} from "stores/user_cache_store";
+import {ParticipantStore} from "stores/participant_store";
 import {MessageApi} from "src/api/apis/message_api";
 import {chatSocket} from "src/services/chat_socket";
 import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
 import LeaveGroupButton from "components/LeaveGroupButton.vue";
+import ParticipantListDialog from "components/ParticipantListDialog.vue";
 import MessageBubble from "components/MessageBubble.vue";
 
 const route = useRoute();
@@ -16,6 +18,7 @@ const route = useRoute();
 const message = ref("");
 const messagesContainer = ref<HTMLElement | null>(null);
 const dialogRef = ref();
+const participantsDialogRef = ref<{ openDialog: () => void } | null>(null);
 const isEditing = ref(false);
 const editingMessageId = ref<string | null>(null);
 const editContent = ref("");
@@ -149,6 +152,12 @@ function handleTyping() {
   }, 2000);
 }
 
+// Открыть список участников
+function openParticipantsDialog() {
+  if (!conversationId.value) return;
+  participantsDialogRef.value?.openDialog();
+}
+
 // Очистка при выходе
 onMounted(() => {
   if (conversationId.value) {
@@ -160,6 +169,8 @@ onUnmounted(() => {
   if (conversationId.value) {
     chatSocket.getSocket()?.emit('conversation:leave', { conversationId: conversationId.value });
   }
+  // Очищаем участники при выходе из чата
+  ParticipantStore.clearParticipants();
 });
 
 // Перезагрузка при смене чата
@@ -185,6 +196,17 @@ watch(() => route.params.id, (newId) => {
       </div>
 
       <div class="row q-gutter-sm">
+        <!-- Кнопка списка участников для групп -->
+        <q-btn
+          v-if="chat?.conversationType === 'group'"
+          icon="group"
+          flat
+          round
+          @click="openParticipantsDialog"
+        >
+          <q-tooltip>Participants</q-tooltip>
+        </q-btn>
+
         <q-btn
           v-if="chat?.conversationType === 'group'"
           icon="edit"
@@ -203,6 +225,11 @@ watch(() => route.params.id, (newId) => {
     </div>
 
     <EditGroupTitleDialog ref="dialogRef" />
+    <ParticipantListDialog
+      ref="participantsDialogRef"
+      :conversationId="conversationId"
+      :conversationType="(chat?.conversationType as 'direct' | 'group') ?? 'direct'"
+    />
 
     <!-- MESSAGES LIST -->
     <div
