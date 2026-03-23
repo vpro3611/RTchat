@@ -67,13 +67,6 @@ export class Participant {
         );
     }
 
-    ensureIsOwner() {
-        if (this.role !== ParticipantRole.OWNER) {
-            throw new 
-            InsufficientPermissionsError("Cannot perform this actions since not enough permissions")
-        }
-    }
-
     mute(until: Date | null) {
         this.canSendMessages = false;
         this.mutedUntil = until;
