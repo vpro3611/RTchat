@@ -1,9 +1,10 @@
 import {fetchJson} from "src/api/fetch/generinc_fetcher";
 import {BaseUrl} from "src/base_url/base_url";
 import {AuthStore} from "stores/auth_store";
-import type {ParticipantsResponse, ParticipantResponse} from "src/api/types/participant_response";
+import type {ParticipantsResponse, ParticipantResponse, MuteDuration, ParticipantRole} from "src/api/types/participant_response";
 
 export const ParticipantApi = {
+  // Получить список участников
   getParticipants(conversationId: string, cursor?: string, limit = 50) {
     const queryParams = new URLSearchParams({
       limit: limit.toString(),
@@ -24,6 +25,7 @@ export const ParticipantApi = {
     );
   },
 
+  // Получить полную информацию об участнике
   getSpecificParticipant(conversationId: string, targetId: string) {
     return fetchJson<ParticipantResponse>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/get-full`,
@@ -36,8 +38,9 @@ export const ParticipantApi = {
     );
   },
 
+  // Присоединиться к беседе
   joinConversation(conversationId: string) {
-    return fetchJson<{ok: boolean}>(
+    return fetchJson<ParticipantResponse>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/join`,
       {
         method: "POST",
@@ -48,8 +51,9 @@ export const ParticipantApi = {
     );
   },
 
+  // Покинуть беседу (возвращает 204, без тела)
   leaveConversation(conversationId: string) {
-    return fetchJson<{ok: boolean}>(
+    return fetchJson<void>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/leave`,
       {
         method: "DELETE",
@@ -60,8 +64,9 @@ export const ParticipantApi = {
     );
   },
 
-  changeRole(conversationId: string, targetId: string, role: 'admin' | 'member') {
-    return fetchJson<{ok: boolean}>(
+  // Изменить роль участника
+  changeRole(conversationId: string, targetId: string, role: ParticipantRole) {
+    return fetchJson<ParticipantResponse>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/role`,
       {
         method: "PATCH",
@@ -74,8 +79,9 @@ export const ParticipantApi = {
     );
   },
 
-  muteParticipant(conversationId: string, targetId: string, duration: number) {
-    return fetchJson<{ok: boolean}>(
+  // Заглушить участника
+  muteParticipant(conversationId: string, targetId: string, duration: MuteDuration) {
+    return fetchJson<ParticipantResponse>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/mute`,
       {
         method: "PATCH",
@@ -88,8 +94,9 @@ export const ParticipantApi = {
     );
   },
 
+  // Разглушить участника
   unmuteParticipant(conversationId: string, targetId: string) {
-    return fetchJson<{ok: boolean}>(
+    return fetchJson<ParticipantResponse>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/unmute`,
       {
         method: "PATCH",
@@ -100,8 +107,9 @@ export const ParticipantApi = {
     );
   },
 
+  // Удалить участника из беседы (kick)
   kickParticipant(conversationId: string, targetId: string) {
-    return fetchJson<{ok: boolean}>(
+    return fetchJson<void>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/kick`,
       {
         method: "DELETE",
