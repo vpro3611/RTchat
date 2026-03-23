@@ -3,6 +3,7 @@ import {Pool, PoolClient} from "pg";
 import {Participant} from "../domain/participant/participant";
 import {mapPgError} from "../../error_mapper/pg_error_mapper";
 import {FullParticipantDto} from "../DTO/full_participant_dto";
+import {ParticipantListDTO} from "../DTO/participant_list_dto";
 
 
 export class ParticipantRepositoryPg implements ParticipantRepoInterface {
@@ -115,25 +116,26 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
         }
     }
 
-    async getParticipants(conversationId: string, limit = 20, cursor?: string): Promise<{items: Participant[], nextCursor?: string}> {
+    async getParticipants(conversationId: string, limit = 20, cursor?: string): Promise<{items: ParticipantListDTO[], nextCursor?: string}> {
         try {
             const params: any[] = [conversationId];
             let cursorCondition = "";
 
             if (cursor) {
                 params.push(cursor);
-                cursorCondition = `AND joined_at < $${params.length}`;
+                cursorCondition = `AND p.joined_at < $${params.length}`;
             }
 
             params.push(limit + 1);
 
             const result = await this.pool.query(
                 `
-                    SELECT *
-                    FROM conversation_participants
-                    WHERE conversation_id = $1
+                    SELECT p.*, u.username, u.email
+                    FROM conversation_participants p
+                    JOIN users u ON p.user_id = u.id
+                    WHERE p.conversation_id = $1
                         ${cursorCondition}
-                    ORDER BY joined_at DESC
+                    ORDER BY u.username ASC
                         LIMIT $${params.length}
                 `,
                 params
@@ -148,12 +150,25 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
                 nextCursor = next?.joined_at.toISOString();
             }
 
-            const items = rows.map(row => this.mapToParticipant(row));
+            const items = rows.map(row => this.mapToParticipantListDto(row));
 
             return {items, nextCursor};
         } catch (error) {
             throw mapPgError(error);
         }
+    }
+
+    private mapToParticipantListDto(row: any): ParticipantListDTO {
+        return {
+            conversationId: row.conversation_id,
+            userId: row.user_id,
+            username: row.username,
+            email: row.email,
+            role: row.role,
+            canSendMessages: row.can_send_messages,
+            mutedUntil: row.muted_until,
+            joinedAt: row.joined_at,
+        };
     }
     async getSpecificParticipant(conversationId: string, participantId: string): Promise<FullParticipantDto | null> {
         try {
