@@ -8,7 +8,7 @@ import {CheckIsParticipant} from "../../shared/is_participant";
 import {UserIsNotAllowedToPerformError} from "../../errors/participants_errors/participant_errors";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
-import {Participant} from "../../domain/participant/participant";
+import {ParticipantListDTO} from "../../DTO/participant_list_dto";
 
 
 export class SendMessageUseCase {
@@ -20,7 +20,7 @@ export class SendMessageUseCase {
                 private readonly participantRepo: ParticipantRepoInterface,
     ) {}
 
-    private async invalidateCache(participants: Participant[]) {
+    private async invalidateCache(participants: ParticipantListDTO[]) {
         for (const p of participants) {
             await this.cacheService.delByPattern(`conv:user:${p.userId}:*`);
         }
