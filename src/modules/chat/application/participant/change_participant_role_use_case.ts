@@ -27,8 +27,9 @@ export class ChangeParticipantRoleUseCase {
         return target
     }
 
-    private async invalidateParticipantCache(conversationId: string) {
+    private async invalidateParticipantCache(conversationId: string, targetId: string) {
         await this.cacheService.del(`participants:conv:${conversationId}`);
+        await this.cacheService.del(`participant:conv:${conversationId}:user:${targetId}`);
     }
 
     async changeParticipantRoleUseCase(actorId: string, conversationId: string, targetId: string): Promise<ParticipantDTO> {
@@ -40,7 +41,7 @@ export class ChangeParticipantRoleUseCase {
 
         await this.participantRepo.save(target);
 
-        await this.invalidateParticipantCache(conversationId);
+        await this.invalidateParticipantCache(conversationId, targetId);
 
         return this.participantMapper.mapToParticipantDto(target);
     }

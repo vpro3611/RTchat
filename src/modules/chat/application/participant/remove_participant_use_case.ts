@@ -41,8 +41,9 @@ export class RemoveParticipantUseCase {
         }
     }
 
-    private async invalidateParticipantsCache(conversationId: string) {
+    private async invalidateParticipantsCache(conversationId: string, targetId: string) {
         await this.cacheService.del(`participants:conv:${conversationId}`);
+        await this.cacheService.del(`participant:conv:${conversationId}:user:${targetId}`);
     }
 
     private async invalidateUserConversations(userId: string) {
@@ -60,7 +61,7 @@ export class RemoveParticipantUseCase {
 
         await this.participantRepo.remove(conversationId, targetId);
 
-        await this.invalidateParticipantsCache(conversationId);
+        await this.invalidateParticipantsCache(conversationId, targetId);
 
         await this.invalidateUserConversations(targetId);
     }

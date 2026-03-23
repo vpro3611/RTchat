@@ -40,8 +40,9 @@ export class MuteParticipantUseCase {
         }
     }
 
-    private async invalidateParticipantsCache(conversationId: string) {
+    private async invalidateParticipantsCache(conversationId: string, targetId: string) {
         await this.cacheService.del(`participants:conv:${conversationId}`);
+        await this.cacheService.del(`participant:conv:${conversationId}:user:${targetId}`);
     }
 
     async muteParticipantUseCase(actorId: string, targetId: string, conversationId: string, duration: MuteDuration): Promise<ParticipantDTO> {
@@ -57,7 +58,7 @@ export class MuteParticipantUseCase {
 
         await this.participantRepo.save(target);
 
-        await this.invalidateParticipantsCache(conversationId);
+        await this.invalidateParticipantsCache(conversationId, targetId);
 
         return this.participantMapper.mapToParticipantDto(target);
     }
