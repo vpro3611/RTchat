@@ -4,7 +4,6 @@ import { ActorIsNotParticipantError } from "../../../../src/modules/chat/errors/
 describe("GetParticipantsUseCase", () => {
 
     let participantRepo: any;
-    let mapper: any;
     let cacheService: any;
 
     let useCase: GetParticipantsUseCase;
@@ -19,17 +18,12 @@ describe("GetParticipantsUseCase", () => {
             getParticipants: jest.fn()
         };
 
-        mapper = {
-            mapToParticipantDto: jest.fn()
-        };
-
         cacheService = {
             remember: jest.fn()
         };
 
         useCase = new GetParticipantsUseCase(
             participantRepo,
-            mapper,
             cacheService
         );
 
@@ -112,26 +106,22 @@ describe("GetParticipantsUseCase", () => {
     });
 
     // =========================
-    // mapping
+    // returns participants with username/email
     // =========================
 
-    it("should map participants to dto", async () => {
+    it("should return participants with username and email", async () => {
 
         participantRepo.exists.mockResolvedValue(true);
 
         const participants = [
-            { userId: "u1" },
-            { userId: "u2" }
+            { userId: "u1", username: "user1", email: "user1@test.com", role: "member", canSendMessages: true, mutedUntil: null, joinedAt: new Date(), conversationId: "c1" },
+            { userId: "u2", username: "user2", email: "user2@test.com", role: "owner", canSendMessages: true, mutedUntil: null, joinedAt: new Date(), conversationId: "c1" }
         ];
 
         participantRepo.getParticipants.mockResolvedValue({
             items: participants,
             nextCursor: "cursor2"
         });
-
-        mapper.mapToParticipantDto
-            .mockReturnValueOnce({ userId: "u1" })
-            .mockReturnValueOnce({ userId: "u2" });
 
         cacheService.remember.mockImplementation(
             async (_key: string, _ttl: number, callback: any) => callback()
@@ -142,13 +132,9 @@ describe("GetParticipantsUseCase", () => {
             CONVERSATION_ID
         );
 
-        expect(mapper.mapToParticipantDto).toHaveBeenCalledTimes(2);
-
-        expect(result.items).toEqual([
-            { userId: "u1" },
-            { userId: "u2" }
-        ]);
-
+        expect(result.items).toHaveLength(2);
+        expect(result.items[0].username).toBe("user1");
+        expect(result.items[1].username).toBe("user2");
         expect(result.nextCursor).toBe("cursor2");
 
     });
