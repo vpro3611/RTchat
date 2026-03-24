@@ -197,12 +197,18 @@ export const UserApi =
       })
     },
 
-    getBlacklist() {
+    getBlacklist(): Promise<User[]> {
       return fetchJson<User[]>(`${BaseUrl.apiBaseUrl}/private/user/black_list`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${AuthStore.accessToken}`
         },
-      })
+      }).then(data => {
+        // Явный cast на случай если бэкенд вернёт обёртку
+        if (data && typeof data === 'object' && 'items' in data) {
+          return (data as { items: User[] }).items;
+        }
+        return data;
+      });
     }
   }
