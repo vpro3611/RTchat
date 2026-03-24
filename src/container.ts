@@ -298,7 +298,8 @@ export function assembleContainer()
         conversationRepo,
         participantRepo,
         conversationMapper,
-        RedisCacheService
+        RedisCacheService,
+        userToUserBlocksPG,
     );
     const createGroupConversationUseCase = new CreateGroupConversationUseCase(
         conversationRepo,
@@ -355,7 +356,8 @@ export function assembleContainer()
         messageMapper,
         checkIsParticipant,
         RedisCacheService,
-        participantRepo
+        participantRepo,
+        userToUserBlocksPG,
     );
     const getSpecificMessageUseCase = new GetSpecificMessageUseCase(
         messageMapper,
