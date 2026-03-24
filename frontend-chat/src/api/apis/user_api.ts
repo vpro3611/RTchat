@@ -178,5 +178,31 @@ export const UserApi =
           Authorization: `Bearer ${AuthStore.accessToken}`
         }
       })
+    },
+    blockUser(targetId: string) {
+      return fetchJson<User>(`${BaseUrl.apiBaseUrl}/private/user/${targetId}/block_user`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        }
+      })
+    },
+
+    unblockUser(targetId: string) {
+      return fetchJson<User>(`${BaseUrl.apiBaseUrl}/private/user/${targetId}/unblock_user`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        }
+      })
+    },
+
+    getBlacklist() {
+      return fetchJson<User[]>(`${BaseUrl.apiBaseUrl}/private/user/black_list`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      })
     }
   }
