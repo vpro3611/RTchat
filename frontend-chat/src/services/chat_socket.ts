@@ -6,10 +6,12 @@ import {MessageStore} from "stores/message_store";
 import type {Message} from "src/api/types/message_response";
 
 type TypingCallback = (data: { conversationId: string; userId: string; username: string }) => void;
+type ErrorCallback = (data: { message: string }) => void;
 
 class ChatSocketService {
   private socket: Socket | null = null;
   private typingCallbacks: TypingCallback[] = [];
+  private errorCallbacks: ErrorCallback[] = [];
 
   connect() {
     if (this.socket?.connected) return;
@@ -96,6 +98,7 @@ class ChatSocketService {
     // Ошибка сокета
     this.socket.on('error', (data: { message: string }) => {
       console.error('Socket error:', data.message);
+      this.errorCallbacks.forEach(cb => cb(data));
     });
 
     // Ошибка подключения
@@ -169,6 +172,17 @@ class ChatSocketService {
     const index = this.typingCallbacks.indexOf(callback);
     if (index !== -1) {
       this.typingCallbacks.splice(index, 1);
+    }
+  }
+
+  onError(callback: ErrorCallback) {
+    this.errorCallbacks.push(callback);
+  }
+
+  offError(callback: ErrorCallback) {
+    const index = this.errorCallbacks.indexOf(callback);
+    if (index !== -1) {
+      this.errorCallbacks.splice(index, 1);
     }
   }
 
