@@ -10,6 +10,7 @@ import {ParticipantStore} from "stores/participant_store";
 import {MessageApi} from "src/api/apis/message_api";
 import {UserApi} from "src/api/apis/user_api";
 import {ParticipantApi} from "src/api/apis/participant_api";
+import type {User} from "src/api/types/register_response";
 import {chatSocket} from "src/services/chat_socket";
 import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
 import LeaveGroupButton from "components/LeaveGroupButton.vue";
@@ -64,7 +65,7 @@ async function checkOtherUserBlocked() {
 
   try {
     const response = await UserApi.getBlacklist();
-    isOtherUserBlocked.value = response.some(u => u.id === userId);
+    isOtherUserBlocked.value = response.some((u: User) => u.id === userId);
   } catch (e) {
     console.error('Failed to check block status:', e);
   }
