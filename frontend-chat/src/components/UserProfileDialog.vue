@@ -85,7 +85,7 @@ async function checkBlockStatus(targetId: string, seq?: number) {
   try {
     const response = await UserApi.getBlacklist()
     if (typeof seq === 'number' && seq !== loadSeq) return
-    isBlocked.value = response.some(u => u.id === targetId)
+    isBlocked.value = response.some((u: User) => u.id === targetId)
   } catch (e) {
     console.error('Failed to check block status:', e)
   }
