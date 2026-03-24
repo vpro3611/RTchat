@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router"
 import {computed, ref, onMounted, onUnmounted, nextTick, watch} from "vue";
+import { useQuasar } from "quasar"
 import {ChatStore} from "stores/chat_store";
 import {MessageStore} from "stores/message_store";
 import {AuthStore} from "stores/auth_store";
 import {UserCacheStore} from "stores/user_cache_store";
 import {ParticipantStore} from "stores/participant_store";
 import {MessageApi} from "src/api/apis/message_api";
+import {UserApi} from "src/api/apis/user_api";
+import {ParticipantApi} from "src/api/apis/participant_api";
 import {chatSocket} from "src/services/chat_socket";
 import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
 import LeaveGroupButton from "components/LeaveGroupButton.vue";
 import ParticipantListDialog from "components/ParticipantListDialog.vue";
 import MessageBubble from "components/MessageBubble.vue";
 
+const $q = useQuasar()
 const route = useRoute();
 
 const message = ref("");
@@ -22,12 +26,104 @@ const participantsDialogRef = ref<{ openDialog: () => void } | null>(null);
 const isEditing = ref(false);
 const editingMessageId = ref<string | null>(null);
 const editContent = ref("");
+const isOtherUserBlocked = ref(false);
+const isCurrentUserCanSendMessages = ref(true);
+const sendRestrictionMessage = ref<string | null>(null);
 
 const chat = computed(() => {
   return ChatStore.findById(route.params.id as string);
 });
 
 const conversationId = computed(() => route.params.id as string);
+
+// Получить ID собеседника в direct чате
+const otherUserId = computed(() => {
+  if (chat.value?.conversationType !== 'direct') return null;
+  const currentUserId = AuthStore.user?.id;
+  if (!currentUserId) return null;
+  
+  if (chat.value.userLow === currentUserId) return chat.value.userHigh;
+  if (chat.value.userHigh === currentUserId) return chat.value.userLow;
+  return null;
+});
+
+// Получить имя собеседника
+const otherUserName = computed(() => {
+  const userId = otherUserId.value;
+  if (!userId) return null;
+  return UserCacheStore.getUsername(userId);
+});
+
+// Проверить статус блокировки собеседника
+async function checkOtherUserBlocked() {
+  const userId = otherUserId.value;
+  if (!userId) {
+    isOtherUserBlocked.value = false;
+    return;
+  }
+
+  try {
+    const response = await UserApi.getBlacklist();
+    isOtherUserBlocked.value = response.some(u => u.id === userId);
+  } catch (e) {
+    console.error('Failed to check block status:', e);
+  }
+}
+
+// Проверить, может ли текущий пользователь писать в этот чат
+async function checkCurrentUserCanSendMessages() {
+  const currentUserId = AuthStore.user?.id;
+
+  if (!conversationId.value || !currentUserId) {
+    isCurrentUserCanSendMessages.value = true;
+    return;
+  }
+
+  try {
+    const response = await ParticipantApi.getSpecificParticipant(conversationId.value, currentUserId);
+
+    if (chat.value?.conversationType === 'direct') {
+      isCurrentUserCanSendMessages.value = response.participant.canSendMessages && !isOtherUserBlocked.value;
+      return;
+    }
+
+    isCurrentUserCanSendMessages.value = response.participant.canSendMessages;
+  } catch (e) {
+    console.error('Failed to check send permission:', e);
+    // fail-safe: не блокируем ввод на transient ошибке
+    isCurrentUserCanSendMessages.value = true;
+  }
+}
+
+// Разблокировать пользователя
+function unblockOtherUser() {
+  const userId = otherUserId.value;
+  if (!userId) return;
+
+  $q.dialog({
+    title: 'Unblock User',
+    message: `Do you want to unblock ${otherUserName.value || 'this user'}?`,
+    cancel: true,
+    persistent: true,
+    ok: {
+      label: 'Unblock',
+      color: 'positive',
+    },
+  }).onOk(() => {
+    void (async () => {
+      try {
+        await UserApi.unblockUser(userId);
+        isOtherUserBlocked.value = false;
+        isCurrentUserCanSendMessages.value = true;
+        sendRestrictionMessage.value = null;
+        $q.notify({ type: 'positive', message: 'User has been unblocked' });
+      } catch (e) {
+        console.error('Failed to unblock user:', e);
+        $q.notify({ type: 'negative', message: 'Failed to unblock user' });
+      }
+    })();
+  });
+}
 
 // Загрузка сообщений
 async function loadMessages() {
@@ -93,8 +189,9 @@ async function loadMoreMessages() {
 
 // Отправка сообщения через WebSocket
 function sendMessage() {
-  if (!message.value.trim() || !conversationId.value) return;
+  if (!message.value.trim() || !conversationId.value || !isCurrentUserCanSendMessages.value) return;
 
+  sendRestrictionMessage.value = null;
   chatSocket.sendMessage(conversationId.value, message.value.trim());
   message.value = "";
 }
@@ -139,7 +236,7 @@ function scrollToBottom() {
 let typingTimeout: NodeJS.Timeout | null = null;
 
 function handleTyping() {
-  if (!conversationId.value) return;
+  if (!conversationId.value || !isCurrentUserCanSendMessages.value) return;
 
   chatSocket.startTyping(conversationId.value);
 
@@ -159,13 +256,43 @@ function openParticipantsDialog() {
 }
 
 // Очистка при выходе
+function handleSocketError(data: { message: string }) {
+  const msg = data.message.toLowerCase();
+
+  console.error('Socket error received:', data.message);
+
+  if (msg.includes('block') || msg.includes('cannot send') || msg.includes('not allowed')) {
+    isCurrentUserCanSendMessages.value = false;
+    sendRestrictionMessage.value = data.message;
+    $q.notify({
+      type: 'warning',
+      message: data.message,
+      timeout: 5000
+    });
+  }
+}
+
+// Слушать события block/unblock из диалогов
+function handleBlockChange() {
+  void checkOtherUserBlocked();
+  void checkCurrentUserCanSendMessages();
+}
+
 onMounted(() => {
+  chatSocket.onError(handleSocketError);
+  window.addEventListener('block-status-changed', handleBlockChange);
+
   if (conversationId.value) {
     void loadMessages();
+    void checkOtherUserBlocked();
+    void checkCurrentUserCanSendMessages();
   }
 });
 
 onUnmounted(() => {
+  chatSocket.offError(handleSocketError);
+  window.removeEventListener('block-status-changed', handleBlockChange);
+
   if (conversationId.value) {
     chatSocket.getSocket()?.emit('conversation:leave', { conversationId: conversationId.value });
   }
@@ -175,10 +302,29 @@ onUnmounted(() => {
 
 // Перезагрузка при смене чата
 watch(() => route.params.id, (newId) => {
+  sendRestrictionMessage.value = null;
+
   if (newId) {
     void loadMessages();
+    void checkCurrentUserCanSendMessages();
   }
 });
+
+// FIX : FIXED статус блока не обновлялся, когда чат догружался в Store позже
+watch(
+  () => otherUserId.value,
+  async (userId) => {
+    if (userId) {
+      await checkOtherUserBlocked();
+      await checkCurrentUserCanSendMessages();
+    } else {
+      isOtherUserBlocked.value = false;
+      sendRestrictionMessage.value = null;
+      await checkCurrentUserCanSendMessages();
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
@@ -230,6 +376,25 @@ watch(() => route.params.id, (newId) => {
       :conversationId="conversationId"
       :conversationType="(chat?.conversationType as 'direct' | 'group') ?? 'direct'"
     />
+
+    <!-- BLOCKED USER NOTICE (Telegram-style) -->
+    <div
+      v-if="isOtherUserBlocked" 
+      class="bg-grey-3 q-pa-md text-center"
+    >
+      <q-icon name="block" size="24px" class="q-mr-sm" />
+      <span class="text-grey-7">
+        You have blocked this user. 
+        <q-btn 
+          flat 
+          dense 
+          color="primary" 
+          label="Unblock" 
+          class="q-ml-sm" 
+          @click="unblockOtherUser"
+        />
+      </span>
+    </div>
 
     <!-- MESSAGES LIST -->
     <div
@@ -295,7 +460,8 @@ watch(() => route.params.id, (newId) => {
         @input="handleTyping"
         dense
         outlined
-        placeholder="Type a message..."
+        :disable="!isCurrentUserCanSendMessages"
+        :placeholder="isCurrentUserCanSendMessages ? 'Type a message...' : 'You cannot send messages in this chat'"
       >
         <template v-slot:append>
           <q-btn
@@ -305,10 +471,16 @@ watch(() => route.params.id, (newId) => {
             icon="send"
             color="primary"
             @click="sendMessage"
-            :disable="!message.trim()"
+            :disable="!message.trim() || !isCurrentUserCanSendMessages"
           />
         </template>
       </q-input>
+      <div
+        v-if="!isCurrentUserCanSendMessages"
+        class="text-caption text-negative q-mt-xs"
+      >
+        {{ sendRestrictionMessage || "You can't send messages in this chat." }}
+      </div>
     </div>
 
   </div>
