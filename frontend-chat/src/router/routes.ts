@@ -34,6 +34,8 @@ const routes = [
       { path: 'main', component: () => import('pages/MainPage.vue')},
 
       { path: 'chat/:id?', component: () => import('pages/ChatPage.vue')},
+
+      { path: 'blacklist', component: () => import('pages/BlacklistPage.vue')},
     ]
   }
 
