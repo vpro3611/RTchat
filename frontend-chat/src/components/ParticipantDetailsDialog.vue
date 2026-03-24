@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
 import { ParticipantApi } from "src/api/apis/participant_api";
+import { UserApi } from "src/api/apis/user_api";
 import { ParticipantStore } from "stores/participant_store";
 import type { Participant, ParticipantRole, MuteDuration } from "src/api/types/participant_response";
 
@@ -17,6 +18,8 @@ const props = defineProps<{
 const isOpen = ref(false);
 const participant = ref<Participant | null>(null);
 const isLoading = ref(false);
+const isBlocked = ref(false);
+const isProcessingBlock = ref(false);
 
 // Computed для безопасного доступа в шаблоне
 const currentParticipant = computed((): Participant => {
@@ -30,33 +33,128 @@ const canManage = computed(() => {
   return props.isOwner && participant.value.userId !== props.currentUserId;
 });
 
+// Можно ли заблокировать участника (не себя)
+const canBlock = computed(() => {
+  if (!participant.value) return false;
+  return participant.value.userId !== props.currentUserId;
+});
+
+let loadSeq = 0
+
 // Открыть диалог деталей
 async function openDialog(p: Participant) {
+  const currentSeq = ++loadSeq
+
+  // Сбрасываем состояние перед загрузкой
+  isBlocked.value = false;
+  isLoading.value = false;
+
   participant.value = p;
   isOpen.value = true;
-  
+
+  await checkBlockStatus(p.userId, currentSeq)
+
   // Загружаем полную информацию
-  await loadFullInfo();
+  await loadFullInfo(currentSeq);
 }
 
+// Следим за изменением participant, чтобы обновить статус блокировки
+watch(participant, async (newParticipant) => {
+  if (newParticipant && isOpen.value) {
+    const currentSeq = ++loadSeq
+    isBlocked.value = false;
+    await checkBlockStatus(newParticipant.userId, currentSeq);
+  }
+});
+
+// FIX : FIXED stale-state race при быстром открытии/закрытии ParticipantDetailsDialog
 // Загрузить полную информацию об участнике
-async function loadFullInfo() {
+async function loadFullInfo(seq: number) {
   const p = participant.value;
   if (!p || !props.conversationId) return;
-  
+
   isLoading.value = true;
   try {
     const response = await ParticipantApi.getSpecificParticipant(
       props.conversationId,
       p.userId
     );
+    if (seq !== loadSeq) return
     participant.value = response.participant;
+    await checkBlockStatus(response.participant.userId, seq)
   } catch (e) {
+    if (seq !== loadSeq) return
     console.error('Failed to load participant details:', e);
     $q.notify({ type: 'negative', message: 'Failed to load details' });
   } finally {
-    isLoading.value = false;
+    if (seq === loadSeq) {
+      isLoading.value = false;
+    }
   }
+}
+
+// Проверить статус блокировки
+async function checkBlockStatus(targetId: string, seq?: number) {
+  try {
+    const response = await UserApi.getBlacklist();
+    if (typeof seq === 'number' && seq !== loadSeq) return
+    isBlocked.value = response.some(u => u.id === targetId);
+  } catch (e) {
+    console.error('Failed to check block status:', e);
+  }
+}
+
+// Заблокировать пользователя
+function blockUser() {
+  const p = participant.value;
+  if (!p || !canBlock.value) return;
+
+  $q.dialog({
+    title: 'Block User',
+    message: `Are you sure you want to block ${p.username}? You won't be able to see their messages or create conversations with them.`,
+    cancel: true,
+    persistent: true,
+    ok: {
+      label: 'Block',
+      color: 'negative',
+    },
+  }).onOk(() => {
+    void (async () => {
+      try {
+        isProcessingBlock.value = true;
+        await UserApi.blockUser(p.userId);
+        isBlocked.value = true;
+        window.dispatchEvent(new Event('block-status-changed'));
+        $q.notify({ type: 'positive', message: `User ${p.username} has been blocked` });
+      } catch (e) {
+        console.error('Failed to block user:', e);
+        $q.notify({ type: 'negative', message: 'Failed to block user' });
+      } finally {
+        isProcessingBlock.value = false;
+      }
+    })();
+  });
+}
+
+// Разблокировать пользователя
+function unblockUser() {
+  const p = participant.value;
+  if (!p || !canBlock.value) return;
+
+  void (async () => {
+    try {
+      isProcessingBlock.value = true;
+      await UserApi.unblockUser(p.userId);
+      isBlocked.value = false;
+      window.dispatchEvent(new Event('block-status-changed'));
+      $q.notify({ type: 'positive', message: `User ${p.username} has been unblocked` });
+    } catch (e) {
+      console.error('Failed to unblock user:', e);
+      $q.notify({ type: 'negative', message: 'Failed to unblock user' });
+    } finally {
+      isProcessingBlock.value = false;
+    }
+  })()
 }
 
 // Изменить роль
@@ -176,7 +274,10 @@ function formatDate(dateStr: string | null): string {
 
 // Закрытие диалога
 function onDialogClose() {
+  loadSeq++
   participant.value = null;
+  isBlocked.value = false;
+  isLoading.value = false;
 }
 
 defineExpose({ openDialog });
@@ -201,10 +302,10 @@ defineExpose({ openDialog });
           <q-avatar size="80px" color="primary" text-color="white" class="q-mb-md">
             {{ currentParticipant.username.charAt(0).toUpperCase() }}
           </q-avatar>
-          
+
           <div class="text-h6">{{ currentParticipant.username }}</div>
           <div class="text-caption text-grey">{{ currentParticipant.email }}</div>
-          
+
           <div class="row q-gutter-sm q-mt-md">
             <q-badge v-if="currentParticipant.userId === currentUserId" color="grey" label="You" />
             <q-badge v-if="currentParticipant.role === 'owner'" color="warning" text-color="black" label="Owner" />
@@ -238,8 +339,8 @@ defineExpose({ openDialog });
         <div v-if="canManage" class="q-pa-md">
           <q-list bordered separator class="rounded-borders">
             <!-- Изменить роль -->
-            <q-item 
-              clickable 
+            <q-item
+              clickable
               @click="changeRole(currentParticipant.role === 'owner' ? 'member' : 'owner')"
             >
               <q-item-section>
@@ -248,9 +349,9 @@ defineExpose({ openDialog });
             </q-item>
 
             <!-- Мут/анмут -->
-            <q-item 
-              v-if="currentParticipant.mutedUntil" 
-              clickable 
+            <q-item
+              v-if="currentParticipant.mutedUntil"
+              clickable
               @click="unmuteParticipant"
             >
               <q-item-section class="text-positive">Unmute</q-item-section>
@@ -264,6 +365,41 @@ defineExpose({ openDialog });
               <q-item-section class="text-negative">Remove from group</q-item-section>
             </q-item>
           </q-list>
+        </div>
+
+        <!-- Блок/разблок для всех (кроме себя) -->
+        <div v-if="canBlock" class="q-pa-md">
+          <q-list bordered separator class="rounded-borders">
+            <!-- Блок/разблок пользователя -->
+            <q-item
+              v-if="!isBlocked"
+              clickable
+              @click="blockUser"
+              :disable="isProcessingBlock"
+            >
+              <q-item-section class="text-negative">
+                <q-icon name="block" class="q-mr-xs" />
+                Block User (Affects only your direct chats)
+              </q-item-section>
+            </q-item>
+            <q-item
+              v-else
+              clickable
+              @click="unblockUser"
+              :disable="isProcessingBlock"
+            >
+              <q-item-section class="text-positive">
+                <q-icon name="check_circle" class="q-mr-xs" />
+                Unblock User
+              </q-item-section>
+            </q-item>
+          </q-list>
+
+          <!-- Статус блокировки -->
+          <div v-if="isBlocked" class="q-mt-sm text-negative text-center text-caption">
+            <q-icon name="block" class="q-mr-xs" />
+            You have blocked this user
+          </div>
         </div>
 
         <!-- Сообщение если нельзя управлять -->
