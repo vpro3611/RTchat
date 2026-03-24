@@ -162,6 +162,40 @@ describe("UserToUserBlocksPg (integration)", () => {
     });
 
     // -------------------------
+    // ensureAnyBlocksExists
+    // -------------------------
+
+    it("should return false when no blocks exist between users", async () => {
+        const result = await repo.ensureAnyBlocksExists(actorId, targetId);
+
+        expect(result).toBe(false);
+    });
+
+    it("should return true when actor blocked target", async () => {
+        await repo.blockSpecificUser(actorId, targetId);
+
+        const result = await repo.ensureAnyBlocksExists(actorId, targetId);
+
+        expect(result).toBe(true);
+    });
+
+    it("should return true when target blocked actor", async () => {
+        await repo.blockSpecificUser(targetId, actorId);
+
+        const result = await repo.ensureAnyBlocksExists(actorId, targetId);
+
+        expect(result).toBe(true);
+    });
+
+    it("should return true regardless of which user blocked which", async () => {
+        await repo.blockSpecificUser(targetId, actorId);
+
+        const result = await repo.ensureAnyBlocksExists(actorId, targetId);
+
+        expect(result).toBe(true);
+    });
+
+    // -------------------------
     // Edge cases
     // -------------------------
 

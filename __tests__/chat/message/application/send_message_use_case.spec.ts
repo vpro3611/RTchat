@@ -9,10 +9,12 @@ describe("SendMessageUseCase", () => {
     let checkIsParticipant: any;
     let cacheService: any;
     let participantRepo: any;
+    let userToUserBansRepo: any;
 
     let useCase: SendMessageUseCase;
 
     const USER_ID = "user-1";
+    const USER_B = "user-2";
     const CONVERSATION_ID = "conv-1";
 
     beforeEach(() => {
@@ -22,6 +24,7 @@ describe("SendMessageUseCase", () => {
         };
 
         conversationRepo = {
+            findById: jest.fn(),
             updateLastMessage: jest.fn()
         };
 
@@ -41,13 +44,18 @@ describe("SendMessageUseCase", () => {
             getParticipants: jest.fn()
         };
 
+        userToUserBansRepo = {
+            ensureAnyBlocksExists: jest.fn()
+        };
+
         useCase = new SendMessageUseCase(
             messageRepo,
             conversationRepo,
             mapper,
             checkIsParticipant,
             cacheService,
-            participantRepo
+            participantRepo,
+            userToUserBansRepo
         );
 
     });
@@ -84,12 +92,18 @@ describe("SendMessageUseCase", () => {
 
         checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
 
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "direct"
+        });
+
         participantRepo.getParticipants.mockResolvedValue({
             items: [
-                { userId: "user-1" },
-                { userId: "user-2" }
+                { userId: USER_ID },
+                { userId: USER_B }
             ]
         });
+
+        userToUserBansRepo.ensureAnyBlocksExists.mockResolvedValue(false);
 
         mapper.mapToMessage.mockReturnValue({ id: "msg-1" });
 
@@ -111,10 +125,114 @@ describe("SendMessageUseCase", () => {
             .toHaveBeenCalledWith(`messages:${CONVERSATION_ID}:*`);
 
         expect(cacheService.delByPattern)
-            .toHaveBeenCalledWith(`conv:user:user-1:*`);
+            .toHaveBeenCalledWith(`conv:user:${USER_ID}:*`);
 
         expect(cacheService.delByPattern)
-            .toHaveBeenCalledWith(`conv:user:user-2:*`);
+            .toHaveBeenCalledWith(`conv:user:${USER_B}:*`);
+
+        expect(result).toEqual({ id: "msg-1" });
+
+    });
+
+    // =========================
+    // blocking relations in direct conversation
+    // =========================
+
+    it("should throw if actor is blocked by target in direct conversation", async () => {
+
+        const participant = {
+            getCanSendMessages: () => true
+        };
+
+        checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
+
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "direct"
+        });
+
+        participantRepo.getParticipants.mockResolvedValue({
+            items: [
+                { userId: USER_ID },
+                { userId: USER_B }
+            ]
+        });
+
+        userToUserBansRepo.ensureAnyBlocksExists.mockResolvedValue(true);
+
+        await expect(
+            useCase.sendMessageUseCase(
+                USER_ID,
+                CONVERSATION_ID,
+                "hello"
+            )
+        ).rejects.toBeInstanceOf(UserIsNotAllowedToPerformError);
+
+        expect(userToUserBansRepo.ensureAnyBlocksExists)
+            .toHaveBeenCalledWith(USER_ID, USER_B);
+
+    });
+
+    it("should allow sending if no blocking relations in direct conversation", async () => {
+
+        const participant = {
+            getCanSendMessages: () => true
+        };
+
+        checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
+
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "direct"
+        });
+
+        participantRepo.getParticipants.mockResolvedValue({
+            items: [
+                { userId: USER_ID },
+                { userId: USER_B }
+            ]
+        });
+
+        userToUserBansRepo.ensureAnyBlocksExists.mockResolvedValue(false);
+
+        mapper.mapToMessage.mockReturnValue({ id: "msg-1" });
+
+        const result = await useCase.sendMessageUseCase(
+            USER_ID,
+            CONVERSATION_ID,
+            "hello"
+        );
+
+        expect(result).toEqual({ id: "msg-1" });
+
+    });
+
+    it("should skip blocking check for group conversations", async () => {
+
+        const participant = {
+            getCanSendMessages: () => true
+        };
+
+        checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
+
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "group"
+        });
+
+        participantRepo.getParticipants.mockResolvedValue({
+            items: [
+                { userId: USER_ID },
+                { userId: USER_B }
+            ]
+        });
+
+        mapper.mapToMessage.mockReturnValue({ id: "msg-1" });
+
+        const result = await useCase.sendMessageUseCase(
+            USER_ID,
+            CONVERSATION_ID,
+            "hello"
+        );
+
+        expect(userToUserBansRepo.ensureAnyBlocksExists).not.toHaveBeenCalled();
 
         expect(result).toEqual({ id: "msg-1" });
 

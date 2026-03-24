@@ -8,6 +8,7 @@ describe("CreateDirectConversationUseCase", () => {
     let participantRepo: any;
     let mapper: any;
     let cacheService: any;
+    let userToUserBansRepo: any;
 
     let useCase: CreateDirectConversationUseCase;
 
@@ -33,11 +34,16 @@ describe("CreateDirectConversationUseCase", () => {
             delByPattern: jest.fn()
         };
 
+        userToUserBansRepo = {
+            ensureAnyBlocksExists: jest.fn()
+        };
+
         useCase = new CreateDirectConversationUseCase(
             conversationRepo,
             participantRepo,
             mapper,
-            cacheService
+            cacheService,
+            userToUserBansRepo
         );
     });
 
@@ -144,6 +150,48 @@ describe("CreateDirectConversationUseCase", () => {
         );
 
         expect(participantRepo.save).toHaveBeenCalledTimes(2);
+
+    });
+
+    // =========================
+    // blocking relations
+    // =========================
+
+    it("should throw if actor is blocked by target", async () => {
+
+        userToUserBansRepo.ensureAnyBlocksExists.mockResolvedValue(true);
+
+        await expect(
+            useCase.createDirectConversationUseCase(USER_A, USER_B)
+        ).rejects.toBeInstanceOf(CannotCreateConversationError);
+
+        expect(userToUserBansRepo.ensureAnyBlocksExists)
+            .toHaveBeenCalledWith(USER_A, USER_B);
+
+    });
+
+    it("should throw if actor blocked target", async () => {
+
+        userToUserBansRepo.ensureAnyBlocksExists.mockResolvedValue(true);
+
+        await expect(
+            useCase.createDirectConversationUseCase(USER_A, USER_B)
+        ).rejects.toBeInstanceOf(CannotCreateConversationError);
+
+    });
+
+    it("should allow conversation if no blocking relations", async () => {
+
+        userToUserBansRepo.ensureAnyBlocksExists.mockResolvedValue(false);
+        conversationRepo.findDirectConversation.mockResolvedValue(null);
+        mapper.mapToConversationDto.mockReturnValue({});
+
+        const result = await useCase.createDirectConversationUseCase(
+            USER_A,
+            USER_B
+        );
+
+        expect(result).toEqual({});
 
     });
 
