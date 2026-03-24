@@ -47,6 +47,8 @@ import {GetSpecificUserParamsSchema} from "./modules/users/controllers/get_speci
 import {
     ResendRegisterVerificationBodySchema
 } from "./modules/users/controllers/resend_register_verification_controller";
+import {BlockSpecificUserParamsSchema} from "./modules/users/controllers/block_specific_user_controller";
+import {UnblockSpecificUserParamsSchema} from "./modules/users/controllers/unblock_specific_user_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
@@ -107,7 +109,7 @@ export function createApp(dependencies: AppContainer): Express
     publicRouter.post("/resend-register",
         validateBody(ResendRegisterVerificationBodySchema),
         dependencies.resendVerificationRegisterController.resendRegisterVerificationCont
-    );
+    ); //
 
     publicRouter.post("/login-email",
         validateBody(LoginEmailBodySchema),
@@ -181,7 +183,7 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.get("/conversation/:conversationId/messages",
         validateParams(GetMessagesParamsSchema),
         dependencies.getMessagesController.getMessagesCont
-    );
+    ); //
 
     privateRouter.get("/conversation/:conversationId/:messageId/view",
         validateParams(GetSpecificMessageParamsSchema),
@@ -191,17 +193,17 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.patch("/conversation/:conversationId/:targetId/role",
         validateParams(ChangeParticipantRoleParamsSchema),
         dependencies.changeParticipantRoleController.changeParticipantRoleCont
-    );
+    ); //
 
     privateRouter.get("/conversation/:conversationId/:targetId/get-full",
         validateParams(GetSpecificParticipantParamsSchema),
         dependencies.getSpecificParticipantController.getSpecificParticipantController
-    );
+    ); //
 
     privateRouter.get("/conversation/:conversationId/participants",
         validateParams(GetParticipantsParamsSchema),
         dependencies.getParticipantsController.getParticipantsCont
-    );
+    ); //
 
     privateRouter.post("/conversation/:conversationId/join",
         validateParams(JoinConversationParamsSchema),
@@ -217,17 +219,17 @@ export function createApp(dependencies: AppContainer): Express
         validateParams(MuteParticipantParamsSchema),
         validateBody(MuteParticipantBodySchema),
         dependencies.muteParticipantController.muteParticipantCont
-    );
+    ); //
 
     privateRouter.delete("/conversation/:conversationId/:targetId/kick",
         validateParams(RemoveParticipantParamsSchema),
         dependencies.removeParticipantController.removeParticipantCont
-    );
+    ); // TODO
 
     privateRouter.patch("/conversation/:conversationId/:targetId/unmute",
         validateParams(UnmuteParticipantParamsSchema),
         dependencies.unmuteParticipantController.unmuteParticipantCont
-    );
+    ); //
 
     privateRouter.get("/search-conversations",
         dependencies.searchConversationsController.searchConversationsCont
@@ -244,6 +246,20 @@ export function createApp(dependencies: AppContainer): Express
 
     privateRouter.post("/resend-change-email",
         dependencies.resendVerificationChangeEmailController.resendChangeEmailVerificationCont
+    ); //
+
+    privateRouter.patch("/user/:targetId/block_user",
+        validateParams(BlockSpecificUserParamsSchema),
+        dependencies.blockSpecificUserController.blockSpecificUserCont
+    );
+
+    privateRouter.patch("/user/:targetId/unblock_user",
+        validateParams(UnblockSpecificUserParamsSchema),
+        dependencies.unblockSpecificUserController.unblockSpecificUserCont
+    );
+
+    privateRouter.get("/user/black_list",
+        dependencies.getFullBlackListController.getFullBlackListController
     );
 
     app.use(errorMiddleware());
