@@ -166,6 +166,16 @@ import {
 import {
     ResendChangeEmailVerificationController
 } from "./modules/users/controllers/resend_change_email_verification_controller";
+import {UserToUserBlocksPg} from "./modules/users/repositories/user_to_user_blocks_pg";
+import {BlockSpecificUserUseCase} from "./modules/users/application/block_specific_user_use_case";
+import {UnblockSpecificUserUseCase} from "./modules/users/application/unblock_specific_user_use_case";
+import {BlockSpecificUserTxService} from "./modules/users/transactional_services/block_specific_user_tx_service";
+import {UnblockSpecificUserTxService} from "./modules/users/transactional_services/unblock_specific_user_tx_service";
+import {BlockSpecificUserController} from "./modules/users/controllers/block_specific_user_controller";
+import {UnblockSpecificUserController} from "./modules/users/controllers/unblock_specific_user_controller";
+import {GetFullBlackListUseCase} from "./modules/users/application/get_full_black_list_use_case";
+import {GetFullBlackListTxService} from "./modules/users/transactional_services/get_full_black_list_tx_service";
+import {GetFullBlackListController} from "./modules/users/controllers/get_full_black_list_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -182,6 +192,7 @@ export function assembleContainer()
     // TODO : USERS REPOSITORIES
     const userRepoReaderPG = new UserRepoReaderPg(pool);
     const userRepoWriterPG = new UserRepoWriterPg(pool);
+    const userToUserBlocksPG = new UserToUserBlocksPg(pool);
 
     // TODO : SHARED FOR USER
     const userMapper = new UserMapper();
@@ -213,6 +224,9 @@ export function assembleContainer()
     const searchUsersUseCase = new SearchUsersUseCase(userRepoReaderPG, userLookup, userMapper, RedisCacheService);
     const getSpecificUserUseCase = new GetSpecificUserUseCase(userLookup, userMapper);
     const confirmEmailChangeUseCase = new ConfirmEmailChangeUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
+    const blockSpecificUserUseCase = new BlockSpecificUserUseCase(userToUserBlocksPG, userRepoReaderPG, userMapper);
+    const unblockSpecificUserUseCase = new UnblockSpecificUserUseCase(userToUserBlocksPG, userRepoReaderPG, userMapper);
+    const getFullBlackListUseCase = new GetFullBlackListUseCase(userToUserBlocksPG, userLookup, userMapper);
 
     // TODO : USER SERVICES
     const changeEmailService = new ChangeEmailTxService(txManager);
@@ -222,6 +236,9 @@ export function assembleContainer()
     const getSelfProfileService = new GetSelfProfileTxService(txManager);
     const searchUsersService = new SearchUsersTxService(txManager);
     const getSpecificUserService = new GetSpecificUserTxService(txManager);
+    const blockSpecificUserService = new BlockSpecificUserTxService(txManager);
+    const unblockSpecificUserService = new UnblockSpecificUserTxService(txManager);
+    const getFullBlackListService = new GetFullBlackListTxService(txManager);
 
     // TODO : USER CONTROLLERS
     const changeEmailController = new ChangeEmailController(changeEmailService, extractUserId);
@@ -232,6 +249,9 @@ export function assembleContainer()
     const searchUsersController = new SearchUsersController(searchUsersService, extractUserId);
     const getSpecificUserController = new GetSpecificUserController(getSpecificUserService, extractUserId);
     const confirmEmailChangeController = new ConfirmEmailChangeController(confirmEmailChangeUseCase);
+    const blockSpecificUserController = new BlockSpecificUserController(blockSpecificUserService, extractUserId);
+    const unblockSpecificUserController = new UnblockSpecificUserController(unblockSpecificUserService, extractUserId);
+    const getFullBlackListController = new GetFullBlackListController(getFullBlackListService, extractUserId);
 
 
     // TODO : AUTHENTIFICATION
@@ -504,6 +524,9 @@ export function assembleContainer()
         searchUsersController,
         getSpecificUserController,
         confirmEmailChangeController,
+        blockSpecificUserController,
+        unblockSpecificUserController,
+        getFullBlackListController,
 
         // jwt token service
         jwtTokenService,
