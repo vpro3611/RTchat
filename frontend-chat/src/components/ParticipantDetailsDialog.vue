@@ -3,6 +3,7 @@ import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
 import { ParticipantApi } from "src/api/apis/participant_api";
 import { UserApi } from "src/api/apis/user_api";
+import type { User } from "src/api/types/register_response";
 import { ParticipantStore } from "stores/participant_store";
 import type { Participant, ParticipantRole, MuteDuration } from "src/api/types/participant_response";
 
@@ -98,7 +99,7 @@ async function checkBlockStatus(targetId: string, seq?: number) {
   try {
     const response = await UserApi.getBlacklist();
     if (typeof seq === 'number' && seq !== loadSeq) return
-    isBlocked.value = response.some(u => u.id === targetId);
+    isBlocked.value = response.some((u: User) => u.id === targetId);
   } catch (e) {
     console.error('Failed to check block status:', e);
   }
