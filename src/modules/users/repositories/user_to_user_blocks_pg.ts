@@ -70,4 +70,18 @@ export class UserToUserBlocksPg implements UserToUserBlocksInterface {
             throw mapPgError(error);
         }
     }
+
+    async ensureAnyBlocksExists(actorId: string, targetId: string): Promise<boolean> {
+        try {
+            const query = `SELECT EXISTS (SELECT 1
+                            FROM user_blocks
+                            WHERE (blocker_id = $1 AND blocked_id = $2)
+                            OR (blocker_id = $2 AND blocked_id = $1)) AS exists
+                        `;
+            const result = await this.pool.query(query, [actorId, targetId]);
+            return result.rows[0].exists;
+        } catch (error: any) {
+            throw mapPgError(error);
+        }
+    }
 }
