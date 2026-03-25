@@ -267,6 +267,45 @@ async function kickParticipant() {
   }
 }
 
+// Бан участника
+function showBanDialog() {
+  const p = participant.value;
+  if (!p || !canManage.value) return;
+
+  $q.dialog({
+    title: 'Ban participant',
+    message: `Enter reason for banning ${p.username}:`,
+    prompt: {
+      model: '',
+      type: 'text',
+      isValid: (val) => val.length > 0,
+    },
+    cancel: true,
+    persistent: true,
+    ok: {
+      label: 'Ban',
+      color: 'negative',
+    },
+  }).onOk((reason: string) => {
+    void banParticipant(reason);
+  });
+}
+
+async function banParticipant(reason: string) {
+  const p = participant.value;
+  if (!p || !canManage.value) return;
+
+  try {
+    await ParticipantApi.banGroupParticipant(props.conversationId, p.userId, reason);
+    ParticipantStore.removeParticipant(p.userId);
+    $q.notify({ type: 'positive', message: 'Participant banned and removed from group' });
+    isOpen.value = false;
+  } catch (e) {
+    console.error('Failed to ban:', e);
+    $q.notify({ type: 'negative', message: 'Failed to ban participant' });
+  }
+}
+
 // Форматирование времени
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return 'N/A';
@@ -364,6 +403,14 @@ defineExpose({ openDialog });
             <!-- Кик -->
             <q-item clickable @click="showKickDialog">
               <q-item-section class="text-negative">Remove from group</q-item-section>
+            </q-item>
+
+            <!-- Бан -->
+            <q-item clickable @click="showBanDialog">
+              <q-item-section class="text-negative text-weight-bold">
+                <q-icon name="gavel" class="q-mr-xs" />
+                Ban from group
+              </q-item-section>
             </q-item>
           </q-list>
         </div>
