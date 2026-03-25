@@ -6,6 +6,7 @@ import { ParticipantStore } from "stores/participant_store";
 import { AuthStore } from "stores/auth_store";
 import type { Participant } from "src/api/types/participant_response";
 import ParticipantDetailsDialog from "components/ParticipantDetailsDialog.vue";
+import BannedParticipantsDialog from "components/BannedParticipantsDialog.vue";
 
 const $q = useQuasar();
 
@@ -23,8 +24,9 @@ const isOpen = ref(false);
 const isLoading = ref(false);
 const isLoadingMore = ref(false);
 
-// Диалог деталей участника
+// Диалоги
 const detailsDialogRef = ref<{ openDialog: (participant: Participant) => void } | null>(null);
+const bannedDialogRef = ref<{ openDialog: () => void } | null>(null);
 
 // Текущий пользователь
 const currentUserId = computed(() => AuthStore.user?.id);
@@ -77,6 +79,11 @@ function openParticipantDetails(participant: Participant) {
   detailsDialogRef.value?.openDialog(participant);
 }
 
+// Открыть список забаненных
+function openBannedList() {
+  bannedDialogRef.value?.openDialog();
+}
+
 // Открыть диалог
 function openDialog() {
   ParticipantStore.clearParticipants();
@@ -97,6 +104,11 @@ defineExpose({ openDialog });
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Participants</div>
         <q-space />
+        <q-btn v-if="isOwner && props.conversationType === 'group'" 
+               flat round dense color="negative" icon="gavel" 
+               @click="openBannedList" class="q-mr-sm">
+          <q-tooltip>Banned List</q-tooltip>
+        </q-btn>
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
 
@@ -168,6 +180,13 @@ defineExpose({ openDialog });
       ref="detailsDialogRef"
       :conversationId="conversationId"
       :currentUserId="currentUserId ?? ''"
+      :isOwner="isOwner"
+    />
+
+    <!-- Диалог забаненных участников -->
+    <BannedParticipantsDialog
+      ref="bannedDialogRef"
+      :conversationId="conversationId"
       :isOwner="isOwner"
     />
   </q-dialog>
