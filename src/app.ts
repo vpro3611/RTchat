@@ -49,6 +49,14 @@ import {
 } from "./modules/users/controllers/resend_register_verification_controller";
 import {BlockSpecificUserParamsSchema} from "./modules/users/controllers/block_specific_user_controller";
 import {UnblockSpecificUserParamsSchema} from "./modules/users/controllers/unblock_specific_user_controller";
+import {
+    BanGroupParticipantBodySchema,
+    BanGroupParticipantParamsSchema
+} from "./modules/chat/controllers/participant/ban_group_participant_controller";
+import {
+    UnbanGroupParticipantParamsSchema
+} from "./modules/chat/controllers/participant/unban_group_participant_controller";
+import {GetBannedUsersParamsSchema} from "./modules/chat/controllers/participant/get_banned_users_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
@@ -251,15 +259,31 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.patch("/user/:targetId/block_user",
         validateParams(BlockSpecificUserParamsSchema),
         dependencies.blockSpecificUserController.blockSpecificUserCont
-    );
+    ); //
 
     privateRouter.patch("/user/:targetId/unblock_user",
         validateParams(UnblockSpecificUserParamsSchema),
         dependencies.unblockSpecificUserController.unblockSpecificUserCont
-    );
+    ); //
 
     privateRouter.get("/user/black_list",
         dependencies.getFullBlackListController.getFullBlackListController
+    ); //
+
+    privateRouter.post("/conversation/:conversationId/:targetId/ban",
+        validateParams(BanGroupParticipantParamsSchema),
+        validateBody(BanGroupParticipantBodySchema),
+        dependencies.banParticipantController.banGroupParticipantCont
+    );
+
+    privateRouter.delete("/conversation/:conversationId/:targetId/unban",
+        validateParams(UnbanGroupParticipantParamsSchema),
+        dependencies.unbanParticipantController.unbanGroupParticipantCont
+    );
+
+    privateRouter.get("/conversation/:conversationId/ban_list",
+        validateParams(GetBannedUsersParamsSchema),
+        dependencies.getBannedUsersController.getBannedUserCont
     );
 
     app.use(errorMiddleware());
