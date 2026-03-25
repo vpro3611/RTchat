@@ -14,6 +14,7 @@ import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_inte
 import {ParticipantListDTO} from "../../DTO/participant_list_dto";
 import {CannotCreateConversationError} from "../../errors/conversation_errors/conversation_errors";
 import {UserToUserBlocksInterface} from "../../../users/ports/user_to_user_blocks_interface";
+import {ConversationBansInterface} from "../../domain/ports/conversation_bans_interface";
 
 
 export class SendMessageUseCase {
@@ -24,7 +25,15 @@ export class SendMessageUseCase {
                 private readonly cacheService: CacheServiceInterface,
                 private readonly participantRepo: ParticipantRepoInterface,
                 private readonly userToUserBansRepo: UserToUserBlocksInterface,
+                private readonly conversationBansRepo: ConversationBansInterface,
     ) {}
+
+    private async checkIfUserIsBannedFromGroup(actorId: string, conversationId: string) {
+        const relation = await this.conversationBansRepo.isBanned(conversationId, actorId);
+        if (relation) {
+            throw new UserIsNotAllowedToPerformError("User is not allowed to send messages because of being blocked by the target user");
+        }
+    }
 
     private async invalidateCache(participants: ParticipantListDTO[]) {
         for (const p of participants) {
@@ -65,6 +74,10 @@ export class SendMessageUseCase {
                     " Cannot send message to a direct conversation without a target user");
             }
             await this.checkForBlockingRelations(actorId, target.userId);
+        }
+
+        if (conversation.getConversationType() === "group") {
+            await this.checkIfUserIsBannedFromGroup(actorId, conversationId);
         }
 
         const message = Message.create(
