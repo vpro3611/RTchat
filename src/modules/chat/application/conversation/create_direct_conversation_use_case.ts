@@ -6,6 +6,7 @@ import {MapToConversationDto} from "../../shared/map_to_conversation_dto";
 import {ConversationDTO} from "../../DTO/conversation_dto";
 import {CannotCreateConversationError} from "../../errors/conversation_errors/conversation_errors";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
+import {UserToUserBlocksInterface} from "../../../users/ports/user_to_user_blocks_interface";
 
 
 export class CreateDirectConversationUseCase {
@@ -13,6 +14,7 @@ export class CreateDirectConversationUseCase {
                 private readonly participantRepo: ParticipantRepoInterface,
                 private readonly conversationMapper: MapToConversationDto,
                 private readonly cacheService: CacheServiceInterface,
+                private readonly userToUserBansRepo: UserToUserBlocksInterface,
     ) {}
 
     private checkForSelf(actorId: string, targetId: string) {
@@ -27,9 +29,18 @@ export class CreateDirectConversationUseCase {
         }
     }
 
+    private async checkForBlockingRelations(actorId: string, targetId: string) {
+        const relation = await this.userToUserBansRepo.ensureAnyBlocksExists(actorId, targetId);
+        if (relation) {
+            throw new CannotCreateConversationError("Cannot create a conversation with a blocked user");
+        }
+    }
+
     async createDirectConversationUseCase(actorId: string, targetId: string): Promise<ConversationDTO> {
 
         this.checkForSelf(actorId, targetId);
+
+        await this.checkForBlockingRelations(actorId, targetId);
 
         const existingConversation = await this.conversationRepo.findDirectConversation(actorId, targetId);
         if (existingConversation) {

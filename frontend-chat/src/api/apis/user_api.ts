@@ -178,5 +178,37 @@ export const UserApi =
           Authorization: `Bearer ${AuthStore.accessToken}`
         }
       })
+    },
+    blockUser(targetId: string) {
+      return fetchJson<User>(`${BaseUrl.apiBaseUrl}/private/user/${targetId}/block_user`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        }
+      })
+    },
+
+    unblockUser(targetId: string) {
+      return fetchJson<User>(`${BaseUrl.apiBaseUrl}/private/user/${targetId}/unblock_user`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        }
+      })
+    },
+
+    getBlacklist(): Promise<User[]> {
+      return fetchJson<User[]>(`${BaseUrl.apiBaseUrl}/private/user/black_list`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      }).then(data => {
+        // Явный cast на случай если бэкенд вернёт обёртку
+        if (data && typeof data === 'object' && 'items' in data) {
+          return (data as { items: User[] }).items;
+        }
+        return data;
+      });
     }
   }

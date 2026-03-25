@@ -3,6 +3,11 @@
 export async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, options)
 
+  // FIX : FIXED - поддержка 204 No Content
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   const text = await response.text()
 
   let data: unknown = null

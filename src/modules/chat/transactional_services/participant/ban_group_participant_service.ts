@@ -1,0 +1,39 @@
+import {
+    TransactionManagerInterface
+} from "../../../infrasctructure/ports/transaction_manager/transaction_manager_interface";
+import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
+import {ConversationBansRepositoryPg} from "../../repositories_pg_realization/conversation_bans_repository_pg";
+import {BanGroupParticipantUseCase} from "../../application/participant/ban_group_participant_use_case";
+import {RedisCacheService} from "../../../../container";
+import {ConversationBans} from "../../domain/conversation_bans/conversation_bans";
+
+
+export class BanGroupParticipantService {
+    constructor(private readonly txManager: TransactionManagerInterface) {}
+
+
+    async banGroupParticipantService(
+        conversationId: string,
+        targetId: string,
+        actorId: string,
+        reason: string
+    ): Promise<ConversationBans> {
+        return await this.txManager.runInTransaction(async (client) => {
+            const participantRepo = new ParticipantRepositoryPg(client);
+            const conversationBansRepo = new ConversationBansRepositoryPg(client);
+
+            const banGroupParticipantUseCase = new BanGroupParticipantUseCase(
+                participantRepo,
+                conversationBansRepo,
+                RedisCacheService
+            );
+
+            return banGroupParticipantUseCase.banGroupParticipantUseCase({
+                    conversationId: conversationId,
+                    userId: targetId,
+                    bannedBy: actorId,
+                    reason: reason
+            });
+        })
+    }
+}

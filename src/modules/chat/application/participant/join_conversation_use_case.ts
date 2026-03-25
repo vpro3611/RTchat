@@ -6,18 +6,27 @@ import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {ParticipantDTO} from "../../DTO/participant_dto";
 import {
     CannotJoinDirectConversationError,
-    UserAlreadyParticipantError
+    UserAlreadyParticipantError, UserIsNotAllowedToPerformError
 } from "../../errors/participants_errors/participant_errors";
 import {Conversation} from "../../domain/conversation/conversation";
 import {ConversationType} from "../../domain/conversation/conversation_type";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
+import {ConversationBansInterface} from "../../domain/ports/conversation_bans_interface";
 
 export class JoinConversationUseCase {
     constructor(private readonly conversationRepo: ConversationRepoInterface,
                 private readonly participantRepo: ParticipantRepoInterface,
                 private readonly participantMapper: MapToParticipantDto,
                 private readonly cacheService: CacheServiceInterface,
+                private readonly conversationBansRepo: ConversationBansInterface,
     ) {}
+
+    private async checkIfIsBanned(actorId: string, conversationId: string) {
+        const exists = await this.conversationBansRepo.isBanned(conversationId, actorId);
+        if (exists) {
+            throw new UserIsNotAllowedToPerformError("User is banned from the conversation");
+        }
+    }
 
     private async checkIfConversationExists(conversationId: string) {
         const conversation = await this.conversationRepo.findById(conversationId);
@@ -51,6 +60,8 @@ export class JoinConversationUseCase {
 
     async joinConversationUseCase(actorId: string, conversationId: string): Promise<ParticipantDTO> {
         const conversation = await this.checkIfConversationExists(conversationId);
+
+        await this.checkIfIsBanned(actorId, conversationId);
 
         this.checkForGroupConversation(conversation);
 

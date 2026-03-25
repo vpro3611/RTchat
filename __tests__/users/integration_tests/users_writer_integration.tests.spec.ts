@@ -20,7 +20,14 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
         client = await pool.connect();
         await client.query("BEGIN");
 
-        // Clean up before test - delete all users
+        // Clean up related tables first (due to FK constraints)
+        await client.query(`DELETE FROM conversation_reads`);
+        await client.query(`DELETE FROM messages`);
+        await client.query(`DELETE FROM conversation_participants`);
+        await client.query(`DELETE FROM conversations`);
+        await client.query(`DELETE FROM user_blocks`);
+        await client.query(`DELETE FROM refresh_tokens`);
+        await client.query(`DELETE FROM email_verification_tokens`);
         await client.query(`DELETE FROM users`);
 
         repo = new UserRepoWriterPg(client);

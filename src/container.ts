@@ -166,6 +166,32 @@ import {
 import {
     ResendChangeEmailVerificationController
 } from "./modules/users/controllers/resend_change_email_verification_controller";
+import {UserToUserBlocksPg} from "./modules/users/repositories/user_to_user_blocks_pg";
+import {BlockSpecificUserUseCase} from "./modules/users/application/block_specific_user_use_case";
+import {UnblockSpecificUserUseCase} from "./modules/users/application/unblock_specific_user_use_case";
+import {BlockSpecificUserTxService} from "./modules/users/transactional_services/block_specific_user_tx_service";
+import {UnblockSpecificUserTxService} from "./modules/users/transactional_services/unblock_specific_user_tx_service";
+import {BlockSpecificUserController} from "./modules/users/controllers/block_specific_user_controller";
+import {UnblockSpecificUserController} from "./modules/users/controllers/unblock_specific_user_controller";
+import {GetFullBlackListUseCase} from "./modules/users/application/get_full_black_list_use_case";
+import {GetFullBlackListTxService} from "./modules/users/transactional_services/get_full_black_list_tx_service";
+import {GetFullBlackListController} from "./modules/users/controllers/get_full_black_list_controller";
+import {ConversationBansRepositoryPg} from "./modules/chat/repositories_pg_realization/conversation_bans_repository_pg";
+import {BanGroupParticipantUseCase} from "./modules/chat/application/participant/ban_group_participant_use_case";
+import {UnbanGroupParticipantUseCase} from "./modules/chat/application/participant/unban_group_participant_use_case";
+import {GetBannedUsersUseCase} from "./modules/chat/application/participant/get_banned_users_use_case";
+import {
+    BanGroupParticipantService
+} from "./modules/chat/transactional_services/participant/ban_group_participant_service";
+import {
+    UnbanGroupParticipantService
+} from "./modules/chat/transactional_services/participant/unban_group_participant_service";
+import {GetBannedUsersService} from "./modules/chat/transactional_services/participant/get_banned_users_service";
+import {BanGroupParticipantController} from "./modules/chat/controllers/participant/ban_group_participant_controller";
+import {
+    UnbanGroupParticipantController
+} from "./modules/chat/controllers/participant/unban_group_participant_controller";
+import {GetBannedUsersController} from "./modules/chat/controllers/participant/get_banned_users_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -182,6 +208,7 @@ export function assembleContainer()
     // TODO : USERS REPOSITORIES
     const userRepoReaderPG = new UserRepoReaderPg(pool);
     const userRepoWriterPG = new UserRepoWriterPg(pool);
+    const userToUserBlocksPG = new UserToUserBlocksPg(pool);
 
     // TODO : SHARED FOR USER
     const userMapper = new UserMapper();
@@ -213,6 +240,9 @@ export function assembleContainer()
     const searchUsersUseCase = new SearchUsersUseCase(userRepoReaderPG, userLookup, userMapper, RedisCacheService);
     const getSpecificUserUseCase = new GetSpecificUserUseCase(userLookup, userMapper);
     const confirmEmailChangeUseCase = new ConfirmEmailChangeUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
+    const blockSpecificUserUseCase = new BlockSpecificUserUseCase(userToUserBlocksPG, userRepoReaderPG, userMapper);
+    const unblockSpecificUserUseCase = new UnblockSpecificUserUseCase(userToUserBlocksPG, userRepoReaderPG, userMapper);
+    const getFullBlackListUseCase = new GetFullBlackListUseCase(userToUserBlocksPG, userLookup, userMapper);
 
     // TODO : USER SERVICES
     const changeEmailService = new ChangeEmailTxService(txManager);
@@ -222,6 +252,9 @@ export function assembleContainer()
     const getSelfProfileService = new GetSelfProfileTxService(txManager);
     const searchUsersService = new SearchUsersTxService(txManager);
     const getSpecificUserService = new GetSpecificUserTxService(txManager);
+    const blockSpecificUserService = new BlockSpecificUserTxService(txManager);
+    const unblockSpecificUserService = new UnblockSpecificUserTxService(txManager);
+    const getFullBlackListService = new GetFullBlackListTxService(txManager);
 
     // TODO : USER CONTROLLERS
     const changeEmailController = new ChangeEmailController(changeEmailService, extractUserId);
@@ -232,6 +265,9 @@ export function assembleContainer()
     const searchUsersController = new SearchUsersController(searchUsersService, extractUserId);
     const getSpecificUserController = new GetSpecificUserController(getSpecificUserService, extractUserId);
     const confirmEmailChangeController = new ConfirmEmailChangeController(confirmEmailChangeUseCase);
+    const blockSpecificUserController = new BlockSpecificUserController(blockSpecificUserService, extractUserId);
+    const unblockSpecificUserController = new UnblockSpecificUserController(unblockSpecificUserService, extractUserId);
+    const getFullBlackListController = new GetFullBlackListController(getFullBlackListService, extractUserId);
 
 
     // TODO : AUTHENTIFICATION
@@ -264,6 +300,7 @@ export function assembleContainer()
     const conversationRepo = new ConversationRepositoryPg(pool);
     const messageRepo = new MessageRepositoryPg(pool);
     const participantRepo = new ParticipantRepositoryPg(pool);
+    const conversationBansRepo = new ConversationBansRepositoryPg(pool);
 
     // TODO : SHARED FOR CHAT
     const conversationMapper = new MapToConversationDto();
@@ -278,7 +315,8 @@ export function assembleContainer()
         conversationRepo,
         participantRepo,
         conversationMapper,
-        RedisCacheService
+        RedisCacheService,
+        userToUserBlocksPG,
     );
     const createGroupConversationUseCase = new CreateGroupConversationUseCase(
         conversationRepo,
@@ -335,7 +373,9 @@ export function assembleContainer()
         messageMapper,
         checkIsParticipant,
         RedisCacheService,
-        participantRepo
+        participantRepo,
+        userToUserBlocksPG,
+        conversationBansRepo,
     );
     const getSpecificMessageUseCase = new GetSpecificMessageUseCase(
         messageMapper,
@@ -351,7 +391,6 @@ export function assembleContainer()
     );
     const getParticipantsRoleUseCase = new GetParticipantsUseCase(
         participantRepo,
-        participantMapper,
         RedisCacheService,
     );
     const getSpecificParticipantUseCase = new GetSpecificParticipantUseCase(
@@ -362,7 +401,8 @@ export function assembleContainer()
         conversationRepo,
         participantRepo,
         participantMapper,
-        RedisCacheService
+        RedisCacheService,
+        conversationBansRepo,
     );
     const leaveConversationUseCase = new LeaveConversationUseCase(
         participantRepo,
@@ -381,6 +421,21 @@ export function assembleContainer()
         participantRepo,
         participantMapper,
         RedisCacheService
+    );
+    const banConversationParticipantUseCase = new BanGroupParticipantUseCase(
+        participantRepo,
+        conversationBansRepo,
+        RedisCacheService,
+    );
+    const unbanConversationParticipantUseCase = new UnbanGroupParticipantUseCase(
+        participantRepo,
+        conversationBansRepo,
+        RedisCacheService,
+    );
+    const getBannedParticipantsUseCase = new GetBannedUsersUseCase(
+        participantRepo,
+        conversationBansRepo,
+        RedisCacheService,
     );
 
     // TODO : CHAT (SERVICES)
@@ -409,7 +464,9 @@ export function assembleContainer()
     const muteParticipantService = new MuteParticipantTxService(txManager);
     const removeParticipantService = new RemoveParticipantTxService(txManager);
     const unmuteParticipantService = new UnmuteParticipantTxService(txManager);
-
+    const banParticipantService = new BanGroupParticipantService(txManager);
+    const unbanParticipantService = new UnbanGroupParticipantService(txManager);
+    const getBannedUsersService = new GetBannedUsersService(txManager);
 
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
@@ -488,7 +545,18 @@ export function assembleContainer()
         unmuteParticipantService,
         extractActorId
     );
-
+    const banParticipantController = new BanGroupParticipantController(
+        banParticipantService,
+        extractActorId
+    );
+    const unbanParticipantController = new UnbanGroupParticipantController(
+        unbanParticipantService,
+        extractActorId
+    );
+    const getBannedUsersController = new GetBannedUsersController(
+        getBannedUsersService,
+        extractActorId
+    );
 
 
 
@@ -505,6 +573,9 @@ export function assembleContainer()
         searchUsersController,
         getSpecificUserController,
         confirmEmailChangeController,
+        blockSpecificUserController,
+        unblockSpecificUserController,
+        getFullBlackListController,
 
         // jwt token service
         jwtTokenService,
@@ -550,7 +621,10 @@ export function assembleContainer()
         muteParticipantController,
         removeParticipantController,
         unmuteParticipantController,
-        getSpecificParticipantController
+        getSpecificParticipantController,
+        banParticipantController,
+        unbanParticipantController,
+        getBannedUsersController,
     }
 }
 

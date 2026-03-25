@@ -62,7 +62,14 @@ describe("GetSpecificParticipantUseCase", () => {
         );
 
         participantRepo.getSpecificParticipant.mockResolvedValue({
-            userId: TARGET_ID
+            conversationId: CONVERSATION_ID,
+            userId: TARGET_ID,
+            username: "testuser",
+            email: "test@test.com",
+            role: "member",
+            canSendMessages: true,
+            mutedUntil: null,
+            joinedAt: new Date(),
         });
 
         await useCase.getSpecificParticipantUseCase(
@@ -92,7 +99,14 @@ describe("GetSpecificParticipantUseCase", () => {
         );
 
         participantRepo.getSpecificParticipant.mockResolvedValue({
-            userId: TARGET_ID
+            conversationId: CONVERSATION_ID,
+            userId: TARGET_ID,
+            username: "testuser",
+            email: "test@test.com",
+            role: "member",
+            canSendMessages: true,
+            mutedUntil: null,
+            joinedAt: new Date(),
         });
 
         await useCase.getSpecificParticipantUseCase(
@@ -138,8 +152,16 @@ describe("GetSpecificParticipantUseCase", () => {
 
         participantRepo.exists.mockResolvedValue(true);
 
+        const joinedAt = new Date();
         const participant = {
-            userId: TARGET_ID
+            conversationId: CONVERSATION_ID,
+            userId: TARGET_ID,
+            username: "testuser",
+            email: "test@test.com",
+            role: "member",
+            canSendMessages: true,
+            mutedUntil: null,
+            joinedAt: joinedAt,
         };
 
         participantRepo.getSpecificParticipant.mockResolvedValue(participant);
@@ -154,7 +176,13 @@ describe("GetSpecificParticipantUseCase", () => {
             TARGET_ID
         );
 
-        expect(result).toEqual(participant);
+        // Use case converts Date to ISO string
+        expect(result).toEqual({
+            participant: {
+                ...participant,
+                joinedAt: joinedAt.toISOString(),
+            }
+        });
 
     });
 

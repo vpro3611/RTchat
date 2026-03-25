@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue"
-import { useRoute } from "vue-router"
+
 import { useQuasar } from "quasar"
 
 import { ChatStore } from "stores/chat_store"
@@ -8,7 +8,6 @@ import { SearchStore } from "stores/conversations_search_store"
 import { UserApi } from "src/api/apis/user_api"
 
 import ChatList from "components/ChatList.vue"
-import ChatPage from "pages/ChatPage.vue"
 import CreateGroupDialog from "components/CreateGroupDialog.vue"
 import ProfileDialog from "components/ProfileDialog.vue"
 import SearchConversationsComponent from "components/SearchConversationsComponent.vue"
@@ -17,7 +16,7 @@ import UserSearchDialog from "components/UserSearchDialog.vue";
 const showProfileDialog = ref(false)
 const drawer = ref(true)
 
-const route = useRoute()
+
 const $q = useQuasar()
 const error = ref<string | null>(null)
 
@@ -72,6 +71,9 @@ onMounted(loadChats)
 
         <q-space />
         <q-btn flat dense round icon="search" @click="showUserSearch = true" />
+        <q-btn flat dense round icon="block" @click="$router.push('/blacklist')">
+          <q-tooltip>Blocked users</q-tooltip>
+        </q-btn>
         <q-btn flat dense round icon="person" @click="showProfileDialog = true" />
         <q-btn flat dense round icon="add" @click="openCreateGroupDialog" />
       </q-toolbar>
@@ -93,13 +95,7 @@ onMounted(loadChats)
 
     <!-- RIGHT -->
     <q-page-container>
-      <div v-if="!route.params.id" class="flex flex-center full-height">
-        <div class="text-grey">
-          Select a chat to start messaging
-        </div>
-      </div>
-
-      <ChatPage v-else />
+      <router-view />
     </q-page-container>
 
   </q-layout>

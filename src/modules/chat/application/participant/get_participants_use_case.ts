@@ -1,12 +1,10 @@
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
-import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 import {ActorIsNotParticipantError} from "../../errors/participants_errors/participant_errors";
 
 
 export class GetParticipantsUseCase {
     constructor(private readonly participantRepo: ParticipantRepoInterface,
-                private readonly participantMapper: MapToParticipantDto,
                 private readonly cacheService: CacheServiceInterface
     ) {}
 
@@ -34,7 +32,20 @@ export class GetParticipantsUseCase {
                 );
 
                 return {
-                    items: result.items.map(participant => this.participantMapper.mapToParticipantDto(participant)),
+                    items: result.items.map(participant => ({
+                        conversationId: participant.conversationId,
+                        userId: participant.userId,
+                        username: participant.username,
+                        email: participant.email,
+                        role: participant.role,
+                        canSendMessages: participant.canSendMessages,
+                        mutedUntil: participant.mutedUntil instanceof Date 
+                            ? participant.mutedUntil.toISOString() 
+                            : participant.mutedUntil,
+                        joinedAt: participant.joinedAt instanceof Date 
+                            ? participant.joinedAt.toISOString() 
+                            : participant.joinedAt,
+                    })),
                     nextCursor: result.nextCursor,
                 };
             }

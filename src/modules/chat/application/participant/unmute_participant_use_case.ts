@@ -38,8 +38,9 @@ export class UnmuteParticipantUseCase {
         }
     }
 
-    private async invalidateParticipantsCache(conversationId: string) {
+    private async invalidateParticipantsCache(conversationId: string, targetId: string) {
         await this.cacheService.del(`participants:conv:${conversationId}`);
+        await this.cacheService.del(`participant:conv:${conversationId}:user:${targetId}`);
     }
 
     async unmuteParticipantUseCase(actorId: string, targetId: string, conversationId: string): Promise<ParticipantDTO> {
@@ -53,7 +54,7 @@ export class UnmuteParticipantUseCase {
 
         await this.participantRepo.save(target);
 
-        await this.invalidateParticipantsCache(conversationId);
+        await this.invalidateParticipantsCache(conversationId, targetId);
 
         return this.participantMapper.mapToParticipantDto(target);
     }

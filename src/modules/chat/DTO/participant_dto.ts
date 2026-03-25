@@ -5,6 +5,6 @@ export type ParticipantDTO = {
     userId: string,
     role: string,
     canSendMessages: boolean,
-    mutedUntil: Date | null,
-    joinedAt: Date,
+    mutedUntil: string | null,
+    joinedAt: string,
 }
