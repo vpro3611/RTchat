@@ -9,6 +9,7 @@ import {CheckIsParticipant} from "../../shared/is_participant";
 import {SendMessageUseCase} from "../../application/message/send_message_use_case";
 import {RedisCacheService} from "../../../../container";
 import {UserToUserBlocksPg} from "../../../users/repositories/user_to_user_blocks_pg";
+import {ConversationBansRepositoryPg} from "../../repositories_pg_realization/conversation_bans_repository_pg";
 
 
 export class SendMessageTxService {
@@ -23,6 +24,7 @@ export class SendMessageTxService {
             const participantRepo = new ParticipantRepositoryPg(client);
             const checkIsParticipant = new CheckIsParticipant(participantRepo);
             const userToUserBansRepo = new UserToUserBlocksPg(client);
+            const conversationBansRepo = new ConversationBansRepositoryPg(client);
 
             const sendMessageUseCase = new SendMessageUseCase(
                 messageRepo,
@@ -31,7 +33,8 @@ export class SendMessageTxService {
                 checkIsParticipant,
                 RedisCacheService,
                 participantRepo,
-                userToUserBansRepo
+                userToUserBansRepo,
+                conversationBansRepo,
             );
 
             return await sendMessageUseCase.sendMessageUseCase(actorId, conversationId, content);
