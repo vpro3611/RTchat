@@ -88,6 +88,22 @@ export class Participant {
         this.role = this.role === ParticipantRole.MEMBER ? ParticipantRole.OWNER : ParticipantRole.MEMBER;
     }
 
+    canBanOther(other: Participant) {
+        return (
+            this.getRole() === ParticipantRole.OWNER &&
+            other.getRole() !== ParticipantRole.OWNER &&
+            this.getConversationId() === other.getConversationId() &&
+            this.userId !== other.userId
+        );
+    }
+
+    canUnban(targetId: string) {
+        return (
+            this.getRole() === ParticipantRole.OWNER &&
+            this.userId !== targetId
+        );
+    }
+
     getConversationId = () => this.conversationId;
     getRole = () => this.role;
     getCanSendMessages = () => this.canSendMessages;
