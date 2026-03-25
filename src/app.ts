@@ -274,17 +274,17 @@ export function createApp(dependencies: AppContainer): Express
         validateParams(BanGroupParticipantParamsSchema),
         validateBody(BanGroupParticipantBodySchema),
         dependencies.banParticipantController.banGroupParticipantCont
-    );
+    ); //
 
     privateRouter.delete("/conversation/:conversationId/:targetId/unban",
         validateParams(UnbanGroupParticipantParamsSchema),
         dependencies.unbanParticipantController.unbanGroupParticipantCont
-    );
+    ); //
 
     privateRouter.get("/conversation/:conversationId/ban_list",
         validateParams(GetBannedUsersParamsSchema),
         dependencies.getBannedUsersController.getBannedUserCont
-    );
+    ); //
 
     app.use(errorMiddleware());
 
