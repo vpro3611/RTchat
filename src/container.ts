@@ -375,6 +375,7 @@ export function assembleContainer()
         RedisCacheService,
         participantRepo,
         userToUserBlocksPG,
+        conversationBansRepo,
     );
     const getSpecificMessageUseCase = new GetSpecificMessageUseCase(
         messageMapper,
@@ -400,7 +401,8 @@ export function assembleContainer()
         conversationRepo,
         participantRepo,
         participantMapper,
-        RedisCacheService
+        RedisCacheService,
+        conversationBansRepo,
     );
     const leaveConversationUseCase = new LeaveConversationUseCase(
         participantRepo,
