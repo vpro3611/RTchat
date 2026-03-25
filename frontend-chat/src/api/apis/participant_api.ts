@@ -2,6 +2,7 @@ import {fetchJson} from "src/api/fetch/generinc_fetcher";
 import {BaseUrl} from "src/base_url/base_url";
 import {AuthStore} from "stores/auth_store";
 import type {ParticipantsResponse, ParticipantResponse, MuteDuration, ParticipantRole} from "src/api/types/participant_response";
+import type {ConversationBansFrontend} from "src/api/types/conversation_bans_response";
 
 export const ParticipantApi = {
   // Получить список участников
@@ -118,5 +119,45 @@ export const ParticipantApi = {
         },
       }
     );
+  },
+
+  // unban a specific participant from a group conversation
+  unbanGroupParticipant(conversationId: string, targetId: string) {
+    return fetchJson<void>(
+      // /conversation/:conversationId/:targetId/unban
+      `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/unban`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      }
+    );
+  },
+
+  banGroupParticipant(conversationId: string, targetId: string, reason: string) {
+    // /conversation/:conversationId/:targetId/ban
+    return fetchJson<ConversationBansFrontend>(
+      `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/ban`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+        body: JSON.stringify({reason}),
+      }
+    )
+  },
+  getBannedParticipantsList(conversationId: string) {
+    return fetchJson<ConversationBansFrontend[]>(
+      `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/ban_list`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      }
+    )
   }
 };
