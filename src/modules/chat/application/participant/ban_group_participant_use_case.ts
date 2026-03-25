@@ -7,6 +7,7 @@ import {
 import {Participant} from "../../domain/participant/participant";
 import {ConversationBans} from "../../domain/conversation_bans/conversation_bans";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
+import {ConversationBansDTO} from "../../DTO/bans_dto";
 
 
 export class BanGroupParticipantUseCase {
@@ -61,7 +62,7 @@ export class BanGroupParticipantUseCase {
 
     async banGroupParticipantUseCase(data:
         Omit<ConversationBans, "createdAt">
-    ): Promise<ConversationBans> {
+    ): Promise<ConversationBansDTO> {
         const actor = await this.actorIsParticipant(data.conversationId, data.bannedBy);
 
         const target = await this.targetIsParticipant(data.conversationId, data.userId);
@@ -79,6 +80,6 @@ export class BanGroupParticipantUseCase {
             await this.invalidateConversationBansCache(data.conversationId),
         ]);
 
-        return createdBan;
+        return {...createdBan, createdAt: createdBan.createdAt.toISOString()};
     }
 }
