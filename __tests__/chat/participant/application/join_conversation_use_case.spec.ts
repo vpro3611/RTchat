@@ -10,8 +10,10 @@ describe("JoinConversationUseCase", () => {
 
     let conversationRepo: any;
     let participantRepo: any;
-    let mapper: any;
     let cacheService: any;
+    let conversationBansRepo: any;
+    let conversationRequestsRepo: any;
+    let requestMapper: any;
 
     let useCase: JoinConversationUseCase;
 
@@ -29,20 +31,30 @@ describe("JoinConversationUseCase", () => {
             save: jest.fn()
         };
 
-        mapper = {
-            mapToParticipantDto: jest.fn()
-        };
-
         cacheService = {
             del: jest.fn(),
             delByPattern: jest.fn()
         };
 
+        conversationBansRepo = {
+            isBanned: jest.fn()
+        };
+
+        conversationRequestsRepo = {
+            create: jest.fn()
+        };
+
+        requestMapper = {
+            mapToRequestDto: jest.fn()
+        };
+
         useCase = new JoinConversationUseCase(
             conversationRepo,
             participantRepo,
-            mapper,
-            cacheService
+            cacheService,
+            conversationBansRepo,
+            conversationRequestsRepo,
+            requestMapper
         );
     });
 
@@ -86,6 +98,8 @@ describe("JoinConversationUseCase", () => {
             getConversationType: () => ConversationType.GROUP
         });
 
+        conversationBansRepo.isBanned.mockResolvedValue(false);
+
         participantRepo.exists.mockResolvedValue(true);
 
         await expect(
@@ -95,19 +109,22 @@ describe("JoinConversationUseCase", () => {
     });
 
     // =========================
-    // happy path
+    // happy path (now creates a request)
     // =========================
 
-    it("should join conversation successfully", async () => {
+    it("should create a join request successfully", async () => {
 
         conversationRepo.findById.mockResolvedValue({
             getConversationType: () => ConversationType.GROUP
         });
 
+        conversationBansRepo.isBanned.mockResolvedValue(false);
+
         participantRepo.exists.mockResolvedValue(false);
 
-        mapper.mapToParticipantDto.mockReturnValue({
-            userId: USER_ID
+        requestMapper.mapToRequestDto.mockReturnValue({
+            userId: USER_ID,
+            status: "pending"
         });
 
         const result = await useCase.joinConversationUseCase(
@@ -115,15 +132,15 @@ describe("JoinConversationUseCase", () => {
             CONVERSATION_ID
         );
 
-        expect(participantRepo.save).toHaveBeenCalled();
-
-        expect(cacheService.del)
-            .toHaveBeenCalledWith(`participants:conv:${CONVERSATION_ID}`);
+        expect(conversationRequestsRepo.create).toHaveBeenCalled();
 
         expect(cacheService.delByPattern)
-            .toHaveBeenCalledWith(`conv:user:${USER_ID}:*`);
+            .toHaveBeenCalledWith(`conv_requests:group:${CONVERSATION_ID}:*`);
 
-        expect(result).toEqual({ userId: USER_ID });
+        expect(cacheService.delByPattern)
+            .toHaveBeenCalledWith(`conv_requests:user:${USER_ID}:*`);
+
+        expect(result).toEqual({ userId: USER_ID, status: "pending" });
 
     });
 
