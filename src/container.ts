@@ -192,6 +192,68 @@ import {
     UnbanGroupParticipantController
 } from "./modules/chat/controllers/participant/unban_group_participant_controller";
 import {GetBannedUsersController} from "./modules/chat/controllers/participant/get_banned_users_controller";
+import {
+    ConversationRequestsRepositoryPg
+} from "./modules/chat/repositories_pg_realization/conversation_requests_repository_pg";
+import {MapToRequestDto} from "./modules/chat/shared/map_to_request_dto";
+import {
+    ChangeRequestStatusUseCase
+} from "./modules/chat/application/conversation_requests/change_request_status_use_case";
+import {WithdrawRequestUseCase} from "./modules/chat/application/conversation_requests/withdraw_request_use_case";
+import {
+    CreateConversationRequestUseCase
+} from "./modules/chat/application/conversation_requests/create_conversation_request_use_case";
+import {
+    ChangeRequestStatusService
+} from "./modules/chat/transactional_services/conversation_requests/change_request_status_service";
+import {
+    WithdrawRequestService
+} from "./modules/chat/transactional_services/conversation_requests/withdraw_request_service";
+import {
+    CreateConversationRequestService
+} from "./modules/chat/transactional_services/conversation_requests/cretate_conversation_reques_service";
+import {
+    ChangeConversationRequestStatusController
+} from "./modules/chat/controllers/conversation_requests/change_conversation_request_status_controller";
+import {
+    WithdrawConversationRequestController
+} from "./modules/chat/controllers/conversation_requests/withdraw_conversation_request_controller";
+import {
+    CreateConversationRequestController
+} from "./modules/chat/controllers/conversation_requests/create_conversation_request_controller";
+import {GetAllRequestListUseCase} from "./modules/chat/application/conversation_requests/get_all_requst_list_use_case";
+import {
+    GetAllRequestListService
+} from "./modules/chat/transactional_services/conversation_requests/get_all_request_list_service";
+import {
+    GetAllRequestListController
+} from "./modules/chat/controllers/conversation_requests/get_all_request_list_controller";
+import {GetUsersRequestsUseCase} from "./modules/chat/application/conversation_requests/get_users_requests_use_case";
+import {RemoveRequestUseCase} from "./modules/chat/application/conversation_requests/remove_request_use_case";
+import {
+    GetUsersRequestsService
+} from "./modules/chat/transactional_services/conversation_requests/get_users_requests_service";
+import {RemoveRequestService} from "./modules/chat/transactional_services/conversation_requests/remove_request_service";
+import {GetUsersRequestController} from "./modules/chat/controllers/conversation_requests/get_users_request_controller";
+import {RemoveRequestController} from "./modules/chat/controllers/conversation_requests/remove_request_controller";
+import {
+    GetSpecificRequestUserUseCase
+} from "./modules/chat/application/conversation_requests/get_specific_request_user_use_case";
+import {
+    GetSpecificRequestGroupUseCase
+} from "./modules/chat/application/conversation_requests/get_specific_request_group_use_case";
+import {
+    GetSpecificRequestUserService
+} from "./modules/chat/transactional_services/conversation_requests/get_specific_request_user_service";
+import {
+    GetSpecificRequestGroupService
+} from "./modules/chat/transactional_services/conversation_requests/get_specific_request_group_service";
+import {
+    GetSpecificRequestUserController
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_user_controller";
+import {
+    GetSpecificRequestGroupController
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_group_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -296,11 +358,13 @@ export function assembleContainer()
     );
 
 
+
     // TODO : CHAT
     const conversationRepo = new ConversationRepositoryPg(pool);
     const messageRepo = new MessageRepositoryPg(pool);
     const participantRepo = new ParticipantRepositoryPg(pool);
     const conversationBansRepo = new ConversationBansRepositoryPg(pool);
+    const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool);
 
     // TODO : SHARED FOR CHAT
     const conversationMapper = new MapToConversationDto();
@@ -308,6 +372,7 @@ export function assembleContainer()
     const participantMapper = new MapToParticipantDto();
     const checkIsParticipant = new CheckIsParticipant(participantRepo);
     const findMessageById = new FindMessageById(messageRepo);
+    const mapToRequestDto = new MapToRequestDto();
 
 
     // TODO : CHAT (USE CASES)
@@ -400,9 +465,10 @@ export function assembleContainer()
     const joinConversationUseCase = new JoinConversationUseCase(
         conversationRepo,
         participantRepo,
-        participantMapper,
         RedisCacheService,
         conversationBansRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
     );
     const leaveConversationUseCase = new LeaveConversationUseCase(
         participantRepo,
@@ -438,6 +504,59 @@ export function assembleContainer()
         RedisCacheService,
     );
 
+    // ____ //
+
+    const changeRequestStatusUseCase = new ChangeRequestStatusUseCase(
+        participantRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const withdrawRequestUseCase = new WithdrawRequestUseCase(
+        userRepoReaderPG,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const createConversationRequestUseCase = new CreateConversationRequestUseCase(
+        userRepoReaderPG,
+        participantRepo,
+        conversationRepo,
+        conversationBansRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const getAllRequestsUseCase = new GetAllRequestListUseCase(
+        participantRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const getAllUsersRequestUseCase = new GetUsersRequestsUseCase(
+        userRepoReaderPG,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const removeSpecificRequestUseCase = new RemoveRequestUseCase(
+        userRepoReaderPG,
+        conversationRequestsRepo,
+        RedisCacheService,
+    );
+    const getSpecificRequestUserUseCase = new GetSpecificRequestUserUseCase(
+        conversationRequestsRepo,
+        userRepoReaderPG,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const getSpecificRequestConversationUseCase = new GetSpecificRequestGroupUseCase(
+        participantRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+
     // TODO : CHAT (SERVICES)
     const createDirectConversationService = new CreateDirectConversationTxService(txManager);
     const createGroupConversationService = new CreateGroupConversationTxService(txManager);
@@ -467,6 +586,17 @@ export function assembleContainer()
     const banParticipantService = new BanGroupParticipantService(txManager);
     const unbanParticipantService = new UnbanGroupParticipantService(txManager);
     const getBannedUsersService = new GetBannedUsersService(txManager);
+
+    // ____ //
+
+    const changeRequestStatusService = new ChangeRequestStatusService(txManager);
+    const withdrawRequestService = new WithdrawRequestService(txManager);
+    const createConversationRequestService = new CreateConversationRequestService(txManager);
+    const getAllRequestsService = new GetAllRequestListService(txManager);
+    const getAllUsersRequestService = new GetUsersRequestsService(txManager);
+    const removeSpecificRequestService = new RemoveRequestService(txManager);
+    const getSpecificRequestUserService = new GetSpecificRequestUserService(txManager);
+    const getSpecificRequestConversationService = new GetSpecificRequestGroupService(txManager);
 
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
@@ -558,7 +688,40 @@ export function assembleContainer()
         extractActorId
     );
 
+    // ____ //
 
+    const changeConversationRequestStatusController = new ChangeConversationRequestStatusController(
+        changeRequestStatusService,
+        extractActorId
+    );
+    const withdrawConversationRequestController = new WithdrawConversationRequestController(
+        withdrawRequestService,
+        extractActorId
+    );
+    const createConversationRequestController = new CreateConversationRequestController(
+        createConversationRequestService,
+        extractActorId
+    );
+    const getAllConversationRequestsController = new GetAllRequestListController(
+        getAllRequestsService,
+        extractActorId
+    );
+    const getUsersRequestsController = new GetUsersRequestController (
+        getAllUsersRequestService,
+        extractActorId
+    );
+    const removeConversationRequestController = new RemoveRequestController(
+        removeSpecificRequestService,
+        extractActorId
+    );
+    const getSpecificRequestUserController = new GetSpecificRequestUserController(
+        getSpecificRequestUserService,
+        extractActorId
+    );
+    const getSpecificRequestGroupController = new GetSpecificRequestGroupController(
+        getSpecificRequestConversationService,
+        extractActorId
+    );
 
     return {
         resendVerificationRegisterController,
@@ -625,6 +788,15 @@ export function assembleContainer()
         banParticipantController,
         unbanParticipantController,
         getBannedUsersController,
+
+        changeConversationRequestStatusController,
+        withdrawConversationRequestController,
+        createConversationRequestController,
+        getAllConversationRequestsController,
+        getUsersRequestsController,
+        removeConversationRequestController,
+        getSpecificRequestUserController,
+        getSpecificRequestGroupController,
     }
 }
 
