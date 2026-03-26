@@ -12,6 +12,7 @@ import CreateGroupDialog from "components/CreateGroupDialog.vue"
 import ProfileDialog from "components/ProfileDialog.vue"
 import SearchConversationsComponent from "components/SearchConversationsComponent.vue"
 import UserSearchDialog from "components/UserSearchDialog.vue";
+import MyRequestsDialog from "components/MyRequestsDialog.vue";
 
 const showProfileDialog = ref(false)
 const drawer = ref(true)
@@ -24,9 +25,14 @@ const showUserSearch = ref(false)
 
 
 const createDialogRef = ref<InstanceType<typeof CreateGroupDialog> | null>(null)
+const myRequestsDialogRef = ref<InstanceType<typeof MyRequestsDialog> | null>(null)
 
 function openCreateGroupDialog() {
   createDialogRef.value?.openDialog()
+}
+
+function openMyRequests() {
+  myRequestsDialogRef.value?.open()
 }
 
 //  главный флаг
@@ -71,6 +77,9 @@ onMounted(loadChats)
 
         <q-space />
         <q-btn flat dense round icon="search" @click="showUserSearch = true" />
+        <q-btn flat dense round icon="group_add" @click="openMyRequests">
+          <q-tooltip>My Join Requests</q-tooltip>
+        </q-btn>
         <q-btn flat dense round icon="block" @click="$router.push('/blacklist')">
           <q-tooltip>Blocked users</q-tooltip>
         </q-btn>
@@ -103,4 +112,5 @@ onMounted(loadChats)
   <CreateGroupDialog ref="createDialogRef" />
   <UserSearchDialog v-model="showUserSearch" />
   <ProfileDialog v-model="showProfileDialog" />
+  <MyRequestsDialog ref="myRequestsDialogRef" />
 </template>
