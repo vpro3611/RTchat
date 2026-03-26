@@ -57,6 +57,27 @@ import {
     UnbanGroupParticipantParamsSchema
 } from "./modules/chat/controllers/participant/unban_group_participant_controller";
 import {GetBannedUsersParamsSchema} from "./modules/chat/controllers/participant/get_banned_users_controller";
+import {
+    ChangeRequestStatusBodySchema,
+    ChangeRequestStatusParamsSchema
+} from "./modules/chat/controllers/conversation_requests/change_conversation_request_status_controller";
+import {
+    CreateConversationRequestBodySchema,
+    CreateConversationRequestParamsSchema
+} from "./modules/chat/controllers/conversation_requests/create_conversation_request_controller";
+import {
+    GetAllRequestListParamsSchema
+} from "./modules/chat/controllers/conversation_requests/get_all_request_list_controller";
+import {
+    GetSpecificRequestGroupParamsSchema
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_group_controller";
+import {
+    GetSpecificRequestUserParamsSchema
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_user_controller";
+import {RemoveRequestParamsSchema} from "./modules/chat/controllers/conversation_requests/remove_request_controller";
+import {
+    WithdrawConversationRequestParamsSchema
+} from "./modules/chat/controllers/conversation_requests/withdraw_conversation_request_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
@@ -284,6 +305,47 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.get("/conversation/:conversationId/ban_list",
         validateParams(GetBannedUsersParamsSchema),
         dependencies.getBannedUsersController.getBannedUserCont
+    ); //
+
+    privateRouter.patch("/conversation/:conversationId/requests/:requestId/status",
+        validateParams(ChangeRequestStatusParamsSchema),
+        validateBody(ChangeRequestStatusBodySchema),
+        dependencies.changeConversationRequestStatusController.changeConversationRequestStatusCont
+    ); //
+
+    privateRouter.post("/conversation/:conversationId/requests/create",
+        validateParams(CreateConversationRequestParamsSchema),
+        validateBody(CreateConversationRequestBodySchema),
+        dependencies.createConversationRequestController.createConvRequestCont
+    ); //
+
+    privateRouter.get("/conversation/:conversationId/requests/get_all",
+        validateParams(GetAllRequestListParamsSchema),
+        dependencies.getAllConversationRequestsController.getAllRequestListCont
+    ); //
+
+    privateRouter.get("/conversation/:conversationId/requests/:requestId/view",
+        validateParams(GetSpecificRequestGroupParamsSchema),
+        dependencies.getSpecificRequestGroupController.getSpecificRequestGroupCont
+    ); //
+
+    privateRouter.get("/private_requests/:requestId/view",
+        validateParams(GetSpecificRequestUserParamsSchema),
+        dependencies.getSpecificRequestUserController.getSpecificRequestUserController
+    ); //
+
+    privateRouter.get("/private_requests/view_all",
+        dependencies.getUsersRequestsController.getUsersRequestCont
+    ); //
+
+    privateRouter.patch("/private_requests/:requestId/remove",
+        validateParams(RemoveRequestParamsSchema),
+        dependencies.removeConversationRequestController.removeRequestCont
+    ); //
+
+    privateRouter.patch("/private_requests/:requestId/withdraw",
+        validateParams(WithdrawConversationRequestParamsSchema),
+        dependencies.withdrawConversationRequestController.withdrawConversationRequestCont
     ); //
 
     app.use(errorMiddleware());
