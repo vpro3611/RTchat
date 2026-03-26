@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref, watch } from "vue"
+import { onMounted, ref, watch } from "vue"
 import { debounce } from "lodash"
 
 import { SearchStore } from "stores/conversations_search_store"
 import { UserApi } from "src/api/apis/user_api"
 import { AuthStore } from "stores/auth_store"
 import { UserCacheStore } from "stores/user_cache_store"
+import { ChatStore } from "stores/chat_store"
+import { ParticipantApi } from "src/api/apis/participant_api"
+import { RequestStore } from "stores/request_store"
+import { useQuasar } from "quasar"
 
+const $q = useQuasar()
 const query = ref("")
 
 watch(query, debounce(async (val: string) => {
@@ -52,8 +57,7 @@ async function loadMore(index: number, done: (stop?: boolean) => void) {
       done()
     }
 
-  } catch (e) {
-    console.error(e)
+  } catch {
     done(true)
   } finally {
     SearchStore.setLoading(false)
@@ -78,6 +82,53 @@ function getChatTitle(chat: { title: string, conversationType: string, userLow: 
   return name ?? chat.title
 }
 
+function isMember(chatId: string) {
+  return !!ChatStore.findById(chatId)
+}
+
+function hasPendingRequest(chatId: string) {
+  return RequestStore.myRequests.some(r => r.conversationId === chatId && r.status === 'pending')
+}
+
+function handleJoin(chat: { id: string, title: string }) {
+  $q.dialog({
+    title: 'Join Group',
+    message: `Do you want to join "${chat.title}"? You can also provide a custom message for the owner:`,
+    prompt: {
+      model: '',
+      type: 'text',
+      placeholder: 'Hello, I would like to join...'
+    },
+    cancel: true,
+    persistent: true,
+    ok: {
+      label: 'Send Request',
+      color: 'primary'
+    }
+  }).onOk((message: string) => {
+    void (async () => {
+      try {
+        if (message && message.trim()) {
+          await ParticipantApi.createConversationRequest(chat.id, message)
+        } else {
+          await ParticipantApi.joinConversation(chat.id)
+        }
+        
+        $q.notify({
+          type: 'positive',
+          message: 'Join request sent successfully'
+        })
+        void RequestStore.fetchMyRequests()
+      } catch {
+        $q.notify({
+          type: 'negative',
+          message: 'Failed to send join request'
+        })
+      }
+    })()
+  })
+}
+
 watch(
   () => SearchStore.items,
   (list) => {
@@ -86,6 +137,10 @@ watch(
   },
   { immediate: true, deep: true }
 )
+
+onMounted(() => {
+  void RequestStore.fetchMyRequests()
+})
 </script>
 
 <template>
@@ -112,10 +167,29 @@ watch(
           <q-item
             v-for="chat in SearchStore.items"
             :key="chat.id"
-            clickable
+            :clickable="isMember(chat.id)"
+            @click="isMember(chat.id) && $router.push(`/chat/${chat.id}`)"
           >
             <q-item-section>
-              {{ getChatTitle(chat) }}
+              <q-item-label>{{ getChatTitle(chat) }}</q-item-label>
+              <q-item-label caption v-if="chat.conversationType === 'group'">
+                Group Chat
+              </q-item-label>
+            </q-item-section>
+
+            <q-item-section side v-if="chat.conversationType === 'group'">
+              <template v-if="!isMember(chat.id)">
+                <q-btn
+                  v-if="!hasPendingRequest(chat.id)"
+                  label="Join"
+                  color="primary"
+                  flat
+                  dense
+                  @click.stop="handleJoin(chat)"
+                />
+                <q-badge v-else color="orange" label="Pending" />
+              </template>
+              <q-badge v-else color="positive" label="Member" />
             </q-item-section>
           </q-item>
 
