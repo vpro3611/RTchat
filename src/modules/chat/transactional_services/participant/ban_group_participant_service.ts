@@ -28,7 +28,7 @@ export class BanGroupParticipantService {
                 RedisCacheService
             );
 
-            return banGroupParticipantUseCase.banGroupParticipantUseCase({
+            return await banGroupParticipantUseCase.banGroupParticipantUseCase({
                     conversationId: conversationId,
                     userId: targetId,
                     bannedBy: actorId,
