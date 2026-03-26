@@ -5,7 +5,7 @@ import {ParticipantRepositoryPg} from "../../repositories_pg_realization/partici
 import {ConversationBansRepositoryPg} from "../../repositories_pg_realization/conversation_bans_repository_pg";
 import {BanGroupParticipantUseCase} from "../../application/participant/ban_group_participant_use_case";
 import {RedisCacheService} from "../../../../container";
-import {ConversationBans} from "../../domain/conversation_bans/conversation_bans";
+import {ConversationBansDTO} from "../../DTO/bans_dto";
 
 
 export class BanGroupParticipantService {
@@ -17,7 +17,7 @@ export class BanGroupParticipantService {
         targetId: string,
         actorId: string,
         reason: string
-    ): Promise<ConversationBans> {
+    ): Promise<ConversationBansDTO> {
         return await this.txManager.runInTransaction(async (client) => {
             const participantRepo = new ParticipantRepositoryPg(client);
             const conversationBansRepo = new ConversationBansRepositoryPg(client);
