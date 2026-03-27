@@ -3,6 +3,7 @@ import type {Socket} from "socket.io-client";
 import {BaseUrl} from "src/base_url/base_url";
 import {AuthStore} from "stores/auth_store";
 import {MessageStore} from "stores/message_store";
+import {ChatStore} from "stores/chat_store";
 import type {Message} from "src/api/types/message_response";
 
 type TypingCallback = (data: { conversationId: string; userId: string; username: string }) => void;
@@ -63,6 +64,12 @@ class ChatSocketService {
     // Новое сообщение
     this.socket.on('message:new', (data: Message) => {
       MessageStore.addMessage(data);
+      // Обновляем список чатов: поднимаем чат наверх и обновляем время
+      const chat = ChatStore.findById(data.conversationId);
+      if (chat) {
+        chat.lastMessageAt = data.createdAt;
+        ChatStore.bumpChat(data.conversationId);
+      }
     });
 
     // Сообщение отредактировано - бэкенд отправляет { message: MessageDTO }
