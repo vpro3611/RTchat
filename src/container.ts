@@ -254,6 +254,15 @@ import {
 import {
     GetSpecificRequestGroupController
 } from "./modules/chat/controllers/conversation_requests/get_specific_request_group_controller";
+import {
+    AddParticipantToConversationUseCase
+} from "./modules/chat/application/participant/add_participant_to_conversation_use_case";
+import {
+    AddParticipantToConversationTxService
+} from "./modules/chat/transactional_services/participant/add_participant_to_conversation_tx_service";
+import {
+    AddParticipantToAConversationController
+} from "./modules/chat/controllers/participant/add_participant_to_a_conversation_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -503,6 +512,15 @@ export function assembleContainer()
         conversationBansRepo,
         RedisCacheService,
     );
+    const addParticipantToConversationUseCase = new AddParticipantToConversationUseCase(
+        userRepoReaderPG,
+        participantRepo,
+        conversationBansRepo,
+        participantMapper,
+        conversationRepo,
+        userToUserBlocksPG,
+        RedisCacheService,
+    );
 
     // ____ //
 
@@ -586,6 +604,7 @@ export function assembleContainer()
     const banParticipantService = new BanGroupParticipantService(txManager);
     const unbanParticipantService = new UnbanGroupParticipantService(txManager);
     const getBannedUsersService = new GetBannedUsersService(txManager);
+    const addParticipantToConversationService = new AddParticipantToConversationTxService(txManager);
 
     // ____ //
 
@@ -687,7 +706,10 @@ export function assembleContainer()
         getBannedUsersService,
         extractActorId
     );
-
+    const addParticipantToConversationController = new AddParticipantToAConversationController(
+        addParticipantToConversationService,
+        extractActorId
+    );
     // ____ //
 
     const changeConversationRequestStatusController = new ChangeConversationRequestStatusController(
@@ -788,6 +810,7 @@ export function assembleContainer()
         banParticipantController,
         unbanParticipantController,
         getBannedUsersController,
+        addParticipantToConversationController,
 
         changeConversationRequestStatusController,
         withdrawConversationRequestController,
