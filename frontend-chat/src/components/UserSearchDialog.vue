@@ -10,7 +10,7 @@ import { useQuasar } from "quasar"
 import type { Participant } from "src/api/types/participant_response"
 import UserProfileDialog from "components/UserProfileDialog.vue";
 
-const props = defineProps<{ 
+const props = defineProps<{
   modelValue: boolean,
   conversationId?: string
 }>()
@@ -94,15 +94,15 @@ async function addToGroup(userId: string, username: string) {
   try {
     isAdding.value[userId] = true
     const dto = await ParticipantApi.addParticipantToGroup(props.conversationId, userId)
-    
+
     $q.notify({
       type: 'positive',
       message: `${username} added to group`
     })
-    
+
     // Находим пользователя в результатах поиска, чтобы взять его email
     const user = SearchStoreUser.items.find(u => u.id === userId)
-    
+
     // Формируем полный объект участника для Store
     const participant: Participant = {
       conversationId: dto.conversationId,
@@ -114,7 +114,7 @@ async function addToGroup(userId: string, username: string) {
       mutedUntil: dto.mutedUntil,
       joinedAt: dto.joinedAt
     }
-    
+
     emit('added', participant)
   } catch {
     $q.notify({
