@@ -81,6 +81,13 @@ import {
 import {
     AddParticipantToAConversationParamsSchema
 } from "./modules/chat/controllers/participant/add_participant_to_a_conversation_controller";
+import {SaveMessageParamsSchema} from "./modules/chat/controllers/saved_messages/save_message_controller";
+import {
+    RemoveSavedMessageParamsSchema
+} from "./modules/chat/controllers/saved_messages/remove_saved_message_controller";
+import {
+    GetSpecificSavedMessageParamsSchema
+} from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
@@ -355,6 +362,25 @@ export function createApp(dependencies: AppContainer): Express
         validateParams(AddParticipantToAConversationParamsSchema),
         dependencies.addParticipantToConversationController.addParticipantToAConversationCont
     ); //
+
+    privateRouter.post("/conversation/:conversationId/:messageId/save",
+        validateParams(SaveMessageParamsSchema),
+        dependencies.saveMessageController.saveMessageCont
+    );
+
+    privateRouter.delete("/user/saved_messages/:messageId/remove",
+        validateParams(RemoveSavedMessageParamsSchema),
+        dependencies.removeSavedMessageController.removeSavedMessageCont
+    );
+
+    privateRouter.get("/user/saved_messages/:messageId/view",
+        validateParams(GetSpecificSavedMessageParamsSchema),
+        dependencies.getSpecificSavedMessageController.getSpecificSavedMessageCont
+    );
+
+    privateRouter.get("/user/saved_messages/all",
+        dependencies.getSavedMessagesListController.getSavedMessagesListCont
+    );
 
     app.use(errorMiddleware());
 
