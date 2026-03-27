@@ -6,6 +6,7 @@ import { UserCacheStore } from "stores/user_cache_store";
 const props = defineProps<{
   message: Message;
   isOwn: boolean;
+  isSaved?: boolean;
 }>();
 
 // FIX : FIXED - вычисляем senderUsername из кэша
@@ -21,6 +22,7 @@ const senderUsername = computed(() => {
 const emit = defineEmits<{
   (e: 'edit', messageId: string, content: string): void;
   (e: 'delete', messageId: string): void;
+  (e: 'save', messageId: string): void;
 }>();
 
 function formatTime(dateString: string) {
@@ -48,6 +50,10 @@ function handleEdit() {
 
 function handleDelete() {
   emit('delete', props.message.id);
+}
+
+function handleSave() {
+  emit('save', props.message.id);
 }
 </script>
 
@@ -88,15 +94,15 @@ function handleDelete() {
       <!-- Time & Menu -->
       <div class="row items-center justify-between q-px-sm q-pb-xs">
         <div
-          class="text-caption"
+          class="text-caption row items-center"
           :class="isOwn ? 'text-white' : 'text-grey'"
         >
           {{ formatDate(message.createdAt) }} {{ formatTime(message.createdAt) }}
+          <q-icon v-if="isSaved" name="bookmark" size="14px" class="q-ml-xs" />
         </div>
 
-        <!-- Menu button (только для своих сообщений) -->
+        <!-- Menu button (доступно для всех сообщений) -->
         <q-btn
-          v-if="isOwn"
           flat
           dense
           round
@@ -105,10 +111,15 @@ function handleDelete() {
         >
           <q-menu anchor="top right" self="top left">
             <q-list dense style="min-width: 100px">
-              <q-item clickable v-close-popup @click="handleEdit">
+              <q-item clickable v-close-popup @click="!isSaved && handleSave()" :disable="isSaved">
+                <q-item-section :class="isSaved ? 'text-grey' : 'text-primary'">
+                  {{ isSaved ? 'Saved' : 'Save' }}
+                </q-item-section>
+              </q-item>
+              <q-item v-if="isOwn" clickable v-close-popup @click="handleEdit">
                 <q-item-section>Edit</q-item-section>
               </q-item>
-              <q-item clickable v-close-popup @click="handleDelete">
+              <q-item v-if="isOwn" clickable v-close-popup @click="handleDelete">
                 <q-item-section class="text-negative">Delete</q-item-section>
               </q-item>
             </q-list>
