@@ -78,6 +78,9 @@ import {RemoveRequestParamsSchema} from "./modules/chat/controllers/conversation
 import {
     WithdrawConversationRequestParamsSchema
 } from "./modules/chat/controllers/conversation_requests/withdraw_conversation_request_controller";
+import {
+    AddParticipantToAConversationParamsSchema
+} from "./modules/chat/controllers/participant/add_participant_to_a_conversation_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
@@ -237,7 +240,7 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.post("/conversation/:conversationId/join",
         validateParams(JoinConversationParamsSchema),
         dependencies.joinConversationController.joinConversationCont
-    );
+    ); //
 
     privateRouter.delete("/conversation/:conversationId/leave",
         validateParams(LeaveConversationParamsSchema),
@@ -346,6 +349,11 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.patch("/private_requests/:requestId/withdraw",
         validateParams(WithdrawConversationRequestParamsSchema),
         dependencies.withdrawConversationRequestController.withdrawConversationRequestCont
+    ); //
+
+    privateRouter.post("/conversation/:conversationId/:targetId/force_add",
+        validateParams(AddParticipantToAConversationParamsSchema),
+        dependencies.addParticipantToConversationController.addParticipantToAConversationCont
     ); //
 
     app.use(errorMiddleware());
