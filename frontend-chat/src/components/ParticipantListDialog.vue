@@ -8,6 +8,7 @@ import type { Participant } from "src/api/types/participant_response";
 import ParticipantDetailsDialog from "components/ParticipantDetailsDialog.vue";
 import BannedParticipantsDialog from "components/BannedParticipantsDialog.vue";
 import ManageRequestsDialog from "components/ManageRequestsDialog.vue";
+import UserSearchDialog from "components/UserSearchDialog.vue";
 
 const $q = useQuasar();
 
@@ -29,6 +30,7 @@ const isLoadingMore = ref(false);
 const detailsDialogRef = ref<{ openDialog: (participant: Participant) => void } | null>(null);
 const bannedDialogRef = ref<{ openDialog: () => void } | null>(null);
 const requestsDialogRef = ref<{ open: () => void } | null>(null);
+const showAddUserSearch = ref(false);
 
 // Текущий пользователь
 const currentUserId = computed(() => AuthStore.user?.id);
@@ -91,6 +93,18 @@ function openRequestsList() {
   requestsDialogRef.value?.open();
 }
 
+function openAddUserSearch() {
+  showAddUserSearch.value = true;
+}
+
+function onUserAdded(participant?: Participant) {
+  if (participant) {
+    ParticipantStore.addParticipant(participant);
+  } else {
+    void loadParticipants();
+  }
+}
+
 // Открыть диалог
 function openDialog() {
   ParticipantStore.clearParticipants();
@@ -111,6 +125,11 @@ defineExpose({ openDialog });
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">Participants</div>
         <q-space />
+        <q-btn v-if="isOwner && props.conversationType === 'group'" 
+               flat round dense color="primary" icon="person_add" 
+               @click="openAddUserSearch" class="q-mr-sm">
+          <q-tooltip>Add User</q-tooltip>
+        </q-btn>
         <q-btn v-if="isOwner && props.conversationType === 'group'" 
                flat round dense color="orange" icon="group_add" 
                @click="openRequestsList" class="q-mr-sm">
@@ -206,6 +225,14 @@ defineExpose({ openDialog });
     <ManageRequestsDialog
       ref="requestsDialogRef"
       :conversationId="conversationId"
+      @accepted="onUserAdded"
+    />
+
+    <!-- Поиск пользователей для добавления -->
+    <UserSearchDialog
+      v-model="showAddUserSearch"
+      :conversationId="conversationId"
+      @added="onUserAdded"
     />
   </q-dialog>
 </template>
