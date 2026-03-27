@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useQuasar } from "quasar";
 import { ParticipantApi } from "src/api/apis/participant_api";
 import { UserApi } from "src/api/apis/user_api";
@@ -319,6 +319,20 @@ function onDialogClose() {
   isBlocked.value = false;
   isLoading.value = false;
 }
+
+function handleBlockChange() {
+  if (participant.value && isOpen.value) {
+    void checkBlockStatus(participant.value.userId);
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('block-status-changed', handleBlockChange);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('block-status-changed', handleBlockChange);
+});
 
 defineExpose({ openDialog });
 </script>
