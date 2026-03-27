@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import { useQuasar } from "quasar"
+import { ParticipantApi } from "src/api/apis/participant_api"
 import { RequestStore } from "stores/request_store"
 import { UserCacheStore } from "stores/user_cache_store"
 import type { ConversationRequestsStatusFrontend } from "src/api/types/request_status"
@@ -37,6 +38,8 @@ function showDetails(requestId: string) {
 
 defineExpose({ open })
 
+const emit = defineEmits(['accepted'])
+
 function handleAction(requestId: string, status: 'accepted' | 'rejected') {
   $q.dialog({
     title: status === 'accepted' ? 'Accept Request' : 'Reject Request',
@@ -50,7 +53,7 @@ function handleAction(requestId: string, status: 'accepted' | 'rejected') {
   }).onOk((reviewMessage: string) => {
     void (async () => {
       try {
-        await RequestStore.changeStatus(
+        const updated = await RequestStore.changeStatus(
           props.conversationId,
           requestId,
           status as ConversationRequestsStatusFrontend,
@@ -60,6 +63,18 @@ function handleAction(requestId: string, status: 'accepted' | 'rejected') {
           type: 'positive',
           message: `Request ${status} successfully`
         })
+        
+        if (status === 'accepted') {
+          try {
+            const pRes = await ParticipantApi.getSpecificParticipant(props.conversationId, updated.userId)
+            emit('accepted', pRes.participant)
+          } catch (e) {
+            console.error('Failed to fetch new participant details:', e)
+            // Фоллбек на обычное обновление
+            emit('accepted')
+          }
+        }
+        
         void loadRequests()
       } catch {
         $q.notify({
