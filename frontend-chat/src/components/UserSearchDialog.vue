@@ -4,10 +4,20 @@ import { debounce } from "lodash"
 
 import { SearchStoreUser } from "stores/user_search_store"
 import { UserApi } from "src/api/apis/user_api"
+import { ParticipantApi } from "src/api/apis/participant_api"
+import { ParticipantStore } from "stores/participant_store"
+import { useQuasar } from "quasar"
+import type { Participant } from "src/api/types/participant_response"
 import UserProfileDialog from "components/UserProfileDialog.vue";
 
-const props = defineProps<{ modelValue: boolean }>()
-const emit = defineEmits(["update:modelValue"])
+const props = defineProps<{ 
+  modelValue: boolean,
+  conversationId?: string
+}>()
+const emit = defineEmits(["update:modelValue", "added"])
+
+const $q = useQuasar()
+const isAdding = ref<Record<string, boolean>>({})
 
 //  синхронизация диалога
 watch(() => props.modelValue, (val) => {
@@ -78,6 +88,49 @@ function openUserProfile(userId: string) {
   showProfile.value = true;
 }
 
+async function addToGroup(userId: string, username: string) {
+  if (!props.conversationId) return
+
+  try {
+    isAdding.value[userId] = true
+    const dto = await ParticipantApi.addParticipantToGroup(props.conversationId, userId)
+    
+    $q.notify({
+      type: 'positive',
+      message: `${username} added to group`
+    })
+    
+    // Находим пользователя в результатах поиска, чтобы взять его email
+    const user = SearchStoreUser.items.find(u => u.id === userId)
+    
+    // Формируем полный объект участника для Store
+    const participant: Participant = {
+      conversationId: dto.conversationId,
+      userId: dto.userId,
+      username: username,
+      email: user?.email || '',
+      role: dto.role,
+      canSendMessages: dto.canSendMessages,
+      mutedUntil: dto.mutedUntil,
+      joinedAt: dto.joinedAt
+    }
+    
+    emit('added', participant)
+  } catch {
+    $q.notify({
+      type: 'negative',
+      message: `Failed to add ${username}`
+    })
+  } finally {
+    isAdding.value[userId] = false
+  }
+}
+
+function isAlreadyInGroup(userId: string) {
+  if (!props.conversationId) return false
+  return !!ParticipantStore.findById(userId)
+}
+
 </script>
 
 <template>
@@ -119,9 +172,26 @@ function openUserProfile(userId: string) {
               v-for="user in SearchStoreUser.items"
               :key="user.id"
               clickable
+              @click="openUserProfile(user.id)"
             >
-              <q-item-section class="text-black" @click="openUserProfile(user.id)">
-                {{user.username}}
+              <q-item-section>
+                <q-item-label class="text-black">{{user.username}}</q-item-label>
+                <q-item-label caption>{{user.id}}</q-item-label>
+              </q-item-section>
+
+              <q-item-section side v-if="props.conversationId">
+                <q-btn
+                  v-if="!isAlreadyInGroup(user.id)"
+                  flat
+                  round
+                  color="primary"
+                  icon="person_add"
+                  :loading="isAdding[user.id]"
+                  @click.stop="addToGroup(user.id, user.username)"
+                >
+                  <q-tooltip>Add to Group</q-tooltip>
+                </q-btn>
+                <q-badge v-else color="positive" label="In group" />
               </q-item-section>
             </q-item>
 

@@ -1,7 +1,7 @@
 import {fetchJson} from "src/api/fetch/generinc_fetcher";
 import {BaseUrl} from "src/base_url/base_url";
 import {AuthStore} from "stores/auth_store";
-import type {ParticipantsResponse, ParticipantResponse, MuteDuration, ParticipantRole} from "src/api/types/participant_response";
+import type {ParticipantsResponse, ParticipantResponse, MuteDuration, ParticipantRole, ParticipantDTO} from "src/api/types/participant_response";
 import type {ConversationBansFrontend} from "src/api/types/conversation_bans_response";
 import type {ConversationRequestsStatusFrontend} from "src/api/types/request_status";
 import type {ConversationRequestsResponse} from "src/api/types/conversation_request_response";
@@ -283,5 +283,19 @@ export const ParticipantApi = {
         },
       }
     )
+  },
+
+  addParticipantToGroup(conversationId: string, targetId: string) {
+    // conversation/:conversationId/:targetId/force_add
+    return fetchJson<ParticipantDTO>(
+      `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/force_add`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      }
+    )
   }
+
 };
