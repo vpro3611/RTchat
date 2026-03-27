@@ -22,6 +22,10 @@ export const UserCacheStore = reactive({
     try {
       const user = await UserApi.getSpecificUser(userId)
       this.byId[userId] = user
+    } catch (e) {
+      console.warn(`UserCacheStore: Failed to fetch user ${userId}. They might be deleted.`, e)
+      // Мы можем поместить сюда "пустого" пользователя или заглушку, чтобы не пытаться снова
+      // this.byId[userId] = { id: userId, username: 'Deleted User' } as any
     } finally {
       this.loading.delete(userId)
     }
