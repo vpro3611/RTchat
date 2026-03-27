@@ -7,6 +7,7 @@ import {MessageStore} from "stores/message_store";
 import {AuthStore} from "stores/auth_store";
 import {UserCacheStore} from "stores/user_cache_store";
 import {ParticipantStore} from "stores/participant_store";
+import {SavedMessagesStore} from "stores/saved_messages_store";
 import {MessageApi} from "src/api/apis/message_api";
 import {UserApi} from "src/api/apis/user_api";
 import {ParticipantApi} from "src/api/apis/participant_api";
@@ -226,6 +227,30 @@ function deleteMessage(messageId: string) {
   chatSocket.deleteMessage(conversationId.value, messageId);
 }
 
+// Сохранить сообщение
+function saveMessageAction(messageId: string) {
+  if (!conversationId.value) return;
+
+  void (async () => {
+    try {
+      await SavedMessagesStore.saveMessage(conversationId.value, messageId);
+      $q.notify({
+        type: 'positive',
+        message: 'Message saved to bookmarks'
+      });
+    } catch {
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to save message'
+      });
+    }
+  })();
+}
+
+function isMessageSaved(messageId: string) {
+  return SavedMessagesStore.messages.some(m => m.messageId === messageId);
+}
+
 // Прокрутка к низу
 function scrollToBottom() {
   if (messagesContainer.value) {
@@ -282,6 +307,9 @@ function handleBlockChange() {
 onMounted(() => {
   chatSocket.onError(handleSocketError);
   window.addEventListener('block-status-changed', handleBlockChange);
+
+  // Подгружаем сохраненные сообщения, чтобы обновлять UI (кнопку Save)
+  void SavedMessagesStore.fetchMessages(50);
 
   if (conversationId.value) {
     void loadMessages();
@@ -429,8 +457,10 @@ watch(
           :key="message.id"
           :message="message"
           :isOwn="message.senderId === AuthStore.user?.id"
+          :isSaved="isMessageSaved(message.id)"
           @edit="startEdit"
           @delete="deleteMessage"
+          @save="saveMessageAction"
         />
 
         <!-- Typing indicator placeholder -->
