@@ -13,6 +13,7 @@ import ProfileDialog from "components/ProfileDialog.vue"
 import SearchConversationsComponent from "components/SearchConversationsComponent.vue"
 import UserSearchDialog from "components/UserSearchDialog.vue";
 import MyRequestsDialog from "components/MyRequestsDialog.vue";
+import SavedMessagesDialog from "components/SavedMessagesDialog.vue";
 
 const showProfileDialog = ref(false)
 const drawer = ref(true)
@@ -26,6 +27,7 @@ const showUserSearch = ref(false)
 
 const createDialogRef = ref<InstanceType<typeof CreateGroupDialog> | null>(null)
 const myRequestsDialogRef = ref<InstanceType<typeof MyRequestsDialog> | null>(null)
+const savedMessagesDialogRef = ref<InstanceType<typeof SavedMessagesDialog> | null>(null)
 
 function openCreateGroupDialog() {
   createDialogRef.value?.openDialog()
@@ -33,6 +35,10 @@ function openCreateGroupDialog() {
 
 function openMyRequests() {
   myRequestsDialogRef.value?.open()
+}
+
+function openSavedMessages() {
+  savedMessagesDialogRef.value?.open()
 }
 
 //  главный флаг
@@ -76,6 +82,9 @@ onMounted(loadChats)
         </q-toolbar-title>
 
         <q-space />
+        <q-btn flat dense round icon="bookmarks" @click="openSavedMessages">
+          <q-tooltip>Saved Messages</q-tooltip>
+        </q-btn>
         <q-btn flat dense round icon="search" @click="showUserSearch = true" />
         <q-btn flat dense round icon="group_add" @click="openMyRequests">
           <q-tooltip>My Join Requests</q-tooltip>
@@ -113,4 +122,5 @@ onMounted(loadChats)
   <UserSearchDialog v-model="showUserSearch" />
   <ProfileDialog v-model="showProfileDialog" />
   <MyRequestsDialog ref="myRequestsDialogRef" />
+  <SavedMessagesDialog ref="savedMessagesDialogRef" />
 </template>
