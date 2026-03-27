@@ -5,6 +5,7 @@ import type {ParticipantsResponse, ParticipantResponse, MuteDuration, Participan
 import type {ConversationBansFrontend} from "src/api/types/conversation_bans_response";
 import type {ConversationRequestsStatusFrontend} from "src/api/types/request_status";
 import type {ConversationRequestsResponse} from "src/api/types/conversation_request_response";
+import type {FrontendSavedMessageDTO} from "src/api/types/saved_message_type";
 
 export const ParticipantApi = {
   // Получить список участников
@@ -47,19 +48,6 @@ export const ParticipantApi = {
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/join`,
       {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${AuthStore.accessToken}`
-        },
-      }
-    );
-  },
-
-  // Покинуть беседу (возвращает 204, без тела)
-  leaveConversation(conversationId: string) {
-    return fetchJson<void>(
-      `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/leave`,
-      {
-        method: "DELETE",
         headers: {
           Authorization: `Bearer ${AuthStore.accessToken}`
         },
@@ -291,6 +279,65 @@ export const ParticipantApi = {
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/force_add`,
       {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      }
+    )
+  },
+
+  saveMessage(conversationId: string, messageId: string) {
+    // /conversation/:conversationId/:messageId/save
+    return fetchJson<FrontendSavedMessageDTO>(
+      `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${messageId}/save`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      }
+    )
+  },
+
+  removeSavedMessage(messageId: string) {
+    // /user/saved_messages/:messageId/remove"
+    return fetchJson<void>(
+      `${BaseUrl.apiBaseUrl}/private/user/saved_messages/${messageId}/remove`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      }
+    )
+  },
+
+  getSpecificSavedMessage(messageId: string) {
+    // "/user/saved_messages/:messageId/view"
+    return fetchJson<FrontendSavedMessageDTO>(
+      `${BaseUrl.apiBaseUrl}/private/user/saved_messages/${messageId}/view`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      }
+    )
+  },
+
+  getSavedMessagesList(limit = 20, cursor?: string) {
+    const queryParams = new URLSearchParams();
+
+    queryParams.append('limit', limit.toString());
+
+    if (cursor) {
+      queryParams.append('cursor', cursor);
+    }
+    // /user/saved_messages/all
+    return fetchJson<{items: FrontendSavedMessageDTO[], nextCursor?: string}>(
+      `${BaseUrl.apiBaseUrl}/private/user/saved_messages/all?${queryParams.toString()}`,
+      {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${AuthStore.accessToken}`
         },
