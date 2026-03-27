@@ -366,21 +366,21 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.post("/conversation/:conversationId/:messageId/save",
         validateParams(SaveMessageParamsSchema),
         dependencies.saveMessageController.saveMessageCont
-    );
+    ); //
 
     privateRouter.delete("/user/saved_messages/:messageId/remove",
         validateParams(RemoveSavedMessageParamsSchema),
         dependencies.removeSavedMessageController.removeSavedMessageCont
-    );
+    ); //
 
     privateRouter.get("/user/saved_messages/:messageId/view",
         validateParams(GetSpecificSavedMessageParamsSchema),
         dependencies.getSpecificSavedMessageController.getSpecificSavedMessageCont
-    );
+    ); //
 
     privateRouter.get("/user/saved_messages/all",
         dependencies.getSavedMessagesListController.getSavedMessagesListCont
-    );
+    ); //
 
     app.use(errorMiddleware());
 
