@@ -263,6 +263,32 @@ import {
 import {
     AddParticipantToAConversationController
 } from "./modules/chat/controllers/participant/add_participant_to_a_conversation_controller";
+import {GetSavedMessagesListUseCase} from "./modules/chat/application/saved_messages/get_saved_messages_list_use_case";
+import {SavedMessagesRepoPg} from "./modules/chat/repositories_pg_realization/saved_messages_repo_pg";
+import {MapToSavedMessageDto} from "./modules/chat/shared/map_to_saved_message_dto";
+import {
+    GetSpecificSavedMessageUseCase
+} from "./modules/chat/application/saved_messages/get_specific_saved_message_use_case";
+import {RemoveSavedMessageUseCase} from "./modules/chat/application/saved_messages/remove_saved_message_use_case";
+import {SaveMessageUseCase} from "./modules/chat/application/saved_messages/save_message_use_case";
+import {
+    GetSavedMessagesListService
+} from "./modules/chat/transactional_services/saved_messages/get_saved_messages_list_service";
+import {
+    GetSpecificSavedMessageService
+} from "./modules/chat/transactional_services/saved_messages/get_specific_saved_message_service";
+import {
+    RemoveSavedMessageService
+} from "./modules/chat/transactional_services/saved_messages/remove_saved_message_service";
+import {SaveMessageService} from "./modules/chat/transactional_services/saved_messages/save_message_service";
+import {
+    GetSavedMessagesListController
+} from "./modules/chat/controllers/saved_messages/get_saved_messages_list_controller";
+import {
+    GetSpecificSavedMessageController
+} from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
+import {RemoveSavedMessageController} from "./modules/chat/controllers/saved_messages/remove_saved_message_controller";
+import {SaveMessageController} from "./modules/chat/controllers/saved_messages/save_message_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -374,6 +400,7 @@ export function assembleContainer()
     const participantRepo = new ParticipantRepositoryPg(pool);
     const conversationBansRepo = new ConversationBansRepositoryPg(pool);
     const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool);
+    const savedMessageRepo = new SavedMessagesRepoPg(pool);
 
     // TODO : SHARED FOR CHAT
     const conversationMapper = new MapToConversationDto();
@@ -382,6 +409,7 @@ export function assembleContainer()
     const checkIsParticipant = new CheckIsParticipant(participantRepo);
     const findMessageById = new FindMessageById(messageRepo);
     const mapToRequestDto = new MapToRequestDto();
+    const mapToSavedMessageDto = new MapToSavedMessageDto();
 
 
     // TODO : CHAT (USE CASES)
@@ -575,6 +603,36 @@ export function assembleContainer()
         RedisCacheService,
     );
 
+    // ____ //
+
+    const getSavedMessagesListUseCase = new GetSavedMessagesListUseCase(
+        userRepoReaderPG,
+        savedMessageRepo,
+        mapToSavedMessageDto,
+        RedisCacheService,
+    );
+
+    const getSpecificSavedMessageUseCase = new GetSpecificSavedMessageUseCase(
+        userRepoReaderPG,
+        savedMessageRepo,
+        mapToSavedMessageDto,
+        RedisCacheService,
+    );
+
+    const removeSavedMessageUseCase = new RemoveSavedMessageUseCase(
+        userRepoReaderPG,
+        savedMessageRepo,
+        RedisCacheService,
+    );
+
+    const saveMessageUseCase = new SaveMessageUseCase(
+        participantRepo,
+        savedMessageRepo,
+        messageRepo,
+        mapToSavedMessageDto,
+        RedisCacheService,
+    );
+
     // TODO : CHAT (SERVICES)
     const createDirectConversationService = new CreateDirectConversationTxService(txManager);
     const createGroupConversationService = new CreateGroupConversationTxService(txManager);
@@ -616,6 +674,13 @@ export function assembleContainer()
     const removeSpecificRequestService = new RemoveRequestService(txManager);
     const getSpecificRequestUserService = new GetSpecificRequestUserService(txManager);
     const getSpecificRequestConversationService = new GetSpecificRequestGroupService(txManager);
+
+    // ____ //
+
+    const getSavedMessagesListService = new GetSavedMessagesListService(txManager);
+    const getSpecificSavedMessageService = new GetSpecificSavedMessageService(txManager);
+    const removeSavedMessageService = new RemoveSavedMessageService(txManager);
+    const saveMessageService = new SaveMessageService(txManager);
 
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
@@ -745,6 +810,25 @@ export function assembleContainer()
         extractActorId
     );
 
+
+    // ____ //
+    const getSavedMessagesListController = new GetSavedMessagesListController(
+        getSavedMessagesListService,
+        extractActorId
+    );
+    const getSpecificSavedMessageController = new GetSpecificSavedMessageController(
+        getSpecificSavedMessageService,
+        extractActorId
+    );
+    const removeSavedMessageController = new RemoveSavedMessageController(
+        removeSavedMessageService,
+        extractActorId
+    );
+    const saveMessageController = new SaveMessageController(
+        saveMessageService,
+        extractActorId
+    )
+
     return {
         resendVerificationRegisterController,
         resendVerificationChangeEmailController,
@@ -820,6 +904,11 @@ export function assembleContainer()
         removeConversationRequestController,
         getSpecificRequestUserController,
         getSpecificRequestGroupController,
+
+        getSavedMessagesListController,
+        getSpecificSavedMessageController,
+        removeSavedMessageController,
+        saveMessageController,
     }
 }
 
