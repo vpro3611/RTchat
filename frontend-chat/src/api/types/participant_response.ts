@@ -11,6 +11,15 @@ export interface Participant {
   joinedAt: string;
 }
 
+export interface ParticipantDTO {
+  conversationId: string;
+  userId: string;
+  role: ParticipantRole;
+  canSendMessages: boolean;
+  mutedUntil: string | null;
+  joinedAt: string;
+}
+
 export interface ParticipantsResponse {
   items: Participant[];
   nextCursor: string | null;
