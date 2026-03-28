@@ -140,6 +140,10 @@ export function createApp(dependencies: AppContainer): Express
         res.status(200).json({message: "OK"});
     }); //
 
+    publicRouter.get("/avatar/:avatarId",
+        dependencies.getAvatarController.execute
+    );
+
     publicRouter.post("/register",
         validateBody(RegisterBodySchema),
         dependencies.registerController.registerController

@@ -1,7 +1,6 @@
 import {UserRepoWriter} from "../ports/user_repo_interfaces";
 import {Pool, PoolClient} from "pg";
 import {User} from "../domain/user";
-import {mapPgError} from "../../error_mapper/pg_error_mapper";
 import {
     DatabaseConnectionError,
     DatabaseQueryError,
@@ -53,6 +52,7 @@ export class UserRepoWriterPg implements UserRepoWriter {
             row.last_seen_at,
             row.created_at,
             row.updated_at,
+            row.avatar_id,
         )
     }
 
@@ -68,9 +68,10 @@ export class UserRepoWriterPg implements UserRepoWriter {
                     is_verified,
                     last_seen_at,
                     created_at,
-                    updated_at
+                    updated_at,
+                    avatar_id
                 )
-                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
                     ON CONFLICT (id)
             DO UPDATE SET
                     username = EXCLUDED.username,
@@ -79,7 +80,8 @@ export class UserRepoWriterPg implements UserRepoWriter {
                                        is_active = EXCLUDED.is_active,
                                        is_verified = EXCLUDED.is_verified, 
                                        last_seen_at = EXCLUDED.last_seen_at,
-                                       updated_at = NOW()
+                                       updated_at = NOW(),
+                                       avatar_id = EXCLUDED.avatar_id
                                        RETURNING *;
             `;
 
@@ -93,6 +95,7 @@ export class UserRepoWriterPg implements UserRepoWriter {
                 user.getLastSeenAt(),
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
+                user.getAvatarId(),
             ];
 
             const result = await this.pool.query(query, values);
@@ -145,11 +148,11 @@ export class UserRepoWriterPg implements UserRepoWriter {
     }
 
     async updateAvatarId(userId: string, avatarId: string | null): Promise<void> {
-        const query = "UPDATE users SET avatar_id = $1 WHERE id = $2";
         try {
+            const query = "UPDATE users SET avatar_id = $1 WHERE id = $2";
             await this.pool.query(query, [avatarId, userId]);
         } catch (error) {
-            throw mapPgError(error);
+            this.mapSaveError(error);
         }
     }
 }

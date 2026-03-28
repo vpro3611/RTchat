@@ -11,7 +11,7 @@ import {
 export class UserRepoReaderPg implements UserRepoReader{
     constructor(private readonly pool: Pool | PoolClient) {}
 
-    private mapDoDomain(row: any): User {
+    private mapToDomain(row: any): User {
         return User.restore(
             row.id,
             row.username,
@@ -56,7 +56,7 @@ export class UserRepoReaderPg implements UserRepoReader{
 
             const row = result.rows[0];
 
-            const user = this.mapDoDomain(row);
+            const user = this.mapToDomain(row);
 
             return user;
         } catch (error: any) {
@@ -94,7 +94,7 @@ export class UserRepoReaderPg implements UserRepoReader{
 
             const row = result.rows[0];
 
-            const user = this.mapDoDomain(row);
+            const user = this.mapToDomain(row);
 
             return user;
         } catch (error: any) {
@@ -115,7 +115,7 @@ export class UserRepoReaderPg implements UserRepoReader{
 
             const row = result.rows[0];
 
-            const user = this.mapDoDomain(row);
+            const user = this.mapToDomain(row);
 
             return user;
         } catch (error: any) {
@@ -152,7 +152,7 @@ export class UserRepoReaderPg implements UserRepoReader{
             const rows = result.rows
 
             return {
-                items: rows.map(r => this.mapDoDomain(r)),
+                items: rows.map(r => this.mapToDomain(r)),
                 nextCursor: rows[0]?.next_cursor ?? undefined
             }
         } catch (error: any) {

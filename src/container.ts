@@ -289,6 +289,9 @@ import {
 } from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
 import {RemoveSavedMessageController} from "./modules/chat/controllers/saved_messages/remove_saved_message_controller";
 import {SaveMessageController} from "./modules/chat/controllers/saved_messages/save_message_controller";
+import {AvatarRepositoryPg} from "./modules/chat/repositories_pg_realization/avatar_repository_pg";
+import {GetAvatarUseCase} from "./modules/chat/application/avatar/get_avatar_use_case";
+import {GetAvatarController} from "./modules/chat/controllers/avatar/get_avatar_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -401,6 +404,7 @@ export function assembleContainer()
     const conversationBansRepo = new ConversationBansRepositoryPg(pool);
     const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool);
     const savedMessageRepo = new SavedMessagesRepoPg(pool);
+    const avatarRepo = new AvatarRepositoryPg(pool);
 
     // TODO : SHARED FOR CHAT
     const conversationMapper = new MapToConversationDto();
@@ -633,6 +637,8 @@ export function assembleContainer()
         RedisCacheService,
     );
 
+    const getAvatarUseCase = new GetAvatarUseCase(avatarRepo);
+
     // TODO : CHAT (SERVICES)
     const createDirectConversationService = new CreateDirectConversationTxService(txManager);
     const createGroupConversationService = new CreateGroupConversationTxService(txManager);
@@ -829,6 +835,8 @@ export function assembleContainer()
         extractActorId
     )
 
+    const getAvatarController = new GetAvatarController(getAvatarUseCase);
+
     return {
         resendVerificationRegisterController,
         resendVerificationChangeEmailController,
@@ -909,6 +917,8 @@ export function assembleContainer()
         getSpecificSavedMessageController,
         removeSavedMessageController,
         saveMessageController,
+
+        getAvatarController,
     }
 }
 
