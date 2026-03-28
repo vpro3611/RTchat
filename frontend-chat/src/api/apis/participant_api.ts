@@ -57,7 +57,7 @@ export const ParticipantApi = {
 
   // Изменить роль участника
   changeRole(conversationId: string, targetId: string, role: ParticipantRole) {
-    return fetchJson<ParticipantResponse>(
+    return fetchJson<ParticipantDTO>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/role`,
       {
         method: "PATCH",
@@ -72,7 +72,7 @@ export const ParticipantApi = {
 
   // Заглушить участника
   muteParticipant(conversationId: string, targetId: string, duration: MuteDuration) {
-    return fetchJson<ParticipantResponse>(
+    return fetchJson<ParticipantDTO>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/mute`,
       {
         method: "PATCH",
@@ -87,7 +87,7 @@ export const ParticipantApi = {
 
   // Разглушить участника
   unmuteParticipant(conversationId: string, targetId: string) {
-    return fetchJson<ParticipantResponse>(
+    return fetchJson<ParticipantDTO>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/unmute`,
       {
         method: "PATCH",
