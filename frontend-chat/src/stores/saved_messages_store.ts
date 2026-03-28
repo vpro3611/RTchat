@@ -35,6 +35,8 @@ export const SavedMessagesStore = reactive({
   },
 
   async saveMessage(conversationId: string, messageId: string) {
+    if (this.messages.some(m => m.messageId === messageId)) return;
+    
     const savedMsg = await ParticipantApi.saveMessage(conversationId, messageId);
     // Add to the top of the list if it's not already there
     if (!this.messages.some(m => m.messageId === messageId)) {

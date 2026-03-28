@@ -4,7 +4,10 @@ import {BaseUrl} from "src/base_url/base_url";
 import {AuthStore} from "stores/auth_store";
 import {MessageStore} from "stores/message_store";
 import {ChatStore} from "stores/chat_store";
+import {ParticipantStore} from "stores/participant_store";
 import type {Message} from "src/api/types/message_response";
+import type {Participant} from "src/api/types/participant_response";
+import type {CreateGroupChatResponse} from "src/api/types/create_group_chat_response";
 
 type TypingCallback = (data: { conversationId: string; userId: string; username: string }) => void;
 type ErrorCallback = (data: { message: string }) => void;
@@ -106,6 +109,27 @@ class ChatSocketService {
     this.socket.on('error', (data: { message: string }) => {
       console.error('Socket error:', data.message);
       this.errorCallbacks.forEach(cb => cb(data));
+    });
+
+    // --- Sync Events ---
+    this.socket.on('participant:added', (data: { conversationId: string, participant: Participant }) => {
+      ParticipantStore.addParticipant(data.participant);
+    });
+
+    this.socket.on('participant:removed', (data: { conversationId: string, userId: string }) => {
+      ParticipantStore.removeParticipant(data.userId);
+    });
+
+    this.socket.on('participant:updated', (data: { conversationId: string, participant: Participant }) => {
+      ParticipantStore.updateParticipant(data.participant.userId, data.participant);
+    });
+
+    this.socket.on('conversation:updated', (data: { conversationId: string, conversation: CreateGroupChatResponse }) => {
+      const chat = ChatStore.findById(data.conversationId);
+      if (chat) {
+        if (data.conversation.title) chat.title = data.conversation.title;
+        if (data.conversation.avatarId !== undefined) chat.avatarId = data.conversation.avatarId;
+      }
     });
 
     // Ошибка подключения
