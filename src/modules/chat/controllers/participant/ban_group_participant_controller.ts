@@ -2,6 +2,7 @@ import {BanGroupParticipantService} from "../../transactional_services/participa
 import {Request, Response} from "express";
 import {z} from "zod";
 import {ExtractActorId} from "../../shared/extract_actor_id_req";
+import {Server} from "socket.io";
 
 export const BanGroupParticipantParamsSchema = z.object({
     conversationId: z.string().uuid(),
@@ -18,7 +19,8 @@ type BanGroupParticipantBodySchemaType = z.infer<typeof BanGroupParticipantBodyS
 
 export class BanGroupParticipantController {
     constructor(private readonly banGroupParticipantService: BanGroupParticipantService,
-                private readonly extractUserId: ExtractActorId) {}
+                private readonly extractUserId: ExtractActorId,
+                private readonly io: Server) {}
 
     banGroupParticipantCont =
         async (req: Request<BanGroupParticipantParamsSchemaType,{},BanGroupParticipantBodySchemaType>, res: Response) => {
@@ -33,6 +35,11 @@ export class BanGroupParticipantController {
                 actorId.sub,
                 reason
             );
+
+            this.io.to(conversationId).emit("participant:removed", {
+                conversationId,
+                userId: targetId
+            });
 
             return res.status(200).json(result);
         }
