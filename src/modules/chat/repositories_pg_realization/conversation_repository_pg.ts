@@ -17,14 +17,15 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
             row.last_message_at,
             row.user_low,
             row.user_high,
+            row.avatar_id,
         );
     }
 
     async create(conversation: Conversation): Promise<void> {
         try {
             await this.pool.query(`INSERT INTO conversations (id, conversation_type, title, created_by, created_at,
-                                                              last_message_at, user_low, user_high)
-                                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                                                              last_message_at, user_low, user_high, avatar_id)
+                                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
                 [
                     conversation.id,
                     conversation.getConversationType(),
@@ -34,6 +35,7 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
                     conversation.getLastMessageAt(),
                     conversation.getUserLow(),
                     conversation.getUserHigh(),
+                    conversation.getAvatarId(),
                 ]);
         } catch (error) {
             throw mapPgError(error);
@@ -148,6 +150,17 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
                                    SET last_message_at = $1
                                    WHERE id = $2`,
                 [date, conversationId]);
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
+
+    async updateAvatarId(conversationId: string, avatarId: string | null): Promise<void> {
+        try {
+            await this.pool.query(`UPDATE conversations
+                                   SET avatar_id = $1
+                                   WHERE id = $2`,
+                [avatarId, conversationId]);
         } catch (error) {
             throw mapPgError(error);
         }

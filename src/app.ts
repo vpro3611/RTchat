@@ -89,6 +89,8 @@ import {
 import {
     GetSpecificSavedMessageParamsSchema
 } from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
+import {SetConversationAvatarParamsSchema} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
+import {DeleteConversationAvatarParamsSchema} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
@@ -396,6 +398,17 @@ export function createApp(dependencies: AppContainer): Express
 
     privateRouter.delete("/me/avatar",
         dependencies.deleteUserAvatarController.deleteAvatar
+    );
+
+    privateRouter.post("/conversation/:conversationId/avatar",
+        validateParams(SetConversationAvatarParamsSchema),
+        upload.single('avatar'),
+        dependencies.setConversationAvatarController.setAvatar
+    );
+
+    privateRouter.delete("/conversation/:conversationId/avatar",
+        validateParams(DeleteConversationAvatarParamsSchema),
+        dependencies.deleteConversationAvatarController.deleteAvatar
     );
 
     app.use(errorMiddleware());

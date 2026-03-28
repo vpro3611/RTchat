@@ -296,6 +296,10 @@ import {SetUserAvatarTxService} from "./modules/chat/transactional_services/avat
 import {DeleteUserAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_user_avatar_tx_service";
 import {SetUserAvatarController} from "./modules/chat/controllers/avatar/set_user_avatar_controller";
 import {DeleteUserAvatarController} from "./modules/chat/controllers/avatar/delete_user_avatar_controller";
+import {SetConversationAvatarTxService} from "./modules/chat/transactional_services/avatar/set_conversation_avatar_tx_service";
+import {DeleteConversationAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_conversation_avatar_tx_service";
+import {SetConversationAvatarController} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
+import {DeleteConversationAvatarController} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -694,6 +698,8 @@ export function assembleContainer()
 
     const setUserAvatarService = new SetUserAvatarTxService(txManager);
     const deleteUserAvatarService = new DeleteUserAvatarTxService(txManager);
+    const setConversationAvatarService = new SetConversationAvatarTxService(txManager);
+    const deleteConversationAvatarService = new DeleteConversationAvatarTxService(txManager);
 
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
@@ -846,6 +852,8 @@ export function assembleContainer()
 
     const setUserAvatarController = new SetUserAvatarController(setUserAvatarService, extractActorId);
     const deleteUserAvatarController = new DeleteUserAvatarController(deleteUserAvatarService, extractActorId);
+    const setConversationAvatarController = new SetConversationAvatarController(setConversationAvatarService, extractActorId);
+    const deleteConversationAvatarController = new DeleteConversationAvatarController(deleteConversationAvatarService, extractActorId);
 
     return {
         resendVerificationRegisterController,
@@ -931,6 +939,8 @@ export function assembleContainer()
         getAvatarController,
         setUserAvatarController,
         deleteUserAvatarController,
+        setConversationAvatarController,
+        deleteConversationAvatarController,
     }
 }
 
