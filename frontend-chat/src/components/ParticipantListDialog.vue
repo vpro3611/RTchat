@@ -12,6 +12,8 @@ import UserSearchDialog from "components/UserSearchDialog.vue";
 import AppAvatar from "components/AppAvatar.vue";
 import AvatarUpload from "components/AvatarUpload.vue";
 import { ChatStore } from "stores/chat_store";
+import { UserCacheStore } from "stores/user_cache_store";
+import { watch } from "vue";
 
 const $q = useQuasar();
 
@@ -147,6 +149,16 @@ async function handleAvatarDelete() {
   }
 }
 
+// Синхронизируем участников с кэшем пользователей для получения актуальных аватаров
+watch(
+  () => ParticipantStore.participants,
+  (list) => {
+    const userIds = list.map(p => p.userId);
+    void UserCacheStore.ensureUsers(userIds);
+  },
+  { immediate: true, deep: true }
+);
+
 // Открыть диалог
 function openDialog() {
   ParticipantStore.clearParticipants();
@@ -215,7 +227,7 @@ defineExpose({ openDialog });
             >
               <q-item-section avatar>
                 <AppAvatar
-                  :avatar-id="participant.avatarId"
+                  :avatar-id="UserCacheStore.getAvatarId(participant.userId) || participant.avatarId"
                   :name="participant.username"
                   size="40px"
                 />
