@@ -10,6 +10,7 @@ export class UserMapper {
             email: user.getEmail().getValue(),
             isActive: user.getIsActive(),
             isVerified: user.getIsVerified(),
+            avatarId: user.getAvatarId(),
             lastSeenAt: user.getLastSeenAt()?.toISOString() ?? new Date().toISOString(),
             createdAt: user.getCreatedAt().toISOString(),
             updatedAt: user.getUpdatedAt().toISOString(),

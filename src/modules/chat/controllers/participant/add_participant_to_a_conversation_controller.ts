@@ -4,6 +4,7 @@ import {
     AddParticipantToConversationTxService
 } from "../../transactional_services/participant/add_participant_to_conversation_tx_service";
 import {ExtractActorId} from "../../shared/extract_actor_id_req";
+import {Server} from "socket.io";
 
 export const AddParticipantToAConversationParamsSchema = z.object({
     conversationId: z.string().uuid(),
@@ -14,7 +15,8 @@ type AddParticipantToAConversationSchemaType = z.infer<typeof AddParticipantToAC
 
 export class AddParticipantToAConversationController {
     constructor(private readonly addParticipantService: AddParticipantToConversationTxService,
-                private readonly extractActorId: ExtractActorId
+                private readonly extractActorId: ExtractActorId,
+                private readonly io: Server
     ) {}
     addParticipantToAConversationCont =
         async (req: Request<AddParticipantToAConversationSchemaType>, res: Response) => {
@@ -27,6 +29,11 @@ export class AddParticipantToAConversationController {
                 targetId,
                 conversationId
             );
+
+            this.io.to(conversationId).emit("participant:added", {
+                conversationId,
+                participant: result // ParticipantListDTO
+            });
 
             return res.status(201).json(result);
     }

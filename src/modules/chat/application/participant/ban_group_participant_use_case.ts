@@ -49,7 +49,7 @@ export class BanGroupParticipantUseCase {
     }
 
     private async invalidateParticipantsCache(conversationId: string) {
-        await this.cacheService.del(`participants:conv:${conversationId}`);
+        await this.cacheService.delByPattern(`participants:conv:${conversationId}:*`);
     }
 
     private async invalidateUserConversations(userId: string) {
@@ -57,7 +57,7 @@ export class BanGroupParticipantUseCase {
     }
 
     private async invalidateConversationBansCache(conversationId: string) {
-        await this.cacheService.del(`bans:conv:${conversationId}`);
+        await this.cacheService.delByPattern(`bans:conv:${conversationId}:*`);
     }
 
     async banGroupParticipantUseCase(data:

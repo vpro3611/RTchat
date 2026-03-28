@@ -28,8 +28,10 @@ export class ChangeParticipantRoleUseCase {
     }
 
     private async invalidateParticipantCache(conversationId: string, targetId: string) {
-        await this.cacheService.del(`participants:conv:${conversationId}`);
-        await this.cacheService.del(`participant:conv:${conversationId}:user:${targetId}`);
+        await Promise.all([
+            this.cacheService.delByPattern(`participants:conv:${conversationId}:*`),
+            this.cacheService.del(`participant:conv:${conversationId}:user:${targetId}`)
+        ]);
     }
 
     async changeParticipantRoleUseCase(actorId: string, conversationId: string, targetId: string): Promise<ParticipantDTO> {

@@ -8,6 +8,7 @@ export class MapToConversationDto {
             id: conversation.id,
             conversationType: conversation.getConversationType(),
             title: conversation.getTitle().getValue(),
+            avatarId: conversation.getAvatarId(),
             createdBy: conversation.getCreatedBy(),
             createdAt: conversation.getCreatedAt().toISOString(),
             lastMessageAt: conversation.getLastMessageAt()?.toISOString() ?? null,

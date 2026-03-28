@@ -5,6 +5,8 @@ import { ChatStore } from "stores/chat_store"
 import { UserApi } from "src/api/apis/user_api"
 import { AuthStore } from "stores/auth_store"
 import { UserCacheStore } from "stores/user_cache_store"
+import AppAvatar from "components/AppAvatar.vue"
+import type { CreateGroupChatResponse } from "src/api/types/create_group_chat_response"
 
 const router = useRouter()
 const route = useRoute()
@@ -29,6 +31,12 @@ function getChatTitle(chat: { title: string, conversationType: string, userLow: 
   return name ?? chat.title
 }
 
+function getAvatarId(chat: CreateGroupChatResponse) {
+  if (chat.conversationType === "group") return chat.avatarId
+  const opponentId = getOpponentId(chat)
+  return opponentId ? UserCacheStore.getAvatarId(opponentId) : null
+}
+
 function openChat(chatId: string) {
   void router.push(`/chat/${chatId}`)
 }
@@ -50,13 +58,18 @@ async function loadMoreChats() {
   }
 }
 
+const opponentIds = computed(() => {
+  return ChatStore.chats
+    .map(getOpponentId)
+    .filter((id): id is string => !!id)
+})
+
 watch(
-  () => ChatStore.chats,
-  (list) => {
-    const opponentIds = list.map(getOpponentId).filter(Boolean) as string[]
-    void UserCacheStore.ensureUsers(opponentIds)
+  opponentIds,
+  (ids) => {
+    void UserCacheStore.ensureUsers(ids)
   },
-  { immediate: true, deep: true }
+  { immediate: true }
 )
 </script>
 
@@ -72,9 +85,11 @@ watch(
       active-class="bg-grey-9"
     >
       <q-item-section avatar>
-        <q-avatar color="primary" text-color="white">
-          {{ getChatTitle(chat)?.[0]?.toUpperCase() || "?" }}
-        </q-avatar>
+        <AppAvatar
+          :avatar-id="getAvatarId(chat)"
+          :name="getChatTitle(chat)"
+          size="48px"
+        />
       </q-item-section>
 
       <q-item-section>

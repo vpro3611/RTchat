@@ -210,5 +210,29 @@ export const UserApi =
         }
         return data;
       });
+    },
+
+    setUserAvatar(file: File)
+    {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      return fetchJson<{avatarId: string}>(`${BaseUrl.apiBaseUrl}/private/me/avatar`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+        body: formData,
+      });
+    },
+
+    deleteUserAvatar()
+    {
+      return fetchJson<void>(`${BaseUrl.apiBaseUrl}/private/me/avatar`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      });
     }
   }

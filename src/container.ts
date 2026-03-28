@@ -289,10 +289,22 @@ import {
 } from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
 import {RemoveSavedMessageController} from "./modules/chat/controllers/saved_messages/remove_saved_message_controller";
 import {SaveMessageController} from "./modules/chat/controllers/saved_messages/save_message_controller";
+import {AvatarRepositoryPg} from "./modules/chat/repositories_pg_realization/avatar_repository_pg";
+import {GetAvatarUseCase} from "./modules/chat/application/avatar/get_avatar_use_case";
+import {GetAvatarController} from "./modules/chat/controllers/avatar/get_avatar_controller";
+import {SetUserAvatarTxService} from "./modules/chat/transactional_services/avatar/set_user_avatar_tx_service";
+import {DeleteUserAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_user_avatar_tx_service";
+import {SetUserAvatarController} from "./modules/chat/controllers/avatar/set_user_avatar_controller";
+import {DeleteUserAvatarController} from "./modules/chat/controllers/avatar/delete_user_avatar_controller";
+import {SetConversationAvatarTxService} from "./modules/chat/transactional_services/avatar/set_conversation_avatar_tx_service";
+import {DeleteConversationAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_conversation_avatar_tx_service";
+import {SetConversationAvatarController} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
+import {DeleteConversationAvatarController} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
+import {Server} from "socket.io";
 
 export const RedisCacheService = new CacheService(redisClient);
 
-export function assembleContainer()
+export function assembleContainer(io: Server)
 {
 
 
@@ -401,6 +413,7 @@ export function assembleContainer()
     const conversationBansRepo = new ConversationBansRepositoryPg(pool);
     const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool);
     const savedMessageRepo = new SavedMessagesRepoPg(pool);
+    const avatarRepo = new AvatarRepositoryPg(pool);
 
     // TODO : SHARED FOR CHAT
     const conversationMapper = new MapToConversationDto();
@@ -633,6 +646,8 @@ export function assembleContainer()
         RedisCacheService,
     );
 
+    const getAvatarUseCase = new GetAvatarUseCase(avatarRepo);
+
     // TODO : CHAT (SERVICES)
     const createDirectConversationService = new CreateDirectConversationTxService(txManager);
     const createGroupConversationService = new CreateGroupConversationTxService(txManager);
@@ -682,6 +697,11 @@ export function assembleContainer()
     const removeSavedMessageService = new RemoveSavedMessageService(txManager);
     const saveMessageService = new SaveMessageService(txManager);
 
+    const setUserAvatarService = new SetUserAvatarTxService(txManager);
+    const deleteUserAvatarService = new DeleteUserAvatarTxService(txManager);
+    const setConversationAvatarService = new SetConversationAvatarTxService(txManager);
+    const deleteConversationAvatarService = new DeleteConversationAvatarTxService(txManager);
+
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
     const editMessageController = new EditMessageController(editMessageService);
@@ -711,7 +731,8 @@ export function assembleContainer()
     );
     const updateConversationTitleController = new UpdateConversationTitleController(
         updateConversationTitleService,
-        extractActorId
+        extractActorId,
+        io
     );
     const searchConversationsController = new SearchConversationsController(
         searchConversationsService,
@@ -729,7 +750,8 @@ export function assembleContainer()
 
     const changeParticipantRoleController = new ChangeParticipantRoleController(
         changeParticipantRoleService,
-        extractActorId
+        extractActorId,
+        io
     );
     const getParticipantsController = new GetParticipantsController(
         getParticipantsService,
@@ -749,19 +771,23 @@ export function assembleContainer()
     );
     const muteParticipantController = new MuteParticipantController(
         muteParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const removeParticipantController = new RemoveParticipantController(
         removeParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const unmuteParticipantController = new UnmuteParticipantController(
         unmuteParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const banParticipantController = new BanGroupParticipantController(
         banParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const unbanParticipantController = new UnbanGroupParticipantController(
         unbanParticipantService,
@@ -773,7 +799,8 @@ export function assembleContainer()
     );
     const addParticipantToConversationController = new AddParticipantToAConversationController(
         addParticipantToConversationService,
-        extractActorId
+        extractActorId,
+        io
     );
     // ____ //
 
@@ -828,6 +855,13 @@ export function assembleContainer()
         saveMessageService,
         extractActorId
     )
+
+    const getAvatarController = new GetAvatarController(getAvatarUseCase);
+
+    const setUserAvatarController = new SetUserAvatarController(setUserAvatarService, extractActorId);
+    const deleteUserAvatarController = new DeleteUserAvatarController(deleteUserAvatarService, extractActorId);
+    const setConversationAvatarController = new SetConversationAvatarController(setConversationAvatarService, extractActorId, io);
+    const deleteConversationAvatarController = new DeleteConversationAvatarController(deleteConversationAvatarService, extractActorId, io);
 
     return {
         resendVerificationRegisterController,
@@ -909,6 +943,12 @@ export function assembleContainer()
         getSpecificSavedMessageController,
         removeSavedMessageController,
         saveMessageController,
+
+        getAvatarController,
+        setUserAvatarController,
+        deleteUserAvatarController,
+        setConversationAvatarController,
+        deleteConversationAvatarController,
     }
 }
 

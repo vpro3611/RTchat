@@ -58,6 +58,7 @@ describe("UnblockSpecificUserController (HTTP)", () => {
         email: "target@test.com",
         isActive: true,
         isVerified: true,
+        avatarId: null,
         lastSeenAt: "",
         createdAt: "",
         updatedAt: ""

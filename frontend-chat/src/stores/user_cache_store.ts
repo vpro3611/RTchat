@@ -13,8 +13,13 @@ export const UserCacheStore = reactive({
     return this.byId[userId]?.username ?? null
   },
 
+  getAvatarId(userId: string | null | undefined) {
+    if (!userId) return null
+    return this.byId[userId]?.avatarId ?? null
+  },
+
   async ensureUser(userId: string | null | undefined) {
-    if (!userId) return
+    if (!userId || typeof userId !== 'string' || userId === 'undefined') return
     if (this.byId[userId]) return
     if (this.loading.has(userId)) return
 
@@ -24,8 +29,19 @@ export const UserCacheStore = reactive({
       this.byId[userId] = user
     } catch (e) {
       console.warn(`UserCacheStore: Failed to fetch user ${userId}. They might be deleted.`, e)
-      // Мы можем поместить сюда "пустого" пользователя или заглушку, чтобы не пытаться снова
-      // this.byId[userId] = { id: userId, username: 'Deleted User' } as any
+      // Кэшируем "пустого" пользователя, чтобы не пытаться снова (избегаем спама 404)
+      const now = new Date().toISOString();
+      this.byId[userId] = { 
+        id: userId, 
+        username: 'Deleted User', 
+        email: 'deleted@user.com',
+        avatarId: null,
+        isActive: false,
+        isVerified: false,
+        lastSeenAt: now,
+        createdAt: now,
+        updatedAt: now
+      }
     } finally {
       this.loading.delete(userId)
     }

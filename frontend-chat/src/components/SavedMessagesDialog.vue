@@ -5,6 +5,7 @@ import { useRouter } from "vue-router"
 import { SavedMessagesStore } from "stores/saved_messages_store"
 import { UserCacheStore } from "stores/user_cache_store"
 import { ChatStore } from "stores/chat_store"
+import AppAvatar from "components/AppAvatar.vue"
 
 const $q = useQuasar()
 const router = useRouter()
@@ -107,9 +108,12 @@ function formatDate(dateStr: string) {
                   </div>
                   
                   <div class="row items-center q-mt-sm">
-                    <q-avatar size="sm" color="secondary" text-color="white" class="q-mr-sm shadow-1">
-                      {{ UserCacheStore.getUsername(msg.senderId)?.[0]?.toUpperCase() || '?' }}
-                    </q-avatar>
+                    <AppAvatar
+                      :avatar-id="UserCacheStore.getAvatarId(msg.senderId)"
+                      :name="UserCacheStore.getUsername(msg.senderId) || '?'"
+                      size="32px"
+                      class="q-mr-sm"
+                    />
                     <span class="text-weight-bold" style="font-family: 'Crimson Text', serif; font-size: 1.1em;">
                       {{ UserCacheStore.getUsername(msg.senderId) || 'Loading...' }}
                     </span>

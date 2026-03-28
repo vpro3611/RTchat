@@ -7,7 +7,8 @@ export interface Message {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
-  senderUsername?: string
+  senderUsername?: string;
+  senderAvatarId?: string | null;
 }
 
 export interface MessagesResponse {

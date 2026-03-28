@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useQuasar } from "quasar";
 import { ParticipantApi } from "src/api/apis/participant_api";
 import { UserApi } from "src/api/apis/user_api";
 import type { User } from "src/api/types/register_response";
+import { UserCacheStore } from "stores/user_cache_store";
 import { ParticipantStore } from "stores/participant_store";
 import type { Participant, ParticipantRole, MuteDuration } from "src/api/types/participant_response";
+import AppAvatar from "components/AppAvatar.vue";
 
 const $q = useQuasar();
 
@@ -25,7 +27,17 @@ const isProcessingBlock = ref(false);
 // Computed для безопасного доступа в шаблоне
 const currentParticipant = computed((): Participant => {
   const p = participant.value;
-  return p ?? { conversationId: '', userId: '', username: '', email: '', role: 'member', canSendMessages: true, mutedUntil: null, joinedAt: '' };
+  return p ?? {
+    conversationId: '',
+    userId: '',
+    username: '',
+    email: '',
+    avatarId: null,
+    role: 'member',
+    canSendMessages: true,
+    mutedUntil: null,
+    joinedAt: ''
+  };
 });
 
 // Можно ли управлять этим участником (не себя, и мы owner)
@@ -50,25 +62,21 @@ async function openDialog(p: Participant) {
   isBlocked.value = false;
   isLoading.value = false;
 
-  participant.value = p;
+  // Инициализируем данными из списка
+  participant.value = { ...p };
   isOpen.value = true;
 
-  await checkBlockStatus(p.userId, currentSeq)
+  try {
+    // Проверяем статус блокировки (не блокируем основной поток)
+    await checkBlockStatus(p.userId, currentSeq)
+  } catch (e) {
+    console.error('Initial block check failed:', e)
+  }
 
   // Загружаем полную информацию
-  await loadFullInfo(currentSeq);
+  void loadFullInfo(currentSeq);
 }
 
-// Следим за изменением participant, чтобы обновить статус блокировки
-watch(participant, async (newParticipant) => {
-  if (newParticipant && isOpen.value) {
-    const currentSeq = ++loadSeq
-    isBlocked.value = false;
-    await checkBlockStatus(newParticipant.userId, currentSeq);
-  }
-});
-
-// FIX : FIXED stale-state race при быстром открытии/закрытии ParticipantDetailsDialog
 // Загрузить полную информацию об участнике
 async function loadFullInfo(seq: number) {
   const p = participant.value;
@@ -76,21 +84,30 @@ async function loadFullInfo(seq: number) {
 
   isLoading.value = true;
   try {
+    // Подгружаем актуальный профиль (для аватара)
+    void UserCacheStore.ensureUser(p.userId);
+
     const response = await ParticipantApi.getSpecificParticipant(
       props.conversationId,
       p.userId
     );
-    if (seq !== loadSeq) return
-    participant.value = response.participant;
-    await checkBlockStatus(response.participant.userId, seq)
+
+    if (seq !== loadSeq) return;
+
+    // Мержим данные, чтобы не потерять username/email если их нет в ответе
+    if (participant.value) {
+      participant.value = { ...participant.value, ...response.participant };
+    } else {
+      participant.value = response.participant;
+    }
+
+    isLoading.value = false;
+    void checkBlockStatus(response.participant.userId, seq);
   } catch (e) {
-    if (seq !== loadSeq) return
+    if (seq !== loadSeq) return;
+    isLoading.value = false;
     console.error('Failed to load participant details:', e);
     $q.notify({ type: 'negative', message: 'Failed to load details' });
-  } finally {
-    if (seq === loadSeq) {
-      isLoading.value = false;
-    }
   }
 }
 
@@ -165,8 +182,11 @@ async function changeRole(newRole: ParticipantRole) {
 
   try {
     const response = await ParticipantApi.changeRole(props.conversationId, p.userId, newRole);
-    participant.value = response.participant;
-    ParticipantStore.updateParticipant(p.userId, response.participant);
+    // Мержим обновление
+    if (participant.value) {
+      participant.value = { ...participant.value, ...response };
+    }
+    ParticipantStore.updateParticipant(p.userId, response);
     $q.notify({ type: 'positive', message: `Role changed to ${newRole}` });
   } catch (e) {
     console.error('Failed to change role:', e);
@@ -208,8 +228,11 @@ async function muteParticipant(duration: MuteDuration) {
 
   try {
     const response = await ParticipantApi.muteParticipant(props.conversationId, p.userId, duration);
-    participant.value = response.participant;
-    ParticipantStore.updateParticipant(p.userId, response.participant);
+    // Мержим обновление
+    if (participant.value) {
+      participant.value = { ...participant.value, ...response };
+    }
+    ParticipantStore.updateParticipant(p.userId, response);
     $q.notify({ type: 'positive', message: 'Participant muted' });
   } catch (e) {
     console.error('Failed to mute:', e);
@@ -224,8 +247,11 @@ async function unmuteParticipant() {
 
   try {
     const response = await ParticipantApi.unmuteParticipant(props.conversationId, p.userId);
-    participant.value = response.participant;
-    ParticipantStore.updateParticipant(p.userId, response.participant);
+    // Мержим обновление
+    if (participant.value) {
+      participant.value = { ...participant.value, ...response };
+    }
+    ParticipantStore.updateParticipant(p.userId, response);
     $q.notify({ type: 'positive', message: 'Participant unmuted' });
   } catch (e) {
     console.error('Failed to unmute:', e);
@@ -353,9 +379,12 @@ defineExpose({ openDialog });
       <q-card-section v-if="currentParticipant">
         <!-- Информация об участнике -->
         <div class="column items-center q-pa-md">
-          <q-avatar size="80px" color="primary" text-color="white" class="q-mb-md">
-            {{ currentParticipant.username.charAt(0).toUpperCase() }}
-          </q-avatar>
+          <AppAvatar
+            :avatar-id="UserCacheStore.getAvatarId(currentParticipant.userId) || currentParticipant.avatarId"
+            :name="currentParticipant.username"
+            size="80px"
+            class="q-mb-md"
+          />
 
           <div class="text-h6">{{ currentParticipant.username }}</div>
           <div class="text-caption text-grey">{{ currentParticipant.email }}</div>

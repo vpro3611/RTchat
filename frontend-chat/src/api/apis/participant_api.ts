@@ -57,7 +57,7 @@ export const ParticipantApi = {
 
   // Изменить роль участника
   changeRole(conversationId: string, targetId: string, role: ParticipantRole) {
-    return fetchJson<ParticipantResponse>(
+    return fetchJson<ParticipantDTO>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/role`,
       {
         method: "PATCH",
@@ -72,7 +72,7 @@ export const ParticipantApi = {
 
   // Заглушить участника
   muteParticipant(conversationId: string, targetId: string, duration: MuteDuration) {
-    return fetchJson<ParticipantResponse>(
+    return fetchJson<ParticipantDTO>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/mute`,
       {
         method: "PATCH",
@@ -87,7 +87,7 @@ export const ParticipantApi = {
 
   // Разглушить участника
   unmuteParticipant(conversationId: string, targetId: string) {
-    return fetchJson<ParticipantResponse>(
+    return fetchJson<ParticipantDTO>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${targetId}/unmute`,
       {
         method: "PATCH",
@@ -284,6 +284,28 @@ export const ParticipantApi = {
         },
       }
     )
+  },
+
+  setConversationAvatar(conversationId: string, file: File) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    return fetchJson<{avatarId: string}>(`${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/avatar`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${AuthStore.accessToken}`
+      },
+      body: formData,
+    });
+  },
+
+  deleteConversationAvatar(conversationId: string) {
+    return fetchJson<void>(`${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/avatar`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${AuthStore.accessToken}`
+      },
+    });
   },
 
   saveMessage(conversationId: string, messageId: string) {

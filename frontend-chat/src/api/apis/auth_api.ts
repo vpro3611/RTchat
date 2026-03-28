@@ -3,7 +3,7 @@ import type {User} from "../types/register_response.ts";
 import {fetchJson, fetchJsonNoError} from "../fetch/generinc_fetcher";
 import type {LoginByEmailResponse} from "../types/login_by_email_response.ts";
 import type {LoginByUsernameResponse} from "../types/login_by_username_response.ts";
-import {AuthStore} from "src/stores/auth_store";
+import {AuthStore} from "stores/auth_store";
 
 type RegisterResponse = {
     message: string;

@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import type {Message} from "src/api/types/message_response";
 import { UserCacheStore } from "stores/user_cache_store";
+import AppAvatar from "./AppAvatar.vue";
 
 const props = defineProps<{
   message: Message;
@@ -11,12 +12,13 @@ const props = defineProps<{
 
 // FIX : FIXED - вычисляем senderUsername из кэша
 const senderUsername = computed(() => {
-  // Если есть в сообщении - используем
-  if (props.message.senderUsername) {
-    return props.message.senderUsername;
-  }
-  // Иначе получаем из кэша
+  if (props.message.senderUsername) return props.message.senderUsername;
   return UserCacheStore.getUsername(props.message.senderId);
+});
+
+const senderAvatarId = computed(() => {
+  if (props.message.senderAvatarId !== undefined) return props.message.senderAvatarId;
+  return UserCacheStore.getAvatarId(props.message.senderId);
 });
 
 const emit = defineEmits<{
@@ -67,13 +69,17 @@ function handleSave() {
       :class="isOwn ? 'bg-primary text-white' : 'bg-grey-2'"
       :style="{ maxWidth: '70%' }"
     >
-      <!-- Username (только для чужих сообщений) -->
       <div
         v-if="!isOwn && senderUsername"
-        class="text-caption q-px-sm q-pt-xs"
+        class="text-caption q-px-sm q-pt-xs row items-center q-gutter-x-xs"
         :class="isOwn ? 'text-white' : 'text-primary'"
       >
-        {{ senderUsername }}
+        <AppAvatar
+          :avatar-id="senderAvatarId"
+          :name="senderUsername"
+          size="18px"
+        />
+        <span>{{ senderUsername }}</span>
       </div>
 
       <!-- Content -->
