@@ -43,6 +43,7 @@ import {
 } from "./modules/chat/controllers/participant/get_specific_participant_controller";
 import {GetSpecificMessageParamsSchema} from "./modules/chat/controllers/message/get_specific_message_controller";
 import cors from "cors";
+import multer from "multer";
 import {GetSpecificUserParamsSchema} from "./modules/users/controllers/get_specific_user_controller";
 import {
     ResendRegisterVerificationBodySchema
@@ -91,6 +92,8 @@ import {
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
+
+    const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 } });
 
     // TODO : loger middleware here.
     app.use(pinoHttp({
@@ -231,7 +234,7 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.get("/conversation/:conversationId/:messageId/view",
         validateParams(GetSpecificMessageParamsSchema),
         dependencies.getSpecificMessageController.getSpecificMessageCont
-    );
+    ); //
 
     privateRouter.patch("/conversation/:conversationId/:targetId/role",
         validateParams(ChangeParticipantRoleParamsSchema),
@@ -385,6 +388,15 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.get("/user/saved_messages/all",
         dependencies.getSavedMessagesListController.getSavedMessagesListCont
     ); //
+
+    privateRouter.post("/me/avatar",
+        upload.single('avatar'),
+        dependencies.setUserAvatarController.setAvatar
+    );
+
+    privateRouter.delete("/me/avatar",
+        dependencies.deleteUserAvatarController.deleteAvatar
+    );
 
     app.use(errorMiddleware());
 

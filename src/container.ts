@@ -292,6 +292,10 @@ import {SaveMessageController} from "./modules/chat/controllers/saved_messages/s
 import {AvatarRepositoryPg} from "./modules/chat/repositories_pg_realization/avatar_repository_pg";
 import {GetAvatarUseCase} from "./modules/chat/application/avatar/get_avatar_use_case";
 import {GetAvatarController} from "./modules/chat/controllers/avatar/get_avatar_controller";
+import {SetUserAvatarTxService} from "./modules/chat/transactional_services/avatar/set_user_avatar_tx_service";
+import {DeleteUserAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_user_avatar_tx_service";
+import {SetUserAvatarController} from "./modules/chat/controllers/avatar/set_user_avatar_controller";
+import {DeleteUserAvatarController} from "./modules/chat/controllers/avatar/delete_user_avatar_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -688,6 +692,9 @@ export function assembleContainer()
     const removeSavedMessageService = new RemoveSavedMessageService(txManager);
     const saveMessageService = new SaveMessageService(txManager);
 
+    const setUserAvatarService = new SetUserAvatarTxService(txManager);
+    const deleteUserAvatarService = new DeleteUserAvatarTxService(txManager);
+
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
     const editMessageController = new EditMessageController(editMessageService);
@@ -837,6 +844,9 @@ export function assembleContainer()
 
     const getAvatarController = new GetAvatarController(getAvatarUseCase);
 
+    const setUserAvatarController = new SetUserAvatarController(setUserAvatarService, extractActorId);
+    const deleteUserAvatarController = new DeleteUserAvatarController(deleteUserAvatarService, extractActorId);
+
     return {
         resendVerificationRegisterController,
         resendVerificationChangeEmailController,
@@ -919,6 +929,8 @@ export function assembleContainer()
         saveMessageController,
 
         getAvatarController,
+        setUserAvatarController,
+        deleteUserAvatarController,
     }
 }
 
