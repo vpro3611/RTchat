@@ -147,7 +147,7 @@ export function createApp(dependencies: AppContainer): Express
 
     publicRouter.get("/avatar/:avatarId",
         dependencies.getAvatarController.execute
-    );
+    ); //
 
     publicRouter.post("/register",
         validateBody(RegisterBodySchema),
@@ -394,22 +394,22 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.post("/me/avatar",
         upload.single('avatar'),
         dependencies.setUserAvatarController.setAvatar
-    );
+    ); //
 
     privateRouter.delete("/me/avatar",
         dependencies.deleteUserAvatarController.deleteAvatar
-    );
+    ); //
 
     privateRouter.post("/conversation/:conversationId/avatar",
         validateParams(SetConversationAvatarParamsSchema),
         upload.single('avatar'),
         dependencies.setConversationAvatarController.setAvatar
-    );
+    ); //
 
     privateRouter.delete("/conversation/:conversationId/avatar",
         validateParams(DeleteConversationAvatarParamsSchema),
         dependencies.deleteConversationAvatarController.deleteAvatar
-    );
+    ); //
 
     app.use(errorMiddleware());
 
