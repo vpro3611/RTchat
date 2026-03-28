@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { AuthStore } from "stores/auth_store"
-import { computed } from "vue"
+import { computed, ref } from "vue"
+import { useQuasar } from "quasar"
+import { UserApi } from "src/api/apis/user_api"
 
 import LogoutComponent from "components/LogoutComponent.vue"
 import ChangePasswordForm from "components/ChangePasswordForm.vue"
 import ChangeUsernameForm from "components/ChangeUsernameForm.vue"
 import ChangeEmailForm from "components/ChangeEmailForm.vue"
 import DeactivateAccountButton from "components/DeactivateAccountButton.vue"
+import AvatarUpload from "components/AvatarUpload.vue"
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits(["update:modelValue"])
+
+const $q = useQuasar()
+const isAvatarLoading = ref(false)
 
 const model = computed({
   get: () => props.modelValue,
@@ -18,6 +24,44 @@ const model = computed({
 
 function close() {
   emit("update:modelValue", false)
+}
+
+async function handleAvatarUpload(file: File) {
+  isAvatarLoading.value = true
+  try {
+    const res = await UserApi.setUserAvatar(file)
+    AuthStore.setAvatarId(res.avatarId)
+    $q.notify({
+      type: "positive",
+      message: "Avatar updated successfully"
+    })
+  } catch (e) {
+    $q.notify({
+      type: "negative",
+      message: e instanceof Error ? e.message : "Failed to upload avatar"
+    })
+  } finally {
+    isAvatarLoading.value = false
+  }
+}
+
+async function handleAvatarDelete() {
+  isAvatarLoading.value = true
+  try {
+    await UserApi.deleteUserAvatar()
+    AuthStore.setAvatarId(null)
+    $q.notify({
+      type: "positive",
+      message: "Avatar removed successfully"
+    })
+  } catch (e) {
+    $q.notify({
+      type: "negative",
+      message: e instanceof Error ? e.message : "Failed to delete avatar"
+    })
+  } finally {
+    isAvatarLoading.value = false
+  }
 }
 </script>
 
@@ -28,9 +72,14 @@ function close() {
 
       <!-- HEADER -->
       <q-card-section class="text-center">
-        <q-avatar size="80px">
-          <q-icon name="person" size="50px" />
-        </q-avatar>
+        <AvatarUpload
+          :avatar-id="AuthStore.user?.avatarId"
+          :name="AuthStore.user?.username"
+          :loading="isAvatarLoading"
+          can-delete
+          @upload="handleAvatarUpload"
+          @delete="handleAvatarDelete"
+        />
 
         <div class="text-h6 q-mt-md">
           {{ AuthStore.user?.username }}

@@ -2,25 +2,29 @@
 import { computed } from "vue";
 import type {Message} from "src/api/types/message_response";
 import { UserCacheStore } from "stores/user_cache_store";
+import AppAvatar from "./AppAvatar.vue";
 
 const props = defineProps<{
   message: Message;
   isOwn: boolean;
+  isSaved?: boolean;
 }>();
 
 // FIX : FIXED - вычисляем senderUsername из кэша
 const senderUsername = computed(() => {
-  // Если есть в сообщении - используем
-  if (props.message.senderUsername) {
-    return props.message.senderUsername;
-  }
-  // Иначе получаем из кэша
+  if (props.message.senderUsername) return props.message.senderUsername;
   return UserCacheStore.getUsername(props.message.senderId);
+});
+
+const senderAvatarId = computed(() => {
+  if (props.message.senderAvatarId !== undefined) return props.message.senderAvatarId;
+  return UserCacheStore.getAvatarId(props.message.senderId);
 });
 
 const emit = defineEmits<{
   (e: 'edit', messageId: string, content: string): void;
   (e: 'delete', messageId: string): void;
+  (e: 'save', messageId: string): void;
 }>();
 
 function formatTime(dateString: string) {
@@ -49,6 +53,10 @@ function handleEdit() {
 function handleDelete() {
   emit('delete', props.message.id);
 }
+
+function handleSave() {
+  emit('save', props.message.id);
+}
 </script>
 
 <template>
@@ -61,13 +69,17 @@ function handleDelete() {
       :class="isOwn ? 'bg-primary text-white' : 'bg-grey-2'"
       :style="{ maxWidth: '70%' }"
     >
-      <!-- Username (только для чужих сообщений) -->
       <div
         v-if="!isOwn && senderUsername"
-        class="text-caption q-px-sm q-pt-xs"
+        class="text-caption q-px-sm q-pt-xs row items-center q-gutter-x-xs"
         :class="isOwn ? 'text-white' : 'text-primary'"
       >
-        {{ senderUsername }}
+        <AppAvatar
+          :avatar-id="senderAvatarId"
+          :name="senderUsername"
+          size="18px"
+        />
+        <span>{{ senderUsername }}</span>
       </div>
 
       <!-- Content -->
@@ -88,15 +100,15 @@ function handleDelete() {
       <!-- Time & Menu -->
       <div class="row items-center justify-between q-px-sm q-pb-xs">
         <div
-          class="text-caption"
+          class="text-caption row items-center"
           :class="isOwn ? 'text-white' : 'text-grey'"
         >
           {{ formatDate(message.createdAt) }} {{ formatTime(message.createdAt) }}
+          <q-icon v-if="isSaved" name="bookmark" size="14px" class="q-ml-xs" />
         </div>
 
-        <!-- Menu button (только для своих сообщений) -->
+        <!-- Menu button (доступно для всех сообщений) -->
         <q-btn
-          v-if="isOwn"
           flat
           dense
           round
@@ -105,10 +117,15 @@ function handleDelete() {
         >
           <q-menu anchor="top right" self="top left">
             <q-list dense style="min-width: 100px">
-              <q-item clickable v-close-popup @click="handleEdit">
+              <q-item clickable v-close-popup @click="!isSaved && handleSave()" :disable="isSaved">
+                <q-item-section :class="isSaved ? 'text-grey' : 'text-primary'">
+                  {{ isSaved ? 'Saved' : 'Save' }}
+                </q-item-section>
+              </q-item>
+              <q-item v-if="isOwn" clickable v-close-popup @click="handleEdit">
                 <q-item-section>Edit</q-item-section>
               </q-item>
-              <q-item clickable v-close-popup @click="handleDelete">
+              <q-item v-if="isOwn" clickable v-close-popup @click="handleDelete">
                 <q-item-section class="text-negative">Delete</q-item-section>
               </q-item>
             </q-list>

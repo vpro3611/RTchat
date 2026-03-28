@@ -18,6 +18,12 @@ export const AuthStore = reactive({
         this.user = user;
     },
 
+    setAvatarId(avatarId: string | null) {
+        if (this.user) {
+            this.user.avatarId = avatarId;
+        }
+    },
+
     clearToken() {
         this.accessToken = null;
         this.user = null;

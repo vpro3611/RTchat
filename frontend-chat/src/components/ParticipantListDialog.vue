@@ -7,6 +7,13 @@ import { AuthStore } from "stores/auth_store";
 import type { Participant } from "src/api/types/participant_response";
 import ParticipantDetailsDialog from "components/ParticipantDetailsDialog.vue";
 import BannedParticipantsDialog from "components/BannedParticipantsDialog.vue";
+import ManageRequestsDialog from "components/ManageRequestsDialog.vue";
+import UserSearchDialog from "components/UserSearchDialog.vue";
+import AppAvatar from "components/AppAvatar.vue";
+import AvatarUpload from "components/AvatarUpload.vue";
+import { ChatStore } from "stores/chat_store";
+import { UserCacheStore } from "stores/user_cache_store";
+import { watch } from "vue";
 
 const $q = useQuasar();
 
@@ -27,6 +34,9 @@ const isLoadingMore = ref(false);
 // Диалоги
 const detailsDialogRef = ref<{ openDialog: (participant: Participant) => void } | null>(null);
 const bannedDialogRef = ref<{ openDialog: () => void } | null>(null);
+const requestsDialogRef = ref<{ open: () => void } | null>(null);
+const showAddUserSearch = ref(false);
+const isAvatarLoading = ref(false);
 
 // Текущий пользователь
 const currentUserId = computed(() => AuthStore.user?.id);
@@ -84,6 +94,71 @@ function openBannedList() {
   bannedDialogRef.value?.openDialog();
 }
 
+// Открыть список запросов
+function openRequestsList() {
+  requestsDialogRef.value?.open();
+}
+
+function openAddUserSearch() {
+  showAddUserSearch.value = true;
+}
+
+function onUserAdded(participant?: Participant) {
+  if (participant) {
+    ParticipantStore.addParticipant(participant);
+  } else {
+    void loadParticipants();
+  }
+}
+
+async function handleAvatarUpload(file: File) {
+  isAvatarLoading.value = true
+  try {
+    const res = await ParticipantApi.setConversationAvatar(props.conversationId, file)
+    ChatStore.updateChatAvatar(props.conversationId, res.avatarId)
+    $q.notify({
+      type: "positive",
+      message: "Group avatar updated"
+    })
+  } catch (e) {
+    $q.notify({
+      type: "negative",
+      message: e instanceof Error ? e.message : "Failed to upload avatar"
+    })
+  } finally {
+    isAvatarLoading.value = false
+  }
+}
+
+async function handleAvatarDelete() {
+  isAvatarLoading.value = true
+  try {
+    await ParticipantApi.deleteConversationAvatar(props.conversationId)
+    ChatStore.updateChatAvatar(props.conversationId, null)
+    $q.notify({
+      type: "positive",
+      message: "Group avatar removed"
+    })
+  } catch (e) {
+    $q.notify({
+      type: "negative",
+      message: e instanceof Error ? e.message : "Failed to delete avatar"
+    })
+  } finally {
+    isAvatarLoading.value = false
+  }
+}
+
+// Синхронизируем участников с кэшем пользователей для получения актуальных аватаров
+watch(
+  () => ParticipantStore.participants,
+  (list) => {
+    const userIds = list.map(p => p.userId);
+    void UserCacheStore.ensureUsers(userIds);
+  },
+  { immediate: true, deep: true }
+);
+
 // Открыть диалог
 function openDialog() {
   ParticipantStore.clearParticipants();
@@ -105,6 +180,16 @@ defineExpose({ openDialog });
         <div class="text-h6">Participants</div>
         <q-space />
         <q-btn v-if="isOwner && props.conversationType === 'group'" 
+               flat round dense color="primary" icon="person_add" 
+               @click="openAddUserSearch" class="q-mr-sm">
+          <q-tooltip>Add User</q-tooltip>
+        </q-btn>
+        <q-btn v-if="isOwner && props.conversationType === 'group'" 
+               flat round dense color="orange" icon="group_add" 
+               @click="openRequestsList" class="q-mr-sm">
+          <q-tooltip>Join Requests</q-tooltip>
+        </q-btn>
+        <q-btn v-if="isOwner && props.conversationType === 'group'" 
                flat round dense color="negative" icon="gavel" 
                @click="openBannedList" class="q-mr-sm">
           <q-tooltip>Banned List</q-tooltip>
@@ -113,6 +198,19 @@ defineExpose({ openDialog });
       </q-card-section>
 
       <q-card-section class="q-pt-md">
+        <!-- Аватар группы для владельца -->
+        <div v-if="isOwner && props.conversationType === 'group'" class="row justify-center q-mb-md">
+          <AvatarUpload
+            :avatar-id="ChatStore.findById(props.conversationId)?.avatarId"
+            :name="ChatStore.findById(props.conversationId)?.title"
+            :loading="isAvatarLoading"
+            can-delete
+            size="100px"
+            @upload="handleAvatarUpload"
+            @delete="handleAvatarDelete"
+          />
+        </div>
+
         <!-- Загрузка -->
         <div v-if="isLoading" class="flex flex-center q-pa-lg">
           <q-spinner-dots size="40px" color="primary" />
@@ -128,9 +226,11 @@ defineExpose({ openDialog });
               @click="openParticipantDetails(participant)"
             >
               <q-item-section avatar>
-                <q-avatar color="primary" text-color="white">
-                  {{ participant.username.charAt(0).toUpperCase() }}
-                </q-avatar>
+                <AppAvatar
+                  :avatar-id="UserCacheStore.getAvatarId(participant.userId) || participant.avatarId"
+                  :name="participant.username"
+                  size="40px"
+                />
               </q-item-section>
 
               <q-item-section>
@@ -188,6 +288,20 @@ defineExpose({ openDialog });
       ref="bannedDialogRef"
       :conversationId="conversationId"
       :isOwner="isOwner"
+    />
+
+    <!-- Диалог запросов на вступление -->
+    <ManageRequestsDialog
+      ref="requestsDialogRef"
+      :conversationId="conversationId"
+      @accepted="onUserAdded"
+    />
+
+    <!-- Поиск пользователей для добавления -->
+    <UserSearchDialog
+      v-model="showAddUserSearch"
+      :conversationId="conversationId"
+      @added="onUserAdded"
     />
   </q-dialog>
 </template>

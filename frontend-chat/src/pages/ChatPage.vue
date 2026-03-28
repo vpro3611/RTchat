@@ -7,6 +7,7 @@ import {MessageStore} from "stores/message_store";
 import {AuthStore} from "stores/auth_store";
 import {UserCacheStore} from "stores/user_cache_store";
 import {ParticipantStore} from "stores/participant_store";
+import {SavedMessagesStore} from "stores/saved_messages_store";
 import {MessageApi} from "src/api/apis/message_api";
 import {UserApi} from "src/api/apis/user_api";
 import {ParticipantApi} from "src/api/apis/participant_api";
@@ -16,6 +17,7 @@ import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
 import LeaveGroupButton from "components/LeaveGroupButton.vue";
 import ParticipantListDialog from "components/ParticipantListDialog.vue";
 import MessageBubble from "components/MessageBubble.vue";
+import AppAvatar from "components/AppAvatar.vue";
 
 const $q = useQuasar()
 const route = useRoute();
@@ -226,6 +228,30 @@ function deleteMessage(messageId: string) {
   chatSocket.deleteMessage(conversationId.value, messageId);
 }
 
+// Сохранить сообщение
+function saveMessageAction(messageId: string) {
+  if (!conversationId.value) return;
+
+  void (async () => {
+    try {
+      await SavedMessagesStore.saveMessage(conversationId.value, messageId);
+      $q.notify({
+        type: 'positive',
+        message: 'Message saved to bookmarks'
+      });
+    } catch {
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to save message'
+      });
+    }
+  })();
+}
+
+function isMessageSaved(messageId: string) {
+  return SavedMessagesStore.messages.some(m => m.messageId === messageId);
+}
+
 // Прокрутка к низу
 function scrollToBottom() {
   if (messagesContainer.value) {
@@ -283,6 +309,9 @@ onMounted(() => {
   chatSocket.onError(handleSocketError);
   window.addEventListener('block-status-changed', handleBlockChange);
 
+  // Подгружаем сохраненные сообщения, чтобы обновлять UI (кнопку Save)
+  void SavedMessagesStore.fetchMessages(50);
+
   if (conversationId.value) {
     void loadMessages();
     void checkOtherUserBlocked();
@@ -333,12 +362,19 @@ watch(
 
     <!-- HEADER -->
     <div class="q-pa-md border-bottom row items-center justify-between">
-      <div>
-        <div class="text-h6">
-          {{ chat?.title || (chat?.conversationType === 'direct' ? 'Direct Chat' : 'Chat') }}
-        </div>
-        <div class="text-caption text-grey">
-          {{ chat?.conversationType === 'group' ? 'Group' : 'Direct' }}
+      <div class="row items-center q-gutter-x-md">
+        <AppAvatar
+          :avatar-id="chat?.avatarId"
+          :name="chat?.title || 'Chat'"
+          size="48px"
+        />
+        <div>
+          <div class="text-h6">
+            {{ chat?.title || (chat?.conversationType === 'direct' ? 'Direct Chat' : 'Chat') }}
+          </div>
+          <div class="text-caption text-grey">
+            {{ chat?.conversationType === 'group' ? 'Group' : 'Direct' }}
+          </div>
         </div>
       </div>
 
@@ -429,8 +465,10 @@ watch(
           :key="message.id"
           :message="message"
           :isOwn="message.senderId === AuthStore.user?.id"
+          :isSaved="isMessageSaved(message.id)"
           @edit="startEdit"
           @delete="deleteMessage"
+          @save="saveMessageAction"
         />
 
         <!-- Typing indicator placeholder -->

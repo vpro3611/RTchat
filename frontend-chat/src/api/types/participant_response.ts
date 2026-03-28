@@ -5,6 +5,17 @@ export interface Participant {
   userId: string;
   username: string;
   email: string;
+  avatarId: string | null;
+  role: ParticipantRole;
+  canSendMessages: boolean;
+  mutedUntil: string | null;
+  joinedAt: string;
+}
+
+export interface ParticipantDTO {
+  conversationId: string;
+  userId: string;
+  avatarId: string | null;
   role: ParticipantRole;
   canSendMessages: boolean;
   mutedUntil: string | null;

@@ -41,8 +41,10 @@ export class MuteParticipantUseCase {
     }
 
     private async invalidateParticipantsCache(conversationId: string, targetId: string) {
-        await this.cacheService.del(`participants:conv:${conversationId}`);
-        await this.cacheService.del(`participant:conv:${conversationId}:user:${targetId}`);
+        await Promise.all([
+            this.cacheService.delByPattern(`participants:conv:${conversationId}:*`),
+            this.cacheService.del(`participant:conv:${conversationId}:user:${targetId}`)
+        ]);
     }
 
     async muteParticipantUseCase(actorId: string, targetId: string, conversationId: string, duration: MuteDuration): Promise<ParticipantDTO> {

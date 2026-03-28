@@ -10,6 +10,7 @@ describe("SendMessageUseCase", () => {
     let cacheService: any;
     let participantRepo: any;
     let userToUserBansRepo: any;
+    let conversationBansRepo: any;
 
     let useCase: SendMessageUseCase;
 
@@ -37,7 +38,8 @@ describe("SendMessageUseCase", () => {
         };
 
         cacheService = {
-            delByPattern: jest.fn()
+            delByPattern: jest.fn(),
+            del: jest.fn()
         };
 
         participantRepo = {
@@ -48,6 +50,10 @@ describe("SendMessageUseCase", () => {
             ensureAnyBlocksExists: jest.fn()
         };
 
+        conversationBansRepo = {
+            isBanned: jest.fn()
+        };
+
         useCase = new SendMessageUseCase(
             messageRepo,
             conversationRepo,
@@ -55,7 +61,8 @@ describe("SendMessageUseCase", () => {
             checkIsParticipant,
             cacheService,
             participantRepo,
-            userToUserBansRepo
+            userToUserBansRepo,
+            conversationBansRepo
         );
 
     });

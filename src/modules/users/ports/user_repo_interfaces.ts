@@ -13,4 +13,5 @@ export interface UserRepoWriter {
     markAsVerified(id: string): Promise<void>;
     setPendingEmail(userId: string, email: string): Promise<void>;
     confirmPendingEmail(userId: string): Promise<void>;
+    updateAvatarId(userId: string, avatarId: string | null): Promise<void>;
 }

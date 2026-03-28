@@ -192,10 +192,119 @@ import {
     UnbanGroupParticipantController
 } from "./modules/chat/controllers/participant/unban_group_participant_controller";
 import {GetBannedUsersController} from "./modules/chat/controllers/participant/get_banned_users_controller";
+import {
+    ConversationRequestsRepositoryPg
+} from "./modules/chat/repositories_pg_realization/conversation_requests_repository_pg";
+import {MapToRequestDto} from "./modules/chat/shared/map_to_request_dto";
+import {
+    ChangeRequestStatusUseCase
+} from "./modules/chat/application/conversation_requests/change_request_status_use_case";
+import {WithdrawRequestUseCase} from "./modules/chat/application/conversation_requests/withdraw_request_use_case";
+import {
+    CreateConversationRequestUseCase
+} from "./modules/chat/application/conversation_requests/create_conversation_request_use_case";
+import {
+    ChangeRequestStatusService
+} from "./modules/chat/transactional_services/conversation_requests/change_request_status_service";
+import {
+    WithdrawRequestService
+} from "./modules/chat/transactional_services/conversation_requests/withdraw_request_service";
+import {
+    CreateConversationRequestService
+} from "./modules/chat/transactional_services/conversation_requests/cretate_conversation_reques_service";
+import {
+    ChangeConversationRequestStatusController
+} from "./modules/chat/controllers/conversation_requests/change_conversation_request_status_controller";
+import {
+    WithdrawConversationRequestController
+} from "./modules/chat/controllers/conversation_requests/withdraw_conversation_request_controller";
+import {
+    CreateConversationRequestController
+} from "./modules/chat/controllers/conversation_requests/create_conversation_request_controller";
+import {GetAllRequestListUseCase} from "./modules/chat/application/conversation_requests/get_all_requst_list_use_case";
+import {
+    GetAllRequestListService
+} from "./modules/chat/transactional_services/conversation_requests/get_all_request_list_service";
+import {
+    GetAllRequestListController
+} from "./modules/chat/controllers/conversation_requests/get_all_request_list_controller";
+import {GetUsersRequestsUseCase} from "./modules/chat/application/conversation_requests/get_users_requests_use_case";
+import {RemoveRequestUseCase} from "./modules/chat/application/conversation_requests/remove_request_use_case";
+import {
+    GetUsersRequestsService
+} from "./modules/chat/transactional_services/conversation_requests/get_users_requests_service";
+import {RemoveRequestService} from "./modules/chat/transactional_services/conversation_requests/remove_request_service";
+import {GetUsersRequestController} from "./modules/chat/controllers/conversation_requests/get_users_request_controller";
+import {RemoveRequestController} from "./modules/chat/controllers/conversation_requests/remove_request_controller";
+import {
+    GetSpecificRequestUserUseCase
+} from "./modules/chat/application/conversation_requests/get_specific_request_user_use_case";
+import {
+    GetSpecificRequestGroupUseCase
+} from "./modules/chat/application/conversation_requests/get_specific_request_group_use_case";
+import {
+    GetSpecificRequestUserService
+} from "./modules/chat/transactional_services/conversation_requests/get_specific_request_user_service";
+import {
+    GetSpecificRequestGroupService
+} from "./modules/chat/transactional_services/conversation_requests/get_specific_request_group_service";
+import {
+    GetSpecificRequestUserController
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_user_controller";
+import {
+    GetSpecificRequestGroupController
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_group_controller";
+import {
+    AddParticipantToConversationUseCase
+} from "./modules/chat/application/participant/add_participant_to_conversation_use_case";
+import {
+    AddParticipantToConversationTxService
+} from "./modules/chat/transactional_services/participant/add_participant_to_conversation_tx_service";
+import {
+    AddParticipantToAConversationController
+} from "./modules/chat/controllers/participant/add_participant_to_a_conversation_controller";
+import {GetSavedMessagesListUseCase} from "./modules/chat/application/saved_messages/get_saved_messages_list_use_case";
+import {SavedMessagesRepoPg} from "./modules/chat/repositories_pg_realization/saved_messages_repo_pg";
+import {MapToSavedMessageDto} from "./modules/chat/shared/map_to_saved_message_dto";
+import {
+    GetSpecificSavedMessageUseCase
+} from "./modules/chat/application/saved_messages/get_specific_saved_message_use_case";
+import {RemoveSavedMessageUseCase} from "./modules/chat/application/saved_messages/remove_saved_message_use_case";
+import {SaveMessageUseCase} from "./modules/chat/application/saved_messages/save_message_use_case";
+import {
+    GetSavedMessagesListService
+} from "./modules/chat/transactional_services/saved_messages/get_saved_messages_list_service";
+import {
+    GetSpecificSavedMessageService
+} from "./modules/chat/transactional_services/saved_messages/get_specific_saved_message_service";
+import {
+    RemoveSavedMessageService
+} from "./modules/chat/transactional_services/saved_messages/remove_saved_message_service";
+import {SaveMessageService} from "./modules/chat/transactional_services/saved_messages/save_message_service";
+import {
+    GetSavedMessagesListController
+} from "./modules/chat/controllers/saved_messages/get_saved_messages_list_controller";
+import {
+    GetSpecificSavedMessageController
+} from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
+import {RemoveSavedMessageController} from "./modules/chat/controllers/saved_messages/remove_saved_message_controller";
+import {SaveMessageController} from "./modules/chat/controllers/saved_messages/save_message_controller";
+import {AvatarRepositoryPg} from "./modules/chat/repositories_pg_realization/avatar_repository_pg";
+import {GetAvatarUseCase} from "./modules/chat/application/avatar/get_avatar_use_case";
+import {GetAvatarController} from "./modules/chat/controllers/avatar/get_avatar_controller";
+import {SetUserAvatarTxService} from "./modules/chat/transactional_services/avatar/set_user_avatar_tx_service";
+import {DeleteUserAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_user_avatar_tx_service";
+import {SetUserAvatarController} from "./modules/chat/controllers/avatar/set_user_avatar_controller";
+import {DeleteUserAvatarController} from "./modules/chat/controllers/avatar/delete_user_avatar_controller";
+import {SetConversationAvatarTxService} from "./modules/chat/transactional_services/avatar/set_conversation_avatar_tx_service";
+import {DeleteConversationAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_conversation_avatar_tx_service";
+import {SetConversationAvatarController} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
+import {DeleteConversationAvatarController} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
+import {Server} from "socket.io";
 
 export const RedisCacheService = new CacheService(redisClient);
 
-export function assembleContainer()
+export function assembleContainer(io: Server)
 {
 
 
@@ -296,11 +405,15 @@ export function assembleContainer()
     );
 
 
+
     // TODO : CHAT
     const conversationRepo = new ConversationRepositoryPg(pool);
     const messageRepo = new MessageRepositoryPg(pool);
     const participantRepo = new ParticipantRepositoryPg(pool);
     const conversationBansRepo = new ConversationBansRepositoryPg(pool);
+    const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool);
+    const savedMessageRepo = new SavedMessagesRepoPg(pool);
+    const avatarRepo = new AvatarRepositoryPg(pool);
 
     // TODO : SHARED FOR CHAT
     const conversationMapper = new MapToConversationDto();
@@ -308,6 +421,8 @@ export function assembleContainer()
     const participantMapper = new MapToParticipantDto();
     const checkIsParticipant = new CheckIsParticipant(participantRepo);
     const findMessageById = new FindMessageById(messageRepo);
+    const mapToRequestDto = new MapToRequestDto();
+    const mapToSavedMessageDto = new MapToSavedMessageDto();
 
 
     // TODO : CHAT (USE CASES)
@@ -400,9 +515,10 @@ export function assembleContainer()
     const joinConversationUseCase = new JoinConversationUseCase(
         conversationRepo,
         participantRepo,
-        participantMapper,
         RedisCacheService,
         conversationBansRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
     );
     const leaveConversationUseCase = new LeaveConversationUseCase(
         participantRepo,
@@ -437,6 +553,100 @@ export function assembleContainer()
         conversationBansRepo,
         RedisCacheService,
     );
+    const addParticipantToConversationUseCase = new AddParticipantToConversationUseCase(
+        userRepoReaderPG,
+        participantRepo,
+        conversationBansRepo,
+        participantMapper,
+        conversationRepo,
+        userToUserBlocksPG,
+        RedisCacheService,
+    );
+
+    // ____ //
+
+    const changeRequestStatusUseCase = new ChangeRequestStatusUseCase(
+        participantRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const withdrawRequestUseCase = new WithdrawRequestUseCase(
+        userRepoReaderPG,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const createConversationRequestUseCase = new CreateConversationRequestUseCase(
+        userRepoReaderPG,
+        participantRepo,
+        conversationRepo,
+        conversationBansRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const getAllRequestsUseCase = new GetAllRequestListUseCase(
+        participantRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const getAllUsersRequestUseCase = new GetUsersRequestsUseCase(
+        userRepoReaderPG,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const removeSpecificRequestUseCase = new RemoveRequestUseCase(
+        userRepoReaderPG,
+        conversationRequestsRepo,
+        RedisCacheService,
+    );
+    const getSpecificRequestUserUseCase = new GetSpecificRequestUserUseCase(
+        conversationRequestsRepo,
+        userRepoReaderPG,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const getSpecificRequestConversationUseCase = new GetSpecificRequestGroupUseCase(
+        participantRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+
+    // ____ //
+
+    const getSavedMessagesListUseCase = new GetSavedMessagesListUseCase(
+        userRepoReaderPG,
+        savedMessageRepo,
+        mapToSavedMessageDto,
+        RedisCacheService,
+    );
+
+    const getSpecificSavedMessageUseCase = new GetSpecificSavedMessageUseCase(
+        userRepoReaderPG,
+        savedMessageRepo,
+        mapToSavedMessageDto,
+        RedisCacheService,
+    );
+
+    const removeSavedMessageUseCase = new RemoveSavedMessageUseCase(
+        userRepoReaderPG,
+        savedMessageRepo,
+        RedisCacheService,
+    );
+
+    const saveMessageUseCase = new SaveMessageUseCase(
+        participantRepo,
+        savedMessageRepo,
+        messageRepo,
+        mapToSavedMessageDto,
+        RedisCacheService,
+    );
+
+    const getAvatarUseCase = new GetAvatarUseCase(avatarRepo);
 
     // TODO : CHAT (SERVICES)
     const createDirectConversationService = new CreateDirectConversationTxService(txManager);
@@ -467,6 +677,30 @@ export function assembleContainer()
     const banParticipantService = new BanGroupParticipantService(txManager);
     const unbanParticipantService = new UnbanGroupParticipantService(txManager);
     const getBannedUsersService = new GetBannedUsersService(txManager);
+    const addParticipantToConversationService = new AddParticipantToConversationTxService(txManager);
+
+    // ____ //
+
+    const changeRequestStatusService = new ChangeRequestStatusService(txManager);
+    const withdrawRequestService = new WithdrawRequestService(txManager);
+    const createConversationRequestService = new CreateConversationRequestService(txManager);
+    const getAllRequestsService = new GetAllRequestListService(txManager);
+    const getAllUsersRequestService = new GetUsersRequestsService(txManager);
+    const removeSpecificRequestService = new RemoveRequestService(txManager);
+    const getSpecificRequestUserService = new GetSpecificRequestUserService(txManager);
+    const getSpecificRequestConversationService = new GetSpecificRequestGroupService(txManager);
+
+    // ____ //
+
+    const getSavedMessagesListService = new GetSavedMessagesListService(txManager);
+    const getSpecificSavedMessageService = new GetSpecificSavedMessageService(txManager);
+    const removeSavedMessageService = new RemoveSavedMessageService(txManager);
+    const saveMessageService = new SaveMessageService(txManager);
+
+    const setUserAvatarService = new SetUserAvatarTxService(txManager);
+    const deleteUserAvatarService = new DeleteUserAvatarTxService(txManager);
+    const setConversationAvatarService = new SetConversationAvatarTxService(txManager);
+    const deleteConversationAvatarService = new DeleteConversationAvatarTxService(txManager);
 
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
@@ -497,7 +731,8 @@ export function assembleContainer()
     );
     const updateConversationTitleController = new UpdateConversationTitleController(
         updateConversationTitleService,
-        extractActorId
+        extractActorId,
+        io
     );
     const searchConversationsController = new SearchConversationsController(
         searchConversationsService,
@@ -515,7 +750,8 @@ export function assembleContainer()
 
     const changeParticipantRoleController = new ChangeParticipantRoleController(
         changeParticipantRoleService,
-        extractActorId
+        extractActorId,
+        io
     );
     const getParticipantsController = new GetParticipantsController(
         getParticipantsService,
@@ -535,19 +771,23 @@ export function assembleContainer()
     );
     const muteParticipantController = new MuteParticipantController(
         muteParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const removeParticipantController = new RemoveParticipantController(
         removeParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const unmuteParticipantController = new UnmuteParticipantController(
         unmuteParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const banParticipantController = new BanGroupParticipantController(
         banParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const unbanParticipantController = new UnbanGroupParticipantController(
         unbanParticipantService,
@@ -557,8 +797,71 @@ export function assembleContainer()
         getBannedUsersService,
         extractActorId
     );
+    const addParticipantToConversationController = new AddParticipantToAConversationController(
+        addParticipantToConversationService,
+        extractActorId,
+        io
+    );
+    // ____ //
+
+    const changeConversationRequestStatusController = new ChangeConversationRequestStatusController(
+        changeRequestStatusService,
+        extractActorId
+    );
+    const withdrawConversationRequestController = new WithdrawConversationRequestController(
+        withdrawRequestService,
+        extractActorId
+    );
+    const createConversationRequestController = new CreateConversationRequestController(
+        createConversationRequestService,
+        extractActorId
+    );
+    const getAllConversationRequestsController = new GetAllRequestListController(
+        getAllRequestsService,
+        extractActorId
+    );
+    const getUsersRequestsController = new GetUsersRequestController (
+        getAllUsersRequestService,
+        extractActorId
+    );
+    const removeConversationRequestController = new RemoveRequestController(
+        removeSpecificRequestService,
+        extractActorId
+    );
+    const getSpecificRequestUserController = new GetSpecificRequestUserController(
+        getSpecificRequestUserService,
+        extractActorId
+    );
+    const getSpecificRequestGroupController = new GetSpecificRequestGroupController(
+        getSpecificRequestConversationService,
+        extractActorId
+    );
 
 
+    // ____ //
+    const getSavedMessagesListController = new GetSavedMessagesListController(
+        getSavedMessagesListService,
+        extractActorId
+    );
+    const getSpecificSavedMessageController = new GetSpecificSavedMessageController(
+        getSpecificSavedMessageService,
+        extractActorId
+    );
+    const removeSavedMessageController = new RemoveSavedMessageController(
+        removeSavedMessageService,
+        extractActorId
+    );
+    const saveMessageController = new SaveMessageController(
+        saveMessageService,
+        extractActorId
+    )
+
+    const getAvatarController = new GetAvatarController(getAvatarUseCase);
+
+    const setUserAvatarController = new SetUserAvatarController(setUserAvatarService, extractActorId);
+    const deleteUserAvatarController = new DeleteUserAvatarController(deleteUserAvatarService, extractActorId);
+    const setConversationAvatarController = new SetConversationAvatarController(setConversationAvatarService, extractActorId, io);
+    const deleteConversationAvatarController = new DeleteConversationAvatarController(deleteConversationAvatarService, extractActorId, io);
 
     return {
         resendVerificationRegisterController,
@@ -625,6 +928,27 @@ export function assembleContainer()
         banParticipantController,
         unbanParticipantController,
         getBannedUsersController,
+        addParticipantToConversationController,
+
+        changeConversationRequestStatusController,
+        withdrawConversationRequestController,
+        createConversationRequestController,
+        getAllConversationRequestsController,
+        getUsersRequestsController,
+        removeConversationRequestController,
+        getSpecificRequestUserController,
+        getSpecificRequestGroupController,
+
+        getSavedMessagesListController,
+        getSpecificSavedMessageController,
+        removeSavedMessageController,
+        saveMessageController,
+
+        getAvatarController,
+        setUserAvatarController,
+        deleteUserAvatarController,
+        setConversationAvatarController,
+        deleteConversationAvatarController,
     }
 }
 

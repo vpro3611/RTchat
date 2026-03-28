@@ -1,9 +1,6 @@
 import {ConversationRepoInterface} from "../../domain/ports/conversation_repo_interface";
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
 import {ConversationNotFoundError} from "../../errors/conversation_errors/conversation_errors";
-import {Participant} from "../../domain/participant/participant";
-import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
-import {ParticipantDTO} from "../../DTO/participant_dto";
 import {
     CannotJoinDirectConversationError,
     UserAlreadyParticipantError, UserIsNotAllowedToPerformError
@@ -12,13 +9,18 @@ import {Conversation} from "../../domain/conversation/conversation";
 import {ConversationType} from "../../domain/conversation/conversation_type";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 import {ConversationBansInterface} from "../../domain/ports/conversation_bans_interface";
+import {ConversationRequestsInterface} from "../../domain/ports/conversation_requests_interface";
+import {MapToRequestDto} from "../../shared/map_to_request_dto";
+import {ConversationRequests} from "../../domain/conversation_requests/conversation_requests";
+import {ConversationRequestsDto} from "../../DTO/conversation_requests_dto";
 
 export class JoinConversationUseCase {
     constructor(private readonly conversationRepo: ConversationRepoInterface,
                 private readonly participantRepo: ParticipantRepoInterface,
-                private readonly participantMapper: MapToParticipantDto,
                 private readonly cacheService: CacheServiceInterface,
                 private readonly conversationBansRepo: ConversationBansInterface,
+                private readonly conversationRequestsRepo: ConversationRequestsInterface,
+                private readonly requestMapper: MapToRequestDto,
     ) {}
 
     private async checkIfIsBanned(actorId: string, conversationId: string) {
@@ -50,15 +52,14 @@ export class JoinConversationUseCase {
         }
     }
 
-    private async invalidateParticipantCache(conversationId: string) {
-        await this.cacheService.del(`participants:conv:${conversationId}`);
+    private async invalidateRequestCaches(conversationId: string, userId: string) {
+        await Promise.all([
+            this.cacheService.delByPattern(`conv_requests:group:${conversationId}:*`),
+            this.cacheService.delByPattern(`conv_requests:user:${userId}:*`),
+        ]);
     }
 
-    private async invalidateUserConversationCache(userId: string) {
-        await this.cacheService.delByPattern(`conv:user:${userId}:*`);
-    }
-
-    async joinConversationUseCase(actorId: string, conversationId: string): Promise<ParticipantDTO> {
+    async joinConversationUseCase(actorId: string, conversationId: string): Promise<ConversationRequestsDto> {
         const conversation = await this.checkIfConversationExists(conversationId);
 
         await this.checkIfIsBanned(actorId, conversationId);
@@ -67,14 +68,16 @@ export class JoinConversationUseCase {
 
         await this.checkIfUserExists(conversationId, actorId);
 
-        const participant = Participant.createAsMember(conversationId, actorId);
+        const newRequest = ConversationRequests.create(
+            conversationId,
+            actorId,
+            "User requested to join the conversation via Join button"
+        );
 
-        await this.participantRepo.save(participant);
+        await this.conversationRequestsRepo.create(newRequest);
 
-        await this.invalidateParticipantCache(conversationId);
+        await this.invalidateRequestCaches(conversationId, actorId);
 
-        await this.invalidateUserConversationCache(actorId);
-
-        return this.participantMapper.mapToParticipantDto(participant);
+        return this.requestMapper.mapToRequestDto(newRequest);
     }
 }

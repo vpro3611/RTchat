@@ -36,6 +36,28 @@ export class ChatGateway {
         this.initialize();
     }
 
+    public updateControllers(
+        sendMessageController: SendMessageController,
+        editMessageController: EditMessageController,
+        deleteMessageController: DeleteMessageController,
+        markConversationAsReadController: MarkConversationAsReadController,
+        getUserConversationsService: GetUserConversationsTxService,
+    ) {
+        this.sendMessageController = sendMessageController;
+        this.editMessageController = editMessageController;
+        this.deleteMessageController = deleteMessageController;
+        this.markConversationAsReadController = markConversationAsReadController;
+        this.getUserConversationsService = getUserConversationsService;
+    }
+
+    isConnected() {
+        return this.io.engine.clientsCount > 0;
+    }
+
+    getIo() {
+        return this.io;
+    }
+
     private extractUserIdSocket(socket: AuthSocket) {
         if (!socket.data.userId) {
             throw new UserIdError("Authentification error")

@@ -51,6 +51,11 @@ export interface ServerToClientEvents {
 
     "message:read": (data: {userId: string, conversationId: string, messageId: string}) => void
 
+    "participant:added": (data: { conversationId: string, participant: any }) => void
+    "participant:removed": (data: { conversationId: string, userId: string }) => void
+    "participant:updated": (data: { conversationId: string, participant: any }) => void
+    "conversation:updated": (data: { conversationId: string, conversation: any }) => void
+
     "error": (error: {message: string}) => void
 
 }

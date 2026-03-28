@@ -43,6 +43,7 @@ import {
 } from "./modules/chat/controllers/participant/get_specific_participant_controller";
 import {GetSpecificMessageParamsSchema} from "./modules/chat/controllers/message/get_specific_message_controller";
 import cors from "cors";
+import multer from "multer";
 import {GetSpecificUserParamsSchema} from "./modules/users/controllers/get_specific_user_controller";
 import {
     ResendRegisterVerificationBodySchema
@@ -57,9 +58,44 @@ import {
     UnbanGroupParticipantParamsSchema
 } from "./modules/chat/controllers/participant/unban_group_participant_controller";
 import {GetBannedUsersParamsSchema} from "./modules/chat/controllers/participant/get_banned_users_controller";
+import {
+    ChangeRequestStatusBodySchema,
+    ChangeRequestStatusParamsSchema
+} from "./modules/chat/controllers/conversation_requests/change_conversation_request_status_controller";
+import {
+    CreateConversationRequestBodySchema,
+    CreateConversationRequestParamsSchema
+} from "./modules/chat/controllers/conversation_requests/create_conversation_request_controller";
+import {
+    GetAllRequestListParamsSchema
+} from "./modules/chat/controllers/conversation_requests/get_all_request_list_controller";
+import {
+    GetSpecificRequestGroupParamsSchema
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_group_controller";
+import {
+    GetSpecificRequestUserParamsSchema
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_user_controller";
+import {RemoveRequestParamsSchema} from "./modules/chat/controllers/conversation_requests/remove_request_controller";
+import {
+    WithdrawConversationRequestParamsSchema
+} from "./modules/chat/controllers/conversation_requests/withdraw_conversation_request_controller";
+import {
+    AddParticipantToAConversationParamsSchema
+} from "./modules/chat/controllers/participant/add_participant_to_a_conversation_controller";
+import {SaveMessageParamsSchema} from "./modules/chat/controllers/saved_messages/save_message_controller";
+import {
+    RemoveSavedMessageParamsSchema
+} from "./modules/chat/controllers/saved_messages/remove_saved_message_controller";
+import {
+    GetSpecificSavedMessageParamsSchema
+} from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
+import {SetConversationAvatarParamsSchema} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
+import {DeleteConversationAvatarParamsSchema} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
+
+    const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 } });
 
     // TODO : loger middleware here.
     app.use(pinoHttp({
@@ -108,6 +144,10 @@ export function createApp(dependencies: AppContainer): Express
     publicRouter.get("/health", (req, res) => {
         res.status(200).json({message: "OK"});
     }); //
+
+    publicRouter.get("/avatar/:avatarId",
+        dependencies.getAvatarController.execute
+    ); //
 
     publicRouter.post("/register",
         validateBody(RegisterBodySchema),
@@ -196,7 +236,7 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.get("/conversation/:conversationId/:messageId/view",
         validateParams(GetSpecificMessageParamsSchema),
         dependencies.getSpecificMessageController.getSpecificMessageCont
-    );
+    ); //
 
     privateRouter.patch("/conversation/:conversationId/:targetId/role",
         validateParams(ChangeParticipantRoleParamsSchema),
@@ -216,7 +256,7 @@ export function createApp(dependencies: AppContainer): Express
     privateRouter.post("/conversation/:conversationId/join",
         validateParams(JoinConversationParamsSchema),
         dependencies.joinConversationController.joinConversationCont
-    );
+    ); //
 
     privateRouter.delete("/conversation/:conversationId/leave",
         validateParams(LeaveConversationParamsSchema),
@@ -274,17 +314,102 @@ export function createApp(dependencies: AppContainer): Express
         validateParams(BanGroupParticipantParamsSchema),
         validateBody(BanGroupParticipantBodySchema),
         dependencies.banParticipantController.banGroupParticipantCont
-    );
+    ); //
 
     privateRouter.delete("/conversation/:conversationId/:targetId/unban",
         validateParams(UnbanGroupParticipantParamsSchema),
         dependencies.unbanParticipantController.unbanGroupParticipantCont
-    );
+    ); //
 
     privateRouter.get("/conversation/:conversationId/ban_list",
         validateParams(GetBannedUsersParamsSchema),
         dependencies.getBannedUsersController.getBannedUserCont
-    );
+    ); //
+
+    privateRouter.patch("/conversation/:conversationId/requests/:requestId/status",
+        validateParams(ChangeRequestStatusParamsSchema),
+        validateBody(ChangeRequestStatusBodySchema),
+        dependencies.changeConversationRequestStatusController.changeConversationRequestStatusCont
+    ); //
+
+    privateRouter.post("/conversation/:conversationId/requests/create",
+        validateParams(CreateConversationRequestParamsSchema),
+        validateBody(CreateConversationRequestBodySchema),
+        dependencies.createConversationRequestController.createConvRequestCont
+    ); //
+
+    privateRouter.get("/conversation/:conversationId/requests/get_all",
+        validateParams(GetAllRequestListParamsSchema),
+        dependencies.getAllConversationRequestsController.getAllRequestListCont
+    ); //
+
+    privateRouter.get("/conversation/:conversationId/requests/:requestId/view",
+        validateParams(GetSpecificRequestGroupParamsSchema),
+        dependencies.getSpecificRequestGroupController.getSpecificRequestGroupCont
+    ); //
+
+    privateRouter.get("/private_requests/:requestId/view",
+        validateParams(GetSpecificRequestUserParamsSchema),
+        dependencies.getSpecificRequestUserController.getSpecificRequestUserController
+    ); //
+
+    privateRouter.get("/private_requests/view_all",
+        dependencies.getUsersRequestsController.getUsersRequestCont
+    ); //
+
+    privateRouter.patch("/private_requests/:requestId/remove",
+        validateParams(RemoveRequestParamsSchema),
+        dependencies.removeConversationRequestController.removeRequestCont
+    ); //
+
+    privateRouter.patch("/private_requests/:requestId/withdraw",
+        validateParams(WithdrawConversationRequestParamsSchema),
+        dependencies.withdrawConversationRequestController.withdrawConversationRequestCont
+    ); //
+
+    privateRouter.post("/conversation/:conversationId/:targetId/force_add",
+        validateParams(AddParticipantToAConversationParamsSchema),
+        dependencies.addParticipantToConversationController.addParticipantToAConversationCont
+    ); //
+
+    privateRouter.post("/conversation/:conversationId/:messageId/save",
+        validateParams(SaveMessageParamsSchema),
+        dependencies.saveMessageController.saveMessageCont
+    ); //
+
+    privateRouter.delete("/user/saved_messages/:messageId/remove",
+        validateParams(RemoveSavedMessageParamsSchema),
+        dependencies.removeSavedMessageController.removeSavedMessageCont
+    ); //
+
+    privateRouter.get("/user/saved_messages/:messageId/view",
+        validateParams(GetSpecificSavedMessageParamsSchema),
+        dependencies.getSpecificSavedMessageController.getSpecificSavedMessageCont
+    ); //
+
+    privateRouter.get("/user/saved_messages/all",
+        dependencies.getSavedMessagesListController.getSavedMessagesListCont
+    ); //
+
+    privateRouter.post("/me/avatar",
+        upload.single('avatar'),
+        dependencies.setUserAvatarController.setAvatar
+    ); //
+
+    privateRouter.delete("/me/avatar",
+        dependencies.deleteUserAvatarController.deleteAvatar
+    ); //
+
+    privateRouter.post("/conversation/:conversationId/avatar",
+        validateParams(SetConversationAvatarParamsSchema),
+        upload.single('avatar'),
+        dependencies.setConversationAvatarController.setAvatar
+    ); //
+
+    privateRouter.delete("/conversation/:conversationId/avatar",
+        validateParams(DeleteConversationAvatarParamsSchema),
+        dependencies.deleteConversationAvatarController.deleteAvatar
+    ); //
 
     app.use(errorMiddleware());
 
