@@ -300,10 +300,11 @@ import {SetConversationAvatarTxService} from "./modules/chat/transactional_servi
 import {DeleteConversationAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_conversation_avatar_tx_service";
 import {SetConversationAvatarController} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
 import {DeleteConversationAvatarController} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
+import {Server} from "socket.io";
 
 export const RedisCacheService = new CacheService(redisClient);
 
-export function assembleContainer()
+export function assembleContainer(io: Server)
 {
 
 
@@ -730,7 +731,8 @@ export function assembleContainer()
     );
     const updateConversationTitleController = new UpdateConversationTitleController(
         updateConversationTitleService,
-        extractActorId
+        extractActorId,
+        io
     );
     const searchConversationsController = new SearchConversationsController(
         searchConversationsService,
@@ -748,7 +750,8 @@ export function assembleContainer()
 
     const changeParticipantRoleController = new ChangeParticipantRoleController(
         changeParticipantRoleService,
-        extractActorId
+        extractActorId,
+        io
     );
     const getParticipantsController = new GetParticipantsController(
         getParticipantsService,
@@ -768,19 +771,23 @@ export function assembleContainer()
     );
     const muteParticipantController = new MuteParticipantController(
         muteParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const removeParticipantController = new RemoveParticipantController(
         removeParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const unmuteParticipantController = new UnmuteParticipantController(
         unmuteParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const banParticipantController = new BanGroupParticipantController(
         banParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const unbanParticipantController = new UnbanGroupParticipantController(
         unbanParticipantService,
@@ -792,7 +799,8 @@ export function assembleContainer()
     );
     const addParticipantToConversationController = new AddParticipantToAConversationController(
         addParticipantToConversationService,
-        extractActorId
+        extractActorId,
+        io
     );
     // ____ //
 
@@ -852,8 +860,8 @@ export function assembleContainer()
 
     const setUserAvatarController = new SetUserAvatarController(setUserAvatarService, extractActorId);
     const deleteUserAvatarController = new DeleteUserAvatarController(deleteUserAvatarService, extractActorId);
-    const setConversationAvatarController = new SetConversationAvatarController(setConversationAvatarService, extractActorId);
-    const deleteConversationAvatarController = new DeleteConversationAvatarController(deleteConversationAvatarService, extractActorId);
+    const setConversationAvatarController = new SetConversationAvatarController(setConversationAvatarService, extractActorId, io);
+    const deleteConversationAvatarController = new DeleteConversationAvatarController(deleteConversationAvatarService, extractActorId, io);
 
     return {
         resendVerificationRegisterController,
