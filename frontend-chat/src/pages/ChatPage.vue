@@ -17,6 +17,7 @@ import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
 import LeaveGroupButton from "components/LeaveGroupButton.vue";
 import ParticipantListDialog from "components/ParticipantListDialog.vue";
 import MessageBubble from "components/MessageBubble.vue";
+import AppAvatar from "components/AppAvatar.vue";
 
 const $q = useQuasar()
 const route = useRoute();
@@ -361,12 +362,19 @@ watch(
 
     <!-- HEADER -->
     <div class="q-pa-md border-bottom row items-center justify-between">
-      <div>
-        <div class="text-h6">
-          {{ chat?.title || (chat?.conversationType === 'direct' ? 'Direct Chat' : 'Chat') }}
-        </div>
-        <div class="text-caption text-grey">
-          {{ chat?.conversationType === 'group' ? 'Group' : 'Direct' }}
+      <div class="row items-center q-gutter-x-md">
+        <AppAvatar
+          :avatar-id="chat?.avatarId"
+          :name="chat?.title || 'Chat'"
+          size="48px"
+        />
+        <div>
+          <div class="text-h6">
+            {{ chat?.title || (chat?.conversationType === 'direct' ? 'Direct Chat' : 'Chat') }}
+          </div>
+          <div class="text-caption text-grey">
+            {{ chat?.conversationType === 'group' ? 'Group' : 'Direct' }}
+          </div>
         </div>
       </div>
 

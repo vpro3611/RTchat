@@ -3,6 +3,7 @@ import { AvatarRepositoryPg } from "../../repositories_pg_realization/avatar_rep
 import { ConversationRepositoryPg } from "../../repositories_pg_realization/conversation_repository_pg";
 import { ParticipantRepositoryPg } from "../../repositories_pg_realization/participant_repository_pg";
 import { DeleteConversationAvatarUseCase } from "../../application/avatar/delete_conversation_avatar_use_case";
+import { RedisCacheService } from "../../../../container";
 
 export class DeleteConversationAvatarTxService {
     constructor(private readonly txManager: TransactionManagerInterface) {}
@@ -16,7 +17,8 @@ export class DeleteConversationAvatarTxService {
             const useCase = new DeleteConversationAvatarUseCase(
                 conversationRepo,
                 participantRepo,
-                avatarRepo
+                avatarRepo,
+                RedisCacheService
             );
 
             return await useCase.execute(conversationId, userId);

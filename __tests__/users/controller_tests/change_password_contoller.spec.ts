@@ -57,6 +57,7 @@ describe("ChangePasswordController (HTTP)", () => {
         email: "test@mail.com",
         isActive: true,
         isVerified: true,
+        avatarId: null,
         lastSeenAt: "",
         createdAt: "",
         updatedAt: ""

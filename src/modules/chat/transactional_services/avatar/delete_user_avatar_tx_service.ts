@@ -3,6 +3,7 @@ import { AvatarRepositoryPg } from "../../repositories_pg_realization/avatar_rep
 import { UserRepoReaderPg } from "../../../users/repositories/user_repo_reader_pg";
 import { UserRepoWriterPg } from "../../../users/repositories/user_repo_writer_pg";
 import { DeleteUserAvatarUseCase } from "../../application/avatar/delete_user_avatar_use_case";
+import { RedisCacheService } from "../../../../container";
 
 export class DeleteUserAvatarTxService {
     constructor(private readonly txManager: TransactionManagerInterface) {}
@@ -16,7 +17,8 @@ export class DeleteUserAvatarTxService {
             const useCase = new DeleteUserAvatarUseCase(
                 userReader,
                 userWriter,
-                avatarRepo
+                avatarRepo,
+                RedisCacheService
             );
 
             return await useCase.execute(userId);

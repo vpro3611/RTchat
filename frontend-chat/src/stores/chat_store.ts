@@ -58,6 +58,13 @@ export const ChatStore = reactive({
     }
   },
 
+  updateChatAvatar(chatId: string, avatarId: string | null) {
+    const chat = this.chats.find(c => c.id === chatId);
+    if (chat) {
+      chat.avatarId = avatarId;
+    }
+  },
+
   findById(id: string) {
     return this.chats.find(c => c.id === id);
   },

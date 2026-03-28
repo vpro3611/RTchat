@@ -286,6 +286,28 @@ export const ParticipantApi = {
     )
   },
 
+  setConversationAvatar(conversationId: string, file: File) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    return fetchJson<{avatarId: string}>(`${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/avatar`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${AuthStore.accessToken}`
+      },
+      body: formData,
+    });
+  },
+
+  deleteConversationAvatar(conversationId: string) {
+    return fetchJson<void>(`${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/avatar`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${AuthStore.accessToken}`
+      },
+    });
+  },
+
   saveMessage(conversationId: string, messageId: string) {
     // /conversation/:conversationId/:messageId/save
     return fetchJson<FrontendSavedMessageDTO>(

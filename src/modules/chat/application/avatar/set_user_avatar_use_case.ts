@@ -3,18 +3,25 @@ import { UserRepoReader, UserRepoWriter } from "../../../users/ports/user_repo_i
 import { Avatar } from "../../domain/avatar/avatar";
 import { ImageProcessorInterface } from "../../domain/ports/image_processor_interface";
 import { UserNotFoundError } from "../../../users/errors/use_case_errors";
+import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 
 export class SetUserAvatarUseCase {
     constructor(
         private readonly userReader: UserRepoReader,
         private readonly userWriter: UserRepoWriter,
         private readonly avatarRepo: AvatarRepoInterface,
-        private readonly imageProcessor: ImageProcessorInterface
+        private readonly imageProcessor: ImageProcessorInterface,
+        private readonly cacheService: CacheServiceInterface
     ) {}
+
+    private async invalidateUserCache(userId: string) {
+        await this.cacheService.del(`user:${userId}`);
+    }
 
     async execute(userId: string, fileBuffer: Buffer): Promise<string> {
         const user = await this.userReader.getUserById(userId);
         if (!user) throw new UserNotFoundError("User not found");
+        user.ensureIsVerifiedAndActive();
 
         const oldAvatarId = user.getAvatarId();
 
@@ -27,6 +34,8 @@ export class SetUserAvatarUseCase {
         if (oldAvatarId) {
             await this.avatarRepo.delete(oldAvatarId);
         }
+
+        await this.invalidateUserCache(userId);
 
         return newAvatarId;
     }

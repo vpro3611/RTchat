@@ -24,6 +24,7 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
         return {
             conversationId: row.conversation_id,
             userId: row.user_id,
+            avatarId: row.avatar_id,
             role: row.role,
             canSendMessages: row.can_send_messages,
             mutedUntil: row.muted_until,
@@ -130,7 +131,7 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
 
             const result = await this.pool.query(
                 `
-                    SELECT p.*, u.username, u.email
+                    SELECT p.*, u.username, u.email, u.avatar_id
                     FROM conversation_participants p
                     JOIN users u ON p.user_id = u.id
                     WHERE p.conversation_id = $1
@@ -164,6 +165,7 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
             userId: row.user_id,
             username: row.username,
             email: row.email,
+            avatarId: row.avatar_id,
             role: row.role,
             canSendMessages: row.can_send_messages,
             mutedUntil: row.muted_until,
@@ -173,7 +175,7 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
     async getSpecificParticipant(conversationId: string, participantId: string): Promise<FullParticipantDto | null> {
         try {
             const query = `
-            SELECT p.*, u.username, u.email, u.is_active, u.last_seen_at, u.created_at, u.updated_at 
+            SELECT p.*, u.username, u.email, u.is_active, u.last_seen_at, u.created_at, u.updated_at, u.avatar_id 
             FROM conversation_participants p 
             JOIN users u ON p.user_id = u.id
             WHERE p.conversation_id = $1 AND p.user_id = $2

@@ -13,6 +13,7 @@ export class GetSelfProfileUseCase {
             email: user.getEmail().getValue(),
             isActive: user.getIsActive(),
             isVerified: user.getIsVerified(),
+            avatarId: user.getAvatarId(),
             lastSeenAt: user.getLastSeenAt().toISOString(),
             createdAt: user.getCreatedAt().toISOString(),
             updatedAt: user.getUpdatedAt().toISOString(),

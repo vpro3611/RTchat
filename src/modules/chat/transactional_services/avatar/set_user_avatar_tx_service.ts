@@ -4,6 +4,7 @@ import { UserRepoReaderPg } from "../../../users/repositories/user_repo_reader_p
 import { UserRepoWriterPg } from "../../../users/repositories/user_repo_writer_pg";
 import { ImageProcessor } from "../../infrasctructure/image_processor/sharp_image_processor";
 import { SetUserAvatarUseCase } from "../../application/avatar/set_user_avatar_use_case";
+import { RedisCacheService } from "../../../../container";
 
 export class SetUserAvatarTxService {
     constructor(private readonly txManager: TransactionManagerInterface) {}
@@ -19,7 +20,8 @@ export class SetUserAvatarTxService {
                 userReader,
                 userWriter,
                 avatarRepo,
-                imageProcessor
+                imageProcessor,
+                RedisCacheService
             );
 
             return await useCase.execute(userId, fileBuffer);

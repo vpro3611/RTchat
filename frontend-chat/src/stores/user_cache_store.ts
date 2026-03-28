@@ -13,6 +13,11 @@ export const UserCacheStore = reactive({
     return this.byId[userId]?.username ?? null
   },
 
+  getAvatarId(userId: string | null | undefined) {
+    if (!userId) return null
+    return this.byId[userId]?.avatarId ?? null
+  },
+
   async ensureUser(userId: string | null | undefined) {
     if (!userId) return
     if (this.byId[userId]) return

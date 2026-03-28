@@ -6,6 +6,7 @@ import { UserApi } from "src/api/apis/user_api";
 import type { User } from "src/api/types/register_response";
 import { ParticipantStore } from "stores/participant_store";
 import type { Participant, ParticipantRole, MuteDuration } from "src/api/types/participant_response";
+import AppAvatar from "components/AppAvatar.vue";
 
 const $q = useQuasar();
 
@@ -25,7 +26,17 @@ const isProcessingBlock = ref(false);
 // Computed для безопасного доступа в шаблоне
 const currentParticipant = computed((): Participant => {
   const p = participant.value;
-  return p ?? { conversationId: '', userId: '', username: '', email: '', role: 'member', canSendMessages: true, mutedUntil: null, joinedAt: '' };
+  return p ?? { 
+    conversationId: '', 
+    userId: '', 
+    username: '', 
+    email: '', 
+    avatarId: null,
+    role: 'member', 
+    canSendMessages: true, 
+    mutedUntil: null, 
+    joinedAt: '' 
+  };
 });
 
 // Можно ли управлять этим участником (не себя, и мы owner)
@@ -353,9 +364,12 @@ defineExpose({ openDialog });
       <q-card-section v-if="currentParticipant">
         <!-- Информация об участнике -->
         <div class="column items-center q-pa-md">
-          <q-avatar size="80px" color="primary" text-color="white" class="q-mb-md">
-            {{ currentParticipant.username.charAt(0).toUpperCase() }}
-          </q-avatar>
+          <AppAvatar
+            :avatar-id="currentParticipant.avatarId"
+            :name="currentParticipant.username"
+            size="80px"
+            class="q-mb-md"
+          />
 
           <div class="text-h6">{{ currentParticipant.username }}</div>
           <div class="text-caption text-grey">{{ currentParticipant.email }}</div>

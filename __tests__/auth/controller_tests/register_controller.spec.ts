@@ -49,6 +49,7 @@ describe("RegisterController (HTTP)", () => {
         email: "test@mail.com",
         isActive: true,
         isVerified: false,
+        avatarId: null,
         lastSeenAt: "",
         createdAt: "",
         updatedAt: ""

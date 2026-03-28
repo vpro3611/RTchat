@@ -109,6 +109,7 @@ async function addToGroup(userId: string, username: string) {
       userId: dto.userId,
       username: username,
       email: user?.email || '',
+      avatarId: user?.avatarId || null,
       role: dto.role,
       canSendMessages: dto.canSendMessages,
       mutedUntil: dto.mutedUntil,

@@ -4,6 +4,7 @@ import { ConversationRepositoryPg } from "../../repositories_pg_realization/conv
 import { ParticipantRepositoryPg } from "../../repositories_pg_realization/participant_repository_pg";
 import { ImageProcessor } from "../../infrasctructure/image_processor/sharp_image_processor";
 import { SetConversationAvatarUseCase } from "../../application/avatar/set_conversation_avatar_use_case";
+import { RedisCacheService } from "../../../../container";
 
 export class SetConversationAvatarTxService {
     constructor(private readonly txManager: TransactionManagerInterface) {}
@@ -19,7 +20,8 @@ export class SetConversationAvatarTxService {
                 conversationRepo,
                 participantRepo,
                 avatarRepo,
-                imageProcessor
+                imageProcessor,
+                RedisCacheService
             );
 
             return await useCase.execute(conversationId, userId, fileBuffer);

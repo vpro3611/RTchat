@@ -4,6 +4,7 @@ import { useQuasar } from "quasar"
 import { UserApi } from "src/api/apis/user_api"
 import type {User} from "src/api/types/register_response"
 import CreateDirectChatButton from "components/CreateDirectChatButton.vue";
+import AppAvatar from "components/AppAvatar.vue";
 import { AuthStore } from "stores/auth_store";
 
 const $q = useQuasar()
@@ -185,9 +186,16 @@ watch(
         </div>
 
         <!-- User -->
-        <div v-else-if="user">
+        <div v-else-if="user" class="column items-center">
 
-          <div class="text-subtitle1">
+          <AppAvatar
+            :avatar-id="user.avatarId"
+            :name="user.username"
+            size="100px"
+            class="q-mb-md"
+          />
+
+          <div class="text-h6">
             {{ user.username }}
           </div>
 

@@ -40,6 +40,7 @@ describe("ToggleStatusController (HTTP)", () => {
         email: "test@mail.com",
         isActive: false,
         isVerified: true,
+        avatarId: null,
         lastSeenAt: "",
         createdAt: "",
         updatedAt: ""

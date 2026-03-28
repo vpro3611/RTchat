@@ -3,6 +3,7 @@ export type ParticipantListDTO = {
   userId: string;
   username: string;
   email: string;
+  avatarId: string | null;
   role: string;
   canSendMessages: boolean;
   mutedUntil: Date | null;
