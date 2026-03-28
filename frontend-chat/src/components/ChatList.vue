@@ -58,13 +58,18 @@ async function loadMoreChats() {
   }
 }
 
+const opponentIds = computed(() => {
+  return ChatStore.chats
+    .map(getOpponentId)
+    .filter((id): id is string => !!id)
+})
+
 watch(
-  () => ChatStore.chats,
-  (list) => {
-    const opponentIds = list.map(getOpponentId).filter(Boolean) as string[]
-    void UserCacheStore.ensureUsers(opponentIds)
+  opponentIds,
+  (ids) => {
+    void UserCacheStore.ensureUsers(ids)
   },
-  { immediate: true, deep: true }
+  { immediate: true }
 )
 </script>
 
