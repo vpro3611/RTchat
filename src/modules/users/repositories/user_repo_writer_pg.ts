@@ -1,6 +1,7 @@
 import {UserRepoWriter} from "../ports/user_repo_interfaces";
 import {Pool, PoolClient} from "pg";
 import {User} from "../domain/user";
+import {mapPgError} from "../../error_mapper/pg_error_mapper";
 import {
     DatabaseConnectionError,
     DatabaseQueryError,
@@ -140,6 +141,15 @@ export class UserRepoWriterPg implements UserRepoWriter {
             await this.pool.query(query, [userId]);
         } catch (error: any) {
             this.mapSaveError(error);
+        }
+    }
+
+    async updateAvatarId(userId: string, avatarId: string | null): Promise<void> {
+        const query = "UPDATE users SET avatar_id = $1 WHERE id = $2";
+        try {
+            await this.pool.query(query, [avatarId, userId]);
+        } catch (error) {
+            throw mapPgError(error);
         }
     }
 }

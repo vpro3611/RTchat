@@ -22,6 +22,7 @@ export class UserRepoReaderPg implements UserRepoReader{
             row.last_seen_at,
             row.created_at,
             row.updated_at,
+            row.avatar_id,
         );
     }
 
