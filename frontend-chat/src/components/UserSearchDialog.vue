@@ -164,7 +164,7 @@ function isAlreadyInGroup(userId: string) {
         </q-input>
       </q-card-section>
 
-      <q-card-section class="q-pa-md bg-grey-1">
+      <q-card-section class="q-pa-md">
         <div style="height: 450px;">
           <q-infinite-scroll 
             @load="loadMore" 
@@ -243,7 +243,7 @@ function isAlreadyInGroup(userId: string) {
         </div>
       </q-card-section>
 
-      <q-card-actions align="right" class="q-pa-md bg-white border-top">
+      <q-card-actions align="right" class="q-pa-md border-top">
         <q-btn flat label="Close" color="primary" v-close-popup class="text-weight-bold" />
       </q-card-actions>
 
