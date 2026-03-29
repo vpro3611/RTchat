@@ -98,6 +98,21 @@ export class UserRepoReaderPg implements UserRepoReader{
         }
     }
 
+    async getPendingIsActiveByUserId(id: string): Promise<boolean | null> {
+        try {
+            const query = `SELECT pending_is_active
+                           FROM users
+                           WHERE id = $1`;
+            const result = await this.pool.query(query, [id]);
+            if (result.rows.length === 0) {
+                return null;
+            }
+            return result.rows[0].pending_is_active ?? null;
+        } catch (error: any) {
+            this.mapError(error);
+        }
+    }
+
     async getUserByUsername(username: string): Promise<User | null> {
         try {
             const query = `SELECT *

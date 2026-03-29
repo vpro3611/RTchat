@@ -173,6 +173,32 @@ export class UserRepoWriterPg implements UserRepoWriter {
         }
     }
 
+    async setPendingIsActive(userId: string): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET pending_is_active = TRUE, updated_at = NOW()
+                WHERE id = $1
+            `;
+            await this.pool.query(query, [ userId]);
+        } catch (error: any) {
+            this.mapSaveError(error);
+        }
+    }
+
+    async confirmPendingIsActive(userId: string): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET is_active = pending_is_active, updated_at = NOW(), pending_is_active = NULL
+                WHERE id = $1 AND pending_is_active IS NOT NULL
+            `;
+            await this.pool.query(query, [userId]);
+        } catch (error: any) {
+            this.mapSaveError(error);
+        }
+    }
+
     async updateAvatarId(userId: string, avatarId: string | null): Promise<void> {
         try {
             const query = "UPDATE users SET avatar_id = $1 WHERE id = $2";
