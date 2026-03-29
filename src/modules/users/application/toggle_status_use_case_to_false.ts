@@ -17,7 +17,7 @@ export class ToggleIsActiveUseCase {
 
         user.ensureIsVerified();
 
-        user.setIsActive();
+        user.setIsActiveTo(false);
 
         const saved = await this.userRepoWriter.save(user);
 
