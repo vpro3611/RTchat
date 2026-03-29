@@ -2,7 +2,11 @@ import {UserRepoReader} from "../../../../users/ports/user_repo_interfaces";
 import {EmailSenderInterface} from "../email_verification/email_sender_interface";
 import {SendVerifEmailShared} from "../../../../users/shared/send_verif_email_shared";
 import {EmailVerificationInterface} from "../email_verification/email_verification_interface";
-import {PendingEmailNotFoundError, UserNotFoundError} from "../../../../users/errors/use_case_errors";
+import {
+    PendingEmailNotFoundError,
+    PendingPasswordNotFoundError,
+    UserNotFoundError
+} from "../../../../users/errors/use_case_errors";
 
 
 export class ResendVerificationService {
@@ -31,7 +35,7 @@ export class ResendVerificationService {
     async resendRegister(email: string) {
         const user = await this.checkUserReg(email);
 
-        await this.verificationRepo.deleteByUserId(user.id);
+        await this.verificationRepo.deleteByUserIdAndType(user.id, "register");
 
         await this.sendEmailVerifShared.sendIt(
             user.getEmail().getValue(),
@@ -51,13 +55,34 @@ export class ResendVerificationService {
             throw new PendingEmailNotFoundError("No pending email change found");
         }
 
-        await this.verificationRepo.deleteByUserId(user.id);
+        await this.verificationRepo.deleteByUserIdAndType(user.id, "change");
 
         await this.sendEmailVerifShared.sendIt(
             pendingEmail,
             user,
             "/public/confirm-email-change",
             "change"
+        );
+    }
+
+    async resendResetPassword(email: string) {
+        const user = await this.checkUserReg(email);
+
+        user.ensureIsVerifiedAndActive();
+
+        const pendingPassword = await this.userRepoReader.getPendingPasswordByUserId(user.id);
+
+        if (!pendingPassword) {
+            throw new PendingPasswordNotFoundError("No pending password reset found");
+        }
+
+        await this.verificationRepo.deleteByUserIdAndType(user.id, "reset-pass");
+
+        await this.sendEmailVerifShared.sendIt(
+            email,
+            user,
+            "/public/confirm-reset-password",
+            "reset-pass"
         );
     }
 }
