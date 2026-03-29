@@ -3,6 +3,8 @@ import {Transporter} from "nodemailer";
 import nodemailer from "nodemailer";
 import {EmailSendError} from "../errors/email_send_errors";
 
+export type FlowType = "register" | "change" | "reset-pass" | "reset-activity";
+
 export class EmailSenderNodemailer implements EmailSenderInterface {
     private readonly transporter: Transporter;
 
@@ -32,7 +34,7 @@ export class EmailSenderNodemailer implements EmailSenderInterface {
         email: string,
         token: string,
         path: string,
-        flowType: "register" | "change"
+        flowType: FlowType
     ): Promise<void> {
         const apiBaseUrl = this.normalizeBaseUrl(process.env.API_URL, "API_URL");
         const verificationUrl = new URL(path.replace(/^\//, ""), apiBaseUrl);
