@@ -6,6 +6,7 @@ export interface UserRepoReader {
     getUserByUsername(username: string): Promise<User | null>;
     getUserByEmail(email: string): Promise<User | null>;
     searchUsers(query: string, limit?: number, cursor?: string): Promise<{items: User[], nextCursor?: string}>;
+    getPendingPasswordByUserId(id: string): Promise<string | null>
 }
 
 export interface UserRepoWriter {
@@ -14,4 +15,6 @@ export interface UserRepoWriter {
     setPendingEmail(userId: string, email: string): Promise<void>;
     confirmPendingEmail(userId: string): Promise<void>;
     updateAvatarId(userId: string, avatarId: string | null): Promise<void>;
+    setPendingPassword(userId: string, password: string): Promise<void>;
+    confirmPendingPassword(userId: string): Promise<void>;
 }
