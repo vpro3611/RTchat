@@ -3,7 +3,7 @@ import { useRoute } from "vue-router"
 import { computed } from "vue"
 
 type StatusType = "success" | "error"
-type PageType = "register" | "change"
+type PageType = "register" | "change" | "reset-pass"
 
 type StatusContent = {
   title: string
@@ -22,28 +22,40 @@ const status = computed<StatusType>(() => {
 
 const flow = computed<PageType>(() => {
   const queryType = route.query.type
-  return queryType === "change" ? "change" : "register"
+  if (queryType === "change") return "change"
+  if (queryType === "reset-pass") return "reset-pass"
+  return "register"
 })
 
 const map: PageMap = {
   register: {
     success: {
-      title: "Email verified successfully",
-      message: "Your account has been verified. You can now login."
+      title: "Account Verified!",
+      message: "Your account has been successfully verified. You can now join the conversation."
     },
     error: {
-      title: "Verification link is invalid or expired",
-      message: "Please request a new verification email."
+      title: "Verification Failed",
+      message: "The verification link is invalid or has expired. Please request a new one."
     }
   },
   change: {
     success: {
-      title: "Email updated successfully",
-      message: "Your new email has been confirmed."
+      title: "Email Updated!",
+      message: "Your new email address has been confirmed and updated."
     },
     error: {
-      title: "Invalid or expired link",
-      message: "Please try changing your email again."
+      title: "Confirmation Failed",
+      message: "We couldn't confirm your email change. The link might be expired."
+    }
+  },
+  "reset-pass": {
+    success: {
+      title: "Password Reset!",
+      message: "Your password has been successfully updated. You can now login with your new credentials."
+    },
+    error: {
+      title: "Reset Failed",
+      message: "This reset link is no longer valid. Please request a new password reset."
     }
   }
 }
@@ -55,27 +67,44 @@ const content = computed(() => {
   }
 })
 
-// const isRegister = computed(() => flow === "register")
+const buttonText = computed(() => {
+  if (status.value === "error") return "Back to Auth";
+  return flow.value === "change" ? "Go to Main" : "Go to Login";
+});
 
-const buttonText = computed(() => flow.value === "register" ? "Go to login" : "Go to main");
-const redirectTo = computed(() => flow.value === "register" ? "/auth" : "/main");
+const redirectTo = computed(() => {
+  if (status.value === "error") return "/auth";
+  return flow.value === "change" ? "/main" : "/auth";
+});
 
 </script>
 
 <template>
-  <section class="container">
+  <q-page class="flex flex-center q-pa-md">
+    <q-card class="q-pa-xl shadow-2 text-center" style="max-width: 500px; width: 100%; border: 2px solid var(--q-primary)">
+      <q-icon
+        :name="status === 'success' ? 'check_circle' : 'error'"
+        :color="status === 'success' ? 'positive' : 'negative'"
+        size="80px"
+        class="q-mb-md"
+      />
 
-    <h2>
-      {{ content.title }}
-    </h2>
+      <div class="text-h4 text-weight-bold text-primary q-mb-md">
+        {{ content.title }}
+      </div>
 
-    <p>
-      {{ content.message }}
-    </p>
+      <p class="text-body1 q-mb-xl text-grey-8">
+        {{ content.message }}
+      </p>
 
-    <button @click="$router.push(redirectTo)">
-      {{ buttonText }}
-    </button>
-
-  </section>
+      <q-btn
+        color="primary"
+        size="lg"
+        class="full-width text-weight-bold"
+        unelevated
+        @click="$router.push(redirectTo)"
+        :label="buttonText"
+      />
+    </q-card>
+  </q-page>
 </template>
