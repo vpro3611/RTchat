@@ -65,19 +65,18 @@ function handleSave() {
     :class="isOwn ? 'row justify-end' : 'row justify-start'"
   >
     <q-card
-      class="message-bubble"
-      :class="isOwn ? 'bg-primary text-white' : 'bg-grey-2'"
-      :style="{ maxWidth: '70%' }"
+      class="message-bubble shadow-2"
+      :class="isOwn ? 'bg-primary text-white' : 'message-bubble-incoming'"
+      :style="{ maxWidth: '75%', minWidth: '80px' }"
     >
       <div
         v-if="!isOwn && senderUsername"
-        class="text-caption q-px-sm q-pt-xs row items-center q-gutter-x-xs"
-        :class="isOwn ? 'text-white' : 'text-primary'"
+        class="text-caption q-px-sm q-pt-xs row items-center q-gutter-x-xs text-primary text-weight-bold"
       >
         <AppAvatar
           :avatar-id="senderAvatarId"
           :name="senderUsername"
-          size="18px"
+          size="20px"
         />
         <span>{{ senderUsername }}</span>
       </div>

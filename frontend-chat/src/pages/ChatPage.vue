@@ -477,7 +477,7 @@ watch(
     </div>
 
     <!-- EDIT MESSAGE INPUT -->
-    <div v-if="isEditing" class="q-pa-md bg-grey-2 row items-center q-gutter-sm">
+    <div v-if="isEditing" class="q-pa-md border-top row items-center q-gutter-sm">
       <q-input
         v-model="editContent"
         dense
