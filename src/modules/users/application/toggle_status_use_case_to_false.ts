@@ -15,7 +15,7 @@ export class ToggleIsActiveUseCase {
     async toggleIsActiveUseCase(actorId: string) {
         const user = await this.userLookup.getUserOrThrow(actorId);
 
-        user.ensureIsVerified();
+        user.ensureIsVerifiedAndActive();
 
         user.setIsActiveTo(false);
 

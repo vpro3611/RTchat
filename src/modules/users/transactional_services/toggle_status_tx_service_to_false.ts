@@ -5,7 +5,7 @@ import {UserRepoWriterPg} from "../repositories/user_repo_writer_pg";
 import {UserLookup} from "../shared/user_exists_by_id";
 import {UserRepoReaderPg} from "../repositories/user_repo_reader_pg";
 import {UserMapper} from "../shared/map_to_dto";
-import {ToggleIsActiveUseCase} from "../application/toggle_status_use_case";
+import {ToggleIsActiveUseCase} from "../application/toggle_status_use_case_to_false";
 
 
 export class ToggleStatusTxService {
