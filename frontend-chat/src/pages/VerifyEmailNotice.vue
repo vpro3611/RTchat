@@ -3,7 +3,7 @@ import { computed, ref } from "vue"
 import { useRoute } from "vue-router"
 import { AuthApi } from "src/api/apis/auth_api"
 
-type FlowType = "register" | "change" | "reset-pass"
+type FlowType = "register" | "change" | "reset-pass" | "reset-activity"
 
 const route = useRoute()
 
@@ -12,6 +12,7 @@ const flowType = computed<FlowType>(() => {
   const type = route.query.type
   if (type === "change") return "change"
   if (type === "reset-pass") return "reset-pass"
+  if (type === "reset-activity") return "reset-activity"
   return "register"
 })
 
@@ -33,6 +34,10 @@ const contentMap = {
   "reset-pass": {
     title: "Confirm password reset",
     desc: "We sent a reset link to your email. Please click it to confirm your new password."
+  },
+  "reset-activity": {
+    title: "Confirm account restoration",
+    desc: "We sent a reactivation link to your email. Please click it to restore your account."
   }
 }
 
@@ -52,6 +57,8 @@ async function handleResend() {
       await AuthApi.resendVerificationRegister(trimmedEmail)
     } else if (flowType.value === "reset-pass") {
       await AuthApi.resendResetPassword(trimmedEmail)
+    } else if (flowType.value === "reset-activity") {
+      await AuthApi.resendResetActivity(trimmedEmail)
     } else {
       // For email change, we need to send the current user ID if it's not in query
       // but usually change flow relies on the session or a known email.

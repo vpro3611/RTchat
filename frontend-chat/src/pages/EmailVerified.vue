@@ -3,7 +3,7 @@ import { useRoute } from "vue-router"
 import { computed } from "vue"
 
 type StatusType = "success" | "error"
-type PageType = "register" | "change" | "reset-pass"
+type PageType = "register" | "change" | "reset-pass" | "reset-activity"
 
 type StatusContent = {
   title: string
@@ -24,6 +24,7 @@ const flow = computed<PageType>(() => {
   const queryType = route.query.type
   if (queryType === "change") return "change"
   if (queryType === "reset-pass") return "reset-pass"
+  if (queryType === "reset-activity") return "reset-activity"
   return "register"
 })
 
@@ -57,6 +58,16 @@ const map: PageMap = {
       title: "Reset Failed",
       message: "This reset link is no longer valid. Please request a new password reset."
     }
+  },
+  "reset-activity": {
+    success: {
+      title: "Account Restored!",
+      message: "Your account has been successfully reactivated. You can now log in."
+    },
+    error: {
+      title: "Restoration Failed",
+      message: "The reactivation link is invalid or has expired. Please request a new one."
+    }
   }
 }
 
@@ -74,7 +85,7 @@ const buttonText = computed(() => {
 
 const redirectTo = computed(() => {
   if (status.value === "error") return "/auth";
-  return flow.value === "change" ? "/main" : "/auth";
+  return (flow.value === "change") ? "/main" : "/auth";
 });
 
 </script>
