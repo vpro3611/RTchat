@@ -28,51 +28,63 @@ function handleSubmit() {
 </script>
 
 <template>
-  <q-card class="q-pa-lg" style="max-width: 420px; margin:auto">
+  <div class="q-pa-sm">
+    <div class="text-h5 text-weight-bold text-primary q-mb-lg">Create Account</div>
 
-    <q-card-section>
-      <div class="text-h6">
-        Register
+    <q-form @submit.prevent="handleSubmit" class="q-gutter-y-md">
+      
+      <div>
+        <div class="text-subtitle2 text-weight-bold q-mb-xs">Username</div>
+        <q-input
+          v-model="username"
+          placeholder="Choose a unique username"
+          outlined
+          dense
+          required
+        />
       </div>
-    </q-card-section>
 
-    <q-form @submit.prevent="handleSubmit" class="q-gutter-md">
+      <div>
+        <div class="text-subtitle2 text-weight-bold q-mb-xs">Email</div>
+        <q-input
+          v-model="email"
+          type="email"
+          placeholder="name@example.com"
+          outlined
+          dense
+          required
+        />
+      </div>
 
-      <q-input
-        v-model="username"
-        label="Username"
-        outlined
-        dense
-      />
+      <div>
+        <div class="text-subtitle2 text-weight-bold q-mb-xs">Password</div>
+        <q-input
+          v-model="password"
+          type="password"
+          placeholder="Minimum 12 characters"
+          outlined
+          dense
+          required
+          :rules="[val => val.length >= 12 || 'Minimum 12 characters']"
+        />
+      </div>
 
-      <q-input
-        v-model="email"
-        label="Email"
-        type="email"
-        outlined
-        dense
-      />
+      <div class="q-mt-lg">
+        <q-btn
+          type="submit"
+          color="primary"
+          unelevated
+          class="full-width text-weight-bold"
+          size="16px"
+          :loading="props.isLoading"
+          label="Sign Up"
+        />
+      </div>
 
-      <q-input
-        v-model="password"
-        label="Password"
-        type="password"
-        outlined
-        dense
-      />
-
-      <q-btn
-        type="submit"
-        color="primary"
-        :loading="props.isLoading"
-        label="Register"
-      />
-
-      <div v-if="props.error" class="text-negative">
+      <div v-if="props.error" class="text-negative text-weight-bold q-mt-sm text-center">
         {{ props.error }}
       </div>
 
     </q-form>
-
-  </q-card>
+  </div>
 </template>
