@@ -20,6 +20,7 @@ export class ChangeEmailUseCase {
                 private readonly mapper: UserMapper,
                 private readonly userLookup: UserLookup,
                 private readonly sendEmailVerifShared: SendVerifEmailShared,
+                private readonly emailVerificationService: EmailVerificationInterface,
     ) {}
 
 
@@ -39,10 +40,14 @@ export class ChangeEmailUseCase {
 
             await this.checkUserWithSameEmail(newEmailValid.getValue());
 
-            await this.sendEmailVerifShared.sendIt(newEmailValid.getValue(), user,
-                "/public/confirm-email-change", "change");
 
             await this.userRepoWriter.setPendingEmail(actorId, newEmailValid.getValue());
+
+            // Clear any old email-change tokens for this user
+            await this.emailVerificationService.deleteByUserIdAndType(actorId, "change");
+
+            await this.sendEmailVerifShared.sendIt(newEmailValid.getValue(), user,
+                "/public/confirm-email-change", "change");
 
             return this.mapper.mapToDto(user);
         } catch (error) {
