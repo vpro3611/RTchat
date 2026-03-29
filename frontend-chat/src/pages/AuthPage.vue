@@ -3,9 +3,11 @@ import { ref } from "vue"
 import LoginPage from "pages/LoginPage.vue"
 import RegisterPage from "pages/RegisterPage.vue"
 import ForgotPasswordForm from "components/ForgotPasswordForm.vue"
+import RestoreAccountForm from "components/RestoreAccountForm.vue"
 import ThemeSwitcher from "components/ThemeSwitcher.vue"
 
 const showForgotPassword = ref(false)
+const showRestoreAccount = ref(false)
 const tab = ref('login')
 </script>
 
@@ -21,7 +23,7 @@ const tab = ref('login')
     >
       
       <!-- Normal Login/Register Tabs -->
-      <div v-if="!showForgotPassword">
+      <div v-if="!showForgotPassword && !showRestoreAccount">
         <q-tabs
           v-model="tab"
           dense
@@ -39,7 +41,10 @@ const tab = ref('login')
 
         <q-tab-panels v-model="tab" animated>
           <q-tab-panel name="login" class="q-pa-lg">
-            <LoginPage @forgotPassword="showForgotPassword = true" />
+            <LoginPage 
+              @forgotPassword="showForgotPassword = true" 
+              @restoreAccount="showRestoreAccount = true"
+            />
           </q-tab-panel>
 
           <q-tab-panel name="register" class="q-pa-lg">
@@ -49,8 +54,13 @@ const tab = ref('login')
       </div>
 
       <!-- Forgot Password View -->
-      <div v-else class="q-pa-lg">
+      <div v-else-if="showForgotPassword" class="q-pa-lg">
         <ForgotPasswordForm @back="showForgotPassword = false" />
+      </div>
+
+      <!-- Restore Account View -->
+      <div v-else class="q-pa-lg">
+        <RestoreAccountForm @back="showRestoreAccount = false" />
       </div>
 
     </q-card>

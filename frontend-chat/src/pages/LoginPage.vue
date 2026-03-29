@@ -6,7 +6,7 @@ import {AuthApi} from "src/api/apis/auth_api";
 import {AuthStore} from "stores/auth_store";
 
 const router = useRouter();
-const emit = defineEmits(['forgotPassword'])
+const emit = defineEmits(['forgotPassword', 'restoreAccount'])
 
 const error = ref<string | null>(null);
 const isLoading = ref(false);
@@ -47,5 +47,6 @@ async function handleLogin(data: { identifier: string; password: string }) {
     :error="error"
     @submit="handleLogin"
     @forgotPassword="emit('forgotPassword')"
+    @restoreAccount="emit('restoreAccount')"
   />
 </template>

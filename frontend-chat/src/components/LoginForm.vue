@@ -8,7 +8,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   submit: [{ identifier: string; password: string }],
-  forgotPassword: []
+  forgotPassword: [],
+  restoreAccount: []
 }>()
 
 const identifier = ref("")
@@ -60,15 +61,26 @@ function handleSubmit() {
           :loading="props.isLoading"
           label="Login"
         />
-        <q-btn
-          flat
-          dense
-          color="grey-8"
-          class="text-weight-bold text-caption"
-          label="Forgot password?"
-          @click="emit('forgotPassword')"
-          :disable="props.isLoading"
-        />
+        <div class="column items-end">
+          <q-btn
+            flat
+            dense
+            color="grey-8"
+            class="text-weight-bold text-caption"
+            label="Forgot password?"
+            @click="emit('forgotPassword')"
+            :disable="props.isLoading"
+          />
+          <q-btn
+            flat
+            dense
+            color="primary"
+            class="text-weight-bold text-caption"
+            label="Restore account?"
+            @click="emit('restoreAccount')"
+            :disable="props.isLoading"
+          />
+        </div>
       </div>
 
       <div v-if="props.error" class="text-negative text-weight-bold q-mt-sm">
