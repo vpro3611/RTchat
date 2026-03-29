@@ -1,38 +1,55 @@
 <script setup lang="ts">
+import { ref } from "vue"
 import LoginPage from "pages/LoginPage.vue"
 import RegisterPage from "pages/RegisterPage.vue"
+import ForgotPasswordForm from "components/ForgotPasswordForm.vue"
+
+const showForgotPassword = ref(false)
+const tab = ref('login')
 </script>
 
 <template>
-  <q-page class="q-pa-xl flex flex-center">
+  <q-page class="q-pa-md flex flex-center bg-grey-1">
 
-    <div style="max-width: 900px; width:100%">
+    <q-card
+      class="q-pa-none shadow-3"
+      style="max-width: 480px; width:100%; border: 2px solid var(--q-primary); border-radius: 12px; overflow: hidden;"
+    >
+      
+      <!-- Normal Login/Register Tabs -->
+      <div v-if="!showForgotPassword">
+        <q-tabs
+          v-model="tab"
+          dense
+          class="text-grey"
+          active-color="primary"
+          indicator-color="primary"
+          align="justify"
+          narrow-indicator
+        >
+          <q-tab name="login" label="Sign In" class="text-weight-bold" />
+          <q-tab name="register" label="Sign Up" class="text-weight-bold" />
+        </q-tabs>
 
-      <div class="text-h4 text-center q-mb-lg">
-        Welcome
-      </div>
+        <q-separator />
 
-      <div class="text-subtitle1 text-center q-mb-xl">
-        Login or create an account
-      </div>
+        <q-tab-panels v-model="tab" animated>
+          <q-tab-panel name="login" class="q-pa-lg">
+            <LoginPage @forgotPassword="showForgotPassword = true" />
+          </q-tab-panel>
 
-      <div class="row q-col-gutter-lg">
-
-        <div class="col-12 col-md-6">
-          <q-card class="q-pa-md">
+          <q-tab-panel name="register" class="q-pa-lg">
             <RegisterPage />
-          </q-card>
-        </div>
-
-        <div class="col-12 col-md-6">
-          <q-card class="q-pa-md">
-            <LoginPage />
-          </q-card>
-        </div>
-
+          </q-tab-panel>
+        </q-tab-panels>
       </div>
 
-    </div>
+      <!-- Forgot Password View -->
+      <div v-else class="q-pa-lg">
+        <ForgotPasswordForm @back="showForgotPassword = false" />
+      </div>
+
+    </q-card>
 
   </q-page>
 </template>
