@@ -91,6 +91,10 @@ import {
 } from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
 import {SetConversationAvatarParamsSchema} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
 import {DeleteConversationAvatarParamsSchema} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
+import {RestoreForgottenPasswordBodySchema} from "./modules/users/controllers/restore_forgotten_password_controller";
+import {
+    ResendResetForgottenPasswordBodySchema
+} from "./modules/users/controllers/resend_reset_forgotten_password_controller";
 export function createApp(dependencies: AppContainer): Express
 {
     const app = express();
@@ -158,6 +162,20 @@ export function createApp(dependencies: AppContainer): Express
         validateBody(ResendRegisterVerificationBodySchema),
         dependencies.resendVerificationRegisterController.resendRegisterVerificationCont
     ); //
+
+    publicRouter.post("/restore-forgotten-password",
+        validateBody(RestoreForgottenPasswordBodySchema),
+        dependencies.restoreForgottenPasswordController.restoreForgottenPasswordCont
+    );
+
+    publicRouter.get("/confirm-reset-password",
+        dependencies.confirmResetPasswordController.confirmPasswordReset
+    );
+
+    publicRouter.post("/resend-reset-password",
+        validateBody(ResendResetForgottenPasswordBodySchema),
+        dependencies.resendForgottenPasswordController.resendResetForgottenPasswordCont
+    );
 
     publicRouter.post("/login-email",
         validateBody(LoginEmailBodySchema),
