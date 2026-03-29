@@ -89,7 +89,8 @@ export class AuthService {
                 userRepoWriter,
                 bcrypter,
                 mapper,
-                sendVerifEmailShared
+                sendVerifEmailShared,
+                emailVerifRepo
             );
 
             const user = await registerUseCase.registerUseCase(username, email, password);

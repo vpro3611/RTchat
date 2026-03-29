@@ -22,8 +22,12 @@ export class EmailVerificationUseCase {
 
         const record = await this.getRecord(tokenHash);
 
+        if (record.tokenType !== 'register') {
+            throw new InvalidTokenError('Invalid token type');
+        }
+
         await this.userRepoWriter.markAsVerified(record.userId);
 
-        await this.verificationRepo.deleteByUserId(record.userId);
+        await this.verificationRepo.deleteByTokenHash(tokenHash);
     }
 }

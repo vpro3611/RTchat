@@ -14,8 +14,8 @@ import * as crypto from "node:crypto";
 import {
     EmailVerificationInterface
 } from "../../infrasctructure/ports/email_verif_infra/email_verification/email_verification_interface";
-import {UserMapper} from "../shared/map_to_dto";
 import {SendVerifEmailShared} from "../shared/send_verif_email_shared";
+import {UserMapper} from "../shared/map_to_dto";
 
 
 export class RegisterUseCase {
@@ -24,6 +24,7 @@ export class RegisterUseCase {
                 private readonly bcrypter: BcryptInterface,
                 private readonly mapper: UserMapper,
                 private readonly sendVerifEmailShared: SendVerifEmailShared,
+                private readonly emailVerificationService: EmailVerificationInterface,
     ) {}
 
 
@@ -58,6 +59,9 @@ export class RegisterUseCase {
         const user = User.create(usernameValid, emailValid, Password.fromHash(passwordHash));
 
         const saved = await this.userRepoWriter.save(user);
+
+        // Clear any old registration tokens for this user (e.g. if they retry registration)
+        await this.emailVerificationService.deleteByUserIdAndType(saved.id, "register");
 
         await this.sendVerifEmailShared.sendIt(emailValid.getValue(), saved, "/public/verify-email", "register");
 
