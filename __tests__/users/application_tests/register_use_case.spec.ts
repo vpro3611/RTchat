@@ -9,11 +9,12 @@ describe("RegisterUseCase", () => {
     let bcrypter: any;
     let mapper: any;
     let sendVerifEmailShared: any;
+    let emailVerificationService: any;
     let useCase: RegisterUseCase;
 
     const validUsername = "testuser";
     const validEmail = "test@example.com";
-    const validPassword = "Str0ng_P@ss1!";
+    const validPassword = "Str0ng_P@ss1!long";
 
     beforeEach(() => {
         reader = {
@@ -37,12 +38,17 @@ describe("RegisterUseCase", () => {
             sendIt: jest.fn(),
         };
 
+        emailVerificationService = {
+            deleteByUserIdAndType: jest.fn(),
+        };
+
         useCase = new RegisterUseCase(
             reader,
             writer,
             bcrypter,
             mapper,
-            sendVerifEmailShared
+            sendVerifEmailShared,
+            emailVerificationService
         );
     });
 
@@ -51,7 +57,8 @@ describe("RegisterUseCase", () => {
         reader.getUserByEmail.mockResolvedValue(null);
         bcrypter.hash.mockResolvedValue("hashedPassword");
 
-        writer.save.mockImplementation(async (user: User) => user);
+        const mockUser = { id: "user-id" };
+        writer.save.mockResolvedValue(mockUser);
 
         sendVerifEmailShared.sendIt.mockResolvedValue(undefined);
 
@@ -69,10 +76,11 @@ describe("RegisterUseCase", () => {
         expect(bcrypter.hash).toHaveBeenCalledWith(validPassword);
 
         expect(writer.save).toHaveBeenCalled();
+        expect(emailVerificationService.deleteByUserIdAndType).toHaveBeenCalledWith("user-id", "register");
 
         expect(sendVerifEmailShared.sendIt).toHaveBeenCalledWith(
             validEmail,
-            expect.any(User),
+            mockUser,
             "/public/verify-email",
             "register"
         );
