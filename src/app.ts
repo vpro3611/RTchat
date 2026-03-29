@@ -95,8 +95,14 @@ import {RestoreForgottenPasswordBodySchema} from "./modules/users/controllers/re
 import {
     ResendResetForgottenPasswordBodySchema
 } from "./modules/users/controllers/resend_reset_forgotten_password_controller";
-export function createApp(dependencies: AppContainer): Express
-{
+import {
+    ResetUserStatusToTrueBodySchema
+} from "./modules/users/controllers/reset_user_status_to_true_controller";
+import {
+    ResendUserStatusToTrueBodySchema
+} from "./modules/users/controllers/resend_user_status_to_true_controller";
+
+export const createApp = (dependencies: AppContainer): Express => {
     const app = express();
 
     const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 } });
@@ -175,6 +181,20 @@ export function createApp(dependencies: AppContainer): Express
     publicRouter.post("/resend-reset-password",
         validateBody(ResendResetForgottenPasswordBodySchema),
         dependencies.resendForgottenPasswordController.resendResetForgottenPasswordCont
+    );
+
+    publicRouter.post("/reset-user-status",
+        validateBody(ResetUserStatusToTrueBodySchema),
+        dependencies.resetUserStatusToTrueController.resetUserStatusToTrueCont
+    );
+
+    publicRouter.get("/confirm-reset-activity",
+        dependencies.confirmResetActivityController.confirmResetActivity
+    );
+
+    publicRouter.post("/resend-reset-activity",
+        validateBody(ResendUserStatusToTrueBodySchema),
+        dependencies.resendUserStatusToTrueController.resendUserStatusToTrueCont
     );
 
     publicRouter.post("/login-email",
