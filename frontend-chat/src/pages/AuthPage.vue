@@ -3,13 +3,17 @@ import { ref } from "vue"
 import LoginPage from "pages/LoginPage.vue"
 import RegisterPage from "pages/RegisterPage.vue"
 import ForgotPasswordForm from "components/ForgotPasswordForm.vue"
+import ThemeSwitcher from "components/ThemeSwitcher.vue"
 
 const showForgotPassword = ref(false)
 const tab = ref('login')
 </script>
 
 <template>
-  <q-page class="q-pa-md flex flex-center bg-grey-1">
+  <q-page class="q-pa-md flex flex-center">
+    <div class="fixed-top-right q-pa-md">
+      <ThemeSwitcher />
+    </div>
 
     <q-card
       class="q-pa-none shadow-3"

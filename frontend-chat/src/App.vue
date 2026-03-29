@@ -2,8 +2,10 @@
 import {onMounted} from "vue";
 import {AuthApi} from "src/api/apis/auth_api";
 import {AuthStore} from "stores/auth_store";
+import {ThemeStore} from "stores/theme_store";
 
 onMounted(async () => {
+  ThemeStore.init();
   try {
     const refreshData = await AuthApi.refresh();
 
