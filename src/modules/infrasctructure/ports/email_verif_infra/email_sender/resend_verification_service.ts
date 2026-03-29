@@ -7,6 +7,7 @@ import {
     PendingPasswordNotFoundError,
     UserNotFoundError
 } from "../../../../users/errors/use_case_errors";
+import {ConflictError} from "../../../../../http_errors_base";
 
 
 export class ResendVerificationService {
@@ -83,6 +84,31 @@ export class ResendVerificationService {
             user,
             "/public/confirm-reset-password",
             "reset-pass"
+        );
+    }
+
+    async resendIsActive(email: string) {
+        const user = await this.checkUserReg(email);
+
+        user.ensureIsVerified();
+
+        if (user.getIsActive()) {
+            throw new ConflictError("User is already active");
+        }
+
+        const pendingIsActive = await this.userRepoReader.getPendingIsActiveByUserId(user.id);
+
+        if (pendingIsActive === null) {
+            throw new ConflictError("No pending activation found");
+        }
+
+        await this.verificationRepo.deleteByUserIdAndType(user.id, "reset-activity");
+
+        await this.sendEmailVerifShared.sendIt(
+            email,
+            user,
+            "/public/confirm-reset-activity",
+            "reset-activity"
         );
     }
 }
