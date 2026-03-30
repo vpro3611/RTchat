@@ -65,6 +65,16 @@ export const ChatStore = reactive({
     }
   },
 
+  setLastMessage(chatId: string, content: string, senderId: string, date: string) {
+    const chat = this.chats.find(c => c.id === chatId);
+    if (chat) {
+      chat.lastMessageContent = content;
+      chat.lastMessageSenderId = senderId;
+      chat.lastMessageAt = date;
+      this.bumpChat(chatId);
+    }
+  },
+
   findById(id: string) {
     return this.chats.find(c => c.id === id);
   },
