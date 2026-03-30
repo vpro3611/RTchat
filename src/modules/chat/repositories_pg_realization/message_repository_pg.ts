@@ -17,6 +17,8 @@ export class MessageRepositoryPg implements MessageRepoInterface {
             row.is_deleted,
             row.created_at,
             row.updated_at,
+            row.original_sender_id,
+            row.is_resent,
         );
     }
 
@@ -25,8 +27,8 @@ export class MessageRepositoryPg implements MessageRepoInterface {
             await this.pg.query(
                 `
                     INSERT INTO messages
-                    (id, conversation_id, sender_id, content, is_edited, is_deleted, created_at, updated_at)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    (id, conversation_id, sender_id, content, is_edited, is_deleted, created_at, updated_at, original_sender_id, is_resent)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                 `,
                 [
                     message.id,
@@ -37,6 +39,8 @@ export class MessageRepositoryPg implements MessageRepoInterface {
                     message.getIsDeleted(),
                     message.getCreatedAt(),
                     message.getUpdatedAt(),
+                    message.getOriginalSenderId(),
+                    message.getIsResent(),
                 ]
             );
         } catch (error) {
