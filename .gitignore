@@ -8,6 +8,16 @@ yarn-error.log*
 /.pnp
 .pnp.js
 
+./dist
+
 *.env
 .idea
 .vscode/*
+
+/dist
+# .koda/
+improvings.md
+chat_app_database_plan.md
+
+KODA.md
+context-mcp-server/

@@ -1,0 +1,93 @@
+// app global css in SCSS form
+
+.message-bubble-incoming {
+  background: white !important;
+  color: #333 !important;
+}
+
+// Default (Light Mode) Autofill fix
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #fff inset !important;
+    -webkit-text-fill-color: #333 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.body--dark {
+  // Dark Mode Autofill fix
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px #2a2a2a inset !important;
+      -webkit-text-fill-color: #e0e0e0 !important;
+  }
+
+  .message-bubble-incoming {
+    background: #2a2a2a !important;
+    color: #e0e0e0 !important;
+  }
+  
+  background: #121212 !important;
+  color: #e0e0e0;
+
+  .q-layout, .q-header, .q-footer, .q-drawer {
+    background: #121212;
+  }
+
+  .q-card, .q-dialog-plugin {
+    background: #1e1e1e !important;
+    color: #e0e0e0 !important;
+  }
+
+  // Inputs and textareas
+  .q-field--outlined .q-field__control {
+    background: #2a2a2a !important;
+    color: #e0e0e0 !important;
+  }
+
+  .q-field__native, .q-field__prefix, .q-field__suffix, .q-field__input {
+    color: #e0e0e0 !important;
+  }
+
+  .q-field--outlined .q-field__control:before {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  // Adjust primary for dark mode
+  .text-primary {
+    color: #fb7185 !important;
+  }
+  .bg-primary {
+    background: #fb7185 !important;
+  }
+
+  .q-item {
+    color: #e0e0e0;
+  }
+
+  .q-separator {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  // Fix low contrast buttons
+  .text-grey-8 {
+    color: #9e9e9e !important;
+  }
+
+  // Soft borders for buttons
+  .q-btn--outline:before {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// Global transitions for theme switching
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.q-layout, .q-card, .q-header, .q-drawer, .q-field__control {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
