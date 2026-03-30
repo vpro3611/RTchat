@@ -67,18 +67,19 @@ class ChatSocketService {
     // Новое сообщение
     this.socket.on('message:new', (data: Message) => {
       MessageStore.addMessage(data);
-      // Обновляем список чатов: поднимаем чат наверх и обновляем время
-      const chat = ChatStore.findById(data.conversationId);
-      if (chat) {
-        chat.lastMessageAt = data.createdAt;
-        ChatStore.bumpChat(data.conversationId);
-      }
+      // Обновляем список чатов: поднимаем чат наверх и обновляем превью
+      ChatStore.setLastMessage(data.conversationId, data.content, data.senderId, data.createdAt);
     });
 
     // Сообщение отредактировано - бэкенд отправляет { message: MessageDTO }
     this.socket.on('message:edited', (data: { message: Message }) => {
       if (data.message) {
         MessageStore.updateMessage(data.message.id, data.message.content);
+        // Если это последнее сообщение в чате, обновляем превью в списке
+        const chat = ChatStore.findById(data.message.conversationId);
+        if (chat && chat.lastMessageAt === data.message.createdAt) {
+           chat.lastMessageContent = data.message.content;
+        }
       }
     });
 
