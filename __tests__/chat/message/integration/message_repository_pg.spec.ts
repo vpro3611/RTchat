@@ -179,4 +179,26 @@ describe("MessageRepositoryPg (integration)", () => {
         expect(result.nextCursor).toBeDefined();
     });
 
+    it("should save and restore resent message with original_sender_id and is_resent", async () => {
+
+        const originalSenderId = USER_ID;
+        const actorId = USER_ID;
+        const content = Content.create("resent message");
+
+        const resentMessage = Message.createResent(
+            CONVERSATION_ID,
+            actorId,
+            content,
+            originalSenderId
+        );
+
+        await repo.create(resentMessage);
+
+        const found = await repo.findById(resentMessage.id);
+
+        expect(found).not.toBeNull();
+        expect(found?.getIsResent()).toBe(true);
+        expect(found?.getOriginalSenderId()).toBe(originalSenderId);
+    });
+
 });
