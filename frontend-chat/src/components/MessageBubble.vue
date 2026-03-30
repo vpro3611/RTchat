@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import type {Message} from "src/api/types/message_response";
 import { UserCacheStore } from "stores/user_cache_store";
 import AppAvatar from "./AppAvatar.vue";
@@ -21,10 +21,22 @@ const senderAvatarId = computed(() => {
   return UserCacheStore.getAvatarId(props.message.senderId);
 });
 
+const originalSenderUsername = computed(() => {
+  if (!props.message.isResent || !props.message.originalSenderId) return null;
+  return UserCacheStore.getUsername(props.message.originalSenderId) || 'User';
+});
+
+onMounted(() => {
+  if (props.message.isResent && props.message.originalSenderId) {
+    void UserCacheStore.ensureUser(props.message.originalSenderId);
+  }
+});
+
 const emit = defineEmits<{
   (e: 'edit', messageId: string, content: string): void;
   (e: 'delete', messageId: string): void;
   (e: 'save', messageId: string): void;
+  (e: 'forward', messageId: string): void;
 }>();
 
 function formatTime(dateString: string) {
@@ -57,6 +69,10 @@ function handleDelete() {
 function handleSave() {
   emit('save', props.message.id);
 }
+
+function handleForward() {
+  emit('forward', props.message.id);
+}
 </script>
 
 <template>
@@ -69,6 +85,17 @@ function handleSave() {
       :class="isOwn ? 'bg-primary text-white' : 'message-bubble-incoming'"
       :style="{ maxWidth: '75%', minWidth: '80px' }"
     >
+      <!-- Forwarded from -->
+      <div
+        v-if="message.isResent"
+        class="text-caption q-px-sm q-pt-xs italic flex items-center"
+        :class="isOwn ? 'text-white-70' : 'text-grey-7'"
+        style="opacity: 0.8; font-size: 11px;"
+      >
+        <q-icon name="forward" size="14px" class="q-mr-xs" />
+        Forwarded from {{ originalSenderUsername }}
+      </div>
+
       <div
         v-if="!isOwn && senderUsername"
         class="text-caption q-px-sm q-pt-xs row items-center q-gutter-x-xs text-primary text-weight-bold"
@@ -121,6 +148,9 @@ function handleSave() {
                   {{ isSaved ? 'Saved' : 'Save' }}
                 </q-item-section>
               </q-item>
+              <q-item clickable v-close-popup @click="handleForward">
+                <q-item-section>Forward</q-item-section>
+              </q-item>
               <q-item v-if="isOwn" clickable v-close-popup @click="handleEdit">
                 <q-item-section>Edit</q-item-section>
               </q-item>
@@ -138,6 +168,14 @@ function handleSave() {
 <style scoped>
 .message-bubble {
   border-radius: 12px;
+}
+
+.message-bubble-incoming {
+  background: var(--q-bg-message-incoming, #f0f0f0);
+}
+
+.text-white-70 {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .message-content {
