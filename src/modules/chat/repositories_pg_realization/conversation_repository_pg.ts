@@ -18,6 +18,8 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
             row.user_low,
             row.user_high,
             row.avatar_id,
+            row.last_message_content,
+            row.last_message_sender_id
         );
     }
 
@@ -114,10 +116,17 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
 
             const result = await this.pool.query(
                 `
-                    SELECT c.*
+                    SELECT c.*, m.content as last_message_content, m.sender_id as last_message_sender_id
                     FROM conversations c
                              JOIN conversation_participants p
                                   ON p.conversation_id = c.id
+                             LEFT JOIN LATERAL (
+                                 SELECT content, sender_id
+                                 FROM messages
+                                 WHERE conversation_id = c.id
+                                 ORDER BY created_at DESC
+                                 LIMIT 1
+                             ) m ON true
                     WHERE p.user_id = $1
                         ${cursorCondition}
                     ORDER BY COALESCE (c.last_message_at, c.created_at) DESC
@@ -204,11 +213,18 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
                     ORDER BY score DESC, c.title ASC
                         LIMIT $3 + 1
                         )
-                    SELECT *,
+                    SELECT g.*, m.content as last_message_content, m.sender_id as last_message_sender_id,
                            (SELECT title
                             FROM groups_page OFFSET $3
                         LIMIT 1 ) AS next_cursor
-                    FROM groups_page
+                    FROM groups_page g
+                    LEFT JOIN LATERAL (
+                                 SELECT content, sender_id
+                                 FROM messages
+                                 WHERE conversation_id = g.id
+                                 ORDER BY created_at DESC
+                                 LIMIT 1
+                             ) m ON true
                         LIMIT $3
                 `,
                 [query, cursor ?? null, limit]
