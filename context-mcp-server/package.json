@@ -1,0 +1,19 @@
+{
+  "name": "context-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for storing conversation context in Redis",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@upstash/redis": "^1.28.0",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
