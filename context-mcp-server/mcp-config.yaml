@@ -1,0 +1,26 @@
+# Context Memory MCP Server Configuration
+# Добавь эту конфигурацию в MCP настройки
+
+mcpServers:
+  context-memory:
+    command: node
+    args:
+      - /home/vpro3611/context-mcp-server/src/index.js
+    env:
+      UPSTASH_REDIS_REST_URL: "https://easy-termite-36651.upstash.io"
+      UPSTASH_REDIS_REST_TOKEN: "AY8rAAIncDFlODBmMmYxMjVjZDM0ZWQ0YmQzOWU0ZTVjNzMyZTNhZnAxMzY2NTE"
+      CONTEXT_TTL: "604800"
+
+# Или для Claude Desktop (mcp.json):
+# {
+#   "mcpServers": {
+#     "context-memory": {
+#       "command": "node",
+#       "args": ["/home/vpro3611/context-mcp-server/src/index.js"],
+#       "env": {
+#         "UPSTASH_REDIS_REST_URL": "https://easy-termite-36651.upstash.io",
+#         "UPSTASH_REDIS_REST_TOKEN": "AY8rAAIncDFlODBmMmYxMjVjZDM0ZWQ0YmQzOWU0ZTVjNzMyZTNhZnAxMzY2NTE"
+#       }
+#     }
+#   }
+# }
