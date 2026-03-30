@@ -13,6 +13,8 @@ export class MapToMessage {
             isDeleted: message.getIsDeleted(),
             createdAt: message.getCreatedAt().toISOString(),
             updatedAt: message.getUpdatedAt().toISOString(),
+            originalSenderId: message.getOriginalSenderId(),
+            isResent: message.getIsResent(),
         }
     }
 }
