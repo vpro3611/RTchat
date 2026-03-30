@@ -8,6 +8,7 @@ import {ParticipantStore} from "stores/participant_store";
 import type {Message} from "src/api/types/message_response";
 import type {Participant} from "src/api/types/participant_response";
 import type {CreateGroupChatResponse} from "src/api/types/create_group_chat_response";
+import {UserApi} from "src/api/apis/user_api";
 
 type TypingCallback = (data: { conversationId: string; userId: string; username: string }) => void;
 type ErrorCallback = (data: { message: string }) => void;
