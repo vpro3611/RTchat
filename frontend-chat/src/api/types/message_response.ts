@@ -9,6 +9,8 @@ export interface Message {
   updatedAt: string;
   senderUsername?: string;
   senderAvatarId?: string | null;
+  isResent: boolean;
+  originalSenderId?: string;
 }
 
 export interface MessagesResponse {
