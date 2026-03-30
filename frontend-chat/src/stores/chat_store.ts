@@ -58,6 +58,17 @@ export const ChatStore = reactive({
     }
   },
 
+  updateChatData(chatId: string, data: Partial<CreateGroupChatResponse>) {
+    const chat = this.chats.find(c => c.id === chatId);
+    if (chat) {
+      if (data.title !== undefined) chat.title = data.title;
+      if (data.avatarId !== undefined) chat.avatarId = data.avatarId;
+      if (data.lastMessageContent !== undefined) chat.lastMessageContent = data.lastMessageContent;
+      if (data.lastMessageSenderId !== undefined) chat.lastMessageSenderId = data.lastMessageSenderId;
+      if (data.lastMessageAt !== undefined) chat.lastMessageAt = data.lastMessageAt;
+    }
+  },
+
   updateChatAvatar(chatId: string, avatarId: string | null) {
     const chat = this.chats.find(c => c.id === chatId);
     if (chat) {

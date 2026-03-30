@@ -87,6 +87,23 @@ class ChatSocketService {
     this.socket.on('message:deleted', (data: { message: Message }) => {
       if (data.message) {
         MessageStore.removeMessage(data.message.id);
+
+        // Если это было последнее сообщение, нужно обновить превью в списке чатов
+        const chat = ChatStore.findById(data.message.conversationId);
+        if (chat && chat.lastMessageAt === data.message.createdAt) {
+          void (async () => {
+            try {
+              const updatedChat = await UserApi.getSpecificConversation(data.message.conversationId);
+              ChatStore.updateChatData(data.message.conversationId, {
+                lastMessageContent: updatedChat.lastMessageContent,
+                lastMessageSenderId: updatedChat.lastMessageSenderId,
+                lastMessageAt: updatedChat.lastMessageAt
+              });
+            } catch (e) {
+              console.error('Failed to sync chat after message deletion:', e);
+            }
+          })();
+        }
       }
     });
 
@@ -126,11 +143,7 @@ class ChatSocketService {
     });
 
     this.socket.on('conversation:updated', (data: { conversationId: string, conversation: CreateGroupChatResponse }) => {
-      const chat = ChatStore.findById(data.conversationId);
-      if (chat) {
-        if (data.conversation.title) chat.title = data.conversation.title;
-        if (data.conversation.avatarId !== undefined) chat.avatarId = data.conversation.avatarId;
-      }
+      ChatStore.updateChatData(data.conversationId, data.conversation);
     });
 
     // Ошибка подключения
