@@ -160,6 +160,16 @@ export const UserApi =
       })
     },
 
+    getSpecificConversation(conversationId: string)
+    {
+      return fetchJson<CreateGroupChatResponse>(`${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/view`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+      })
+    },
+
     createDirectConversation(targetId: string)
     {
       // "/direct-conv/:targetId/create",
