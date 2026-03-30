@@ -68,6 +68,53 @@ describe("Message Domain", () => {
             .toBe(true);
     });
 
+    it("should restore a resent message", () => {
+        const now = new Date();
+        const originalSenderId = "original-sender-1";
+
+        const message = Message.restore(
+            "msg-id",
+            CONVERSATION_ID,
+            USER_ID,
+            "Hello",
+            false,
+            false,
+            now,
+            now,
+            originalSenderId,
+            true
+        );
+
+        expect(message.getOriginalSenderId()).toBe(originalSenderId);
+        expect(message.getIsResent()).toBe(true);
+    });
+
+    // =========================
+    // createResent
+    // =========================
+
+    it("should create a resent message", () => {
+        const content = Content.create("Resent content");
+        const actorId = "actor-1";
+        const originalSenderId = "original-sender-1";
+        const targetConversationId = "target-conv-1";
+
+        const message = Message.createResent(
+            targetConversationId,
+            actorId,
+            content,
+            originalSenderId
+        );
+
+        expect(message.getConversationId()).toBe(targetConversationId);
+        expect(message.getSenderId()).toBe(actorId);
+        expect(message.getContent().getContentValue()).toBe("Resent content");
+        expect(message.getOriginalSenderId()).toBe(originalSenderId);
+        expect(message.getIsResent()).toBe(true);
+        expect(message.getIsEdited()).toBe(false);
+        expect(message.getIsDeleted()).toBe(false);
+    });
+
     // =========================
     // edit message
     // =========================
