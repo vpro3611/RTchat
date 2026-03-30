@@ -87,5 +87,19 @@ export const MessageApi = {
         },
       }
     );
+  },
+
+  resendMessage(sourceConversationId: string, messageId: string, targetConversationId: string) {
+    return fetchJson<Message>(
+      `${BaseUrl.apiBaseUrl}/private/conversation/${sourceConversationId}/messages/${messageId}/resend`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+        body: JSON.stringify({targetConversationId}),
+      }
+    );
   }
 };
