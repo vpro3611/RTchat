@@ -3,6 +3,8 @@ import { ref, computed } from "vue"
 import { useQuasar } from "quasar"
 import { UserApi } from "src/api/apis/user_api"
 import { MessageApi } from "src/api/apis/message_api"
+import { AuthStore } from "stores/auth_store"
+import { UserCacheStore } from "stores/user_cache_store"
 import AppAvatar from "./AppAvatar.vue"
 import type { CreateGroupChatResponse } from "src/api/types/create_group_chat_response"
 
@@ -19,11 +21,42 @@ const conversations = ref<CreateGroupChatResponse[]>([])
 const resendingIds = ref<Set<string>>(new Set())
 const sentIds = ref<Set<string>>(new Set())
 
+function getOpponentId(chat: CreateGroupChatResponse) {
+  if (chat.conversationType === "group") return null
+  if (!chat.userLow || !chat.userHigh) return null
+
+  const me = AuthStore.user?.id
+  if (!me) return null
+
+  return chat.userLow === me ? chat.userHigh : chat.userLow
+}
+
+function getChatTitle(chat: CreateGroupChatResponse) {
+  const opponentId = getOpponentId(chat)
+  if (!opponentId) return chat.title
+
+  const name = UserCacheStore.getUsername(opponentId)
+  return (name ?? chat.title) || 'Direct Chat'
+}
+
+function getAvatarId(chat: CreateGroupChatResponse) {
+  if (chat.conversationType === "group") return chat.avatarId
+  const opponentId = getOpponentId(chat)
+  return opponentId ? UserCacheStore.getAvatarId(opponentId) : chat.avatarId
+}
+
 async function fetchConversations() {
   try {
     isLoading.value = true
     const res = await UserApi.getUserConversations({ limit: 100 })
     conversations.value = res.items
+
+    // Ensure all opponent data is cached
+    const opponentIds = res.items
+      .map(getOpponentId)
+      .filter((id): id is string => !!id)
+
+    await UserCacheStore.ensureUsers(opponentIds)
   } catch (e) {
     console.error(e)
     $q.notify({
@@ -45,9 +78,9 @@ async function handleResend(targetConversationId: string) {
       props.messageId,
       targetConversationId
     )
-    
+
     sentIds.value.add(targetConversationId)
-    
+
     $q.notify({
       type: "positive",
       message: "Message forwarded!",
@@ -71,8 +104,8 @@ const filteredConversations = computed(() => {
     return list
   }
   const q = query.value.toLowerCase()
-  return list.filter(c => 
-    c.title.toLowerCase().includes(q)
+  return list.filter(c =>
+    getChatTitle(c).toLowerCase().includes(q)
   )
 })
 
@@ -121,15 +154,15 @@ defineExpose({ open })
           <div v-if="isLoading" class="flex flex-center q-pa-xl">
             <q-spinner-tail color="primary" size="3em" />
           </div>
-          
+
           <template v-else>
             <transition-group
               enter-active-class="animated fadeIn"
               leave-active-class="animated fadeOut"
             >
-              <q-item 
-                v-for="conv in filteredConversations" 
-                :key="conv.id" 
+              <q-item
+                v-for="conv in filteredConversations"
+                :key="conv.id"
                 v-ripple
                 clickable
                 class="q-py-md conversation-item"
@@ -138,15 +171,15 @@ defineExpose({ open })
               >
                 <q-item-section avatar>
                   <AppAvatar
-                    :avatar-id="conv.avatarId"
-                    :name="conv.title"
+                    :avatar-id="getAvatarId(conv)"
+                    :name="getChatTitle(conv)"
                     size="44px"
                     class="shadow-1"
                   />
                 </q-item-section>
 
                 <q-item-section>
-                  <q-item-label class="text-weight-bold">{{ conv.title }}</q-item-label>
+                  <q-item-label class="text-weight-bold">{{ getChatTitle(conv) }}</q-item-label>
                   <q-item-label caption class="text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">
                     {{ conv.conversationType }}
                   </q-item-label>
@@ -213,7 +246,11 @@ defineExpose({ open })
 }
 
 .conversation-item:hover {
-  background-color: var(--q-grey-2);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.body--dark .conversation-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .search-input :deep(.q-field__control) {
