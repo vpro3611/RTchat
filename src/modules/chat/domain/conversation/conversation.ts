@@ -16,6 +16,8 @@ export class Conversation {
         private userLow: string | null,
         private userHigh: string | null,
         private avatarId: string | null = null,
+        private lastMessageContent?: string,
+        private lastMessageSenderId?: string,
     ) {
         if (conversationType === ConversationType.DIRECT && (!userLow || !userHigh)) {
             throw new DirectConversationTwoUsersError("Direct conversation must have two users!");
@@ -32,6 +34,8 @@ export class Conversation {
         userLow: string | null,
         userHigh: string | null,
         avatarId: string | null = null,
+        lastMessageContent?: string,
+        lastMessageSenderId?: string,
     ) {
         return new Conversation(
             id,
@@ -43,6 +47,8 @@ export class Conversation {
             userLow,
             userHigh,
             avatarId,
+            lastMessageContent,
+            lastMessageSenderId,
         );
     }
 
@@ -112,5 +118,7 @@ export class Conversation {
     getUserLow = () => this.userLow;
     getUserHigh = () => this.userHigh;
     getAvatarId = () => this.avatarId;
+    getLastMessageContent = () => this.lastMessageContent;
+    getLastMessageSenderId = () => this.lastMessageSenderId;
 }
 
