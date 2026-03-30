@@ -133,6 +133,11 @@ export class User {
         this.password = password;
         this.setUpdatedAt(new Date());
     }
+    setIsActive(): void {
+        this.ensureIsVerified();
+        this.is_active = !this.is_active;
+        this.setUpdatedAt(new Date());
+    }
     setIsActiveTo(value: boolean): void {
         this.is_active = value;
         this.setUpdatedAt(new Date());

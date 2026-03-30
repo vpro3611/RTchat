@@ -26,9 +26,15 @@ describe("BanGroupParticipantController (HTTP)", () => {
             extractActorId: jest.fn()
         } as any;
 
+        const io = {
+            to: jest.fn().mockReturnThis(),
+            emit: jest.fn()
+        } as any;
+
         const controller = new BanGroupParticipantController(
             banGroupParticipantService,
-            extractActorId
+            extractActorId,
+            io
         );
 
         app.patch(
