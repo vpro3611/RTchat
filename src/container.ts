@@ -97,6 +97,8 @@ import {LeaveConversationTxService} from "./modules/chat/transactional_services/
 import {MuteParticipantTxService} from "./modules/chat/transactional_services/participant/mute_participant_service";
 import {UnmuteParticipantTxService} from "./modules/chat/transactional_services/participant/unmute_participant_service";
 import {RemoveParticipantTxService} from "./modules/chat/transactional_services/participant/remove_participant_service";
+import {ResendMessageTxService} from "./modules/chat/transactional_services/message/resend_message_service";
+import {ResendMessageController} from "./modules/chat/controllers/message/resend_message_controller";
 import {
     DeleteMessageController
 } from "./modules/chat/web_socket_controllers/message_controllers/delete_message_controller";
@@ -377,7 +379,8 @@ export function assembleContainer(io: Server)
         userRepoReaderPG,
         sendEmailVerifShared,
         userMapper,
-        bcrypter
+        bcrypter,
+        emailVerificationTokenRepoPG
     );
     const confirmResetPasswordUseCase = new ConfirmResetPasswordUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
     const resetUserStatusToTrueUseCase = new ResetUserStatusToTrueUseCase(userRepoWriterPG, userRepoReaderPG, userMapper, sendEmailVerifShared, emailVerificationTokenRepoPG);
@@ -701,6 +704,7 @@ export function assembleContainer(io: Server)
     const editMessageService = new EditMessageTxService(txManager);
     const getMessagesService = new GetMessageTxService(txManager);
     const sendMessageService = new SendMessageTxService(txManager);
+    const resendMessageService = new ResendMessageTxService(txManager, RedisCacheService);
     const getSpecificMessageService = new GetSpecificMessageService(txManager);
 
     // ____ //
@@ -785,6 +789,11 @@ export function assembleContainer(io: Server)
     const getSpecificMessageController = new GetSpecificMessageController(
         getSpecificMessageService,
         extractActorId
+    );
+    const resendMessageController = new ResendMessageController(
+        resendMessageService,
+        extractActorId,
+        io
     );
 
     const changeParticipantRoleController = new ChangeParticipantRoleController(
@@ -958,6 +967,8 @@ export function assembleContainer(io: Server)
         getUserConversationController,
         updateConversationTitleController,
         searchConversationsController,
+
+        resendMessageController,
 
         getMessagesController,
         getSpecificMessageController,
