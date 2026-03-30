@@ -17,6 +17,7 @@ import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
 import LeaveGroupButton from "components/LeaveGroupButton.vue";
 import ParticipantListDialog from "components/ParticipantListDialog.vue";
 import MessageBubble from "components/MessageBubble.vue";
+import ResendMessageDialog from "components/ResendMessageDialog.vue";
 import AppAvatar from "components/AppAvatar.vue";
 
 const $q = useQuasar()
@@ -25,6 +26,8 @@ const route = useRoute();
 const message = ref("");
 const messagesContainer = ref<HTMLElement | null>(null);
 const dialogRef = ref();
+const resendDialogRef = ref<{ open: () => void } | null>(null);
+const forwardingMessageId = ref<string>("");
 const participantsDialogRef = ref<{ openDialog: () => void } | null>(null);
 const isEditing = ref(false);
 const editingMessageId = ref<string | null>(null);
@@ -44,7 +47,7 @@ const otherUserId = computed(() => {
   if (chat.value?.conversationType !== 'direct') return null;
   const currentUserId = AuthStore.user?.id;
   if (!currentUserId) return null;
-  
+
   if (chat.value.userLow === currentUserId) return chat.value.userHigh;
   if (chat.value.userHigh === currentUserId) return chat.value.userLow;
   return null;
@@ -139,9 +142,12 @@ async function loadMessages() {
     MessageStore.setMessages(response.items, response.nextCursor);
     MessageStore.finishBootstrapping();
 
-    // Загружаем данные об отправителях в кэш
-    const senderIds = response.items.map(m => m.senderId).filter(Boolean);
-    await UserCacheStore.ensureUsers(senderIds);
+    // Загружаем данные об отправителях в кэш (включая originalSenderId для пересланных сообщений)
+    const senderIds = response.items.map(m => m.senderId);
+    const originalSenderIds = response.items.map(m => m.originalSenderId).filter(Boolean);
+    const allIds = Array.from(new Set([...senderIds, ...originalSenderIds])) as string[];
+
+    await UserCacheStore.ensureUsers(allIds);
 
     // Подключаемся к WebSocket и ждём готовности
     chatSocket.connect();
@@ -181,8 +187,11 @@ async function loadMoreMessages() {
     MessageStore.appendMessages(response.items, response.nextCursor);
 
     // Загружаем данные об отправителях в кэш
-    const senderIds = response.items.map(m => m.senderId).filter(Boolean);
-    await UserCacheStore.ensureUsers(senderIds);
+    const senderIds = response.items.map(m => m.senderId);
+    const originalSenderIds = response.items.map(m => m.originalSenderId).filter(Boolean);
+    const allIds = Array.from(new Set([...senderIds, ...originalSenderIds])) as string[];
+
+    await UserCacheStore.ensureUsers(allIds);
   } catch (error) {
     console.error('Failed to load more messages:', error);
   } finally {
@@ -226,6 +235,13 @@ function deleteMessage(messageId: string) {
   if (!conversationId.value) return;
 
   chatSocket.deleteMessage(conversationId.value, messageId);
+}
+
+// Переслать сообщение
+async function handleForwardMessage(messageId: string) {
+  forwardingMessageId.value = messageId;
+  await nextTick();
+  resendDialogRef.value?.open();
 }
 
 // Сохранить сообщение
@@ -408,6 +424,11 @@ watch(
     </div>
 
     <EditGroupTitleDialog ref="dialogRef" />
+    <ResendMessageDialog
+      ref="resendDialogRef"
+      :messageId="forwardingMessageId"
+      :sourceConversationId="conversationId"
+    />
     <ParticipantListDialog
       ref="participantsDialogRef"
       :conversationId="conversationId"
@@ -416,18 +437,18 @@ watch(
 
     <!-- BLOCKED USER NOTICE (Telegram-style) -->
     <div
-      v-if="isOtherUserBlocked" 
+      v-if="isOtherUserBlocked"
       class="bg-grey-3 q-pa-md text-center"
     >
       <q-icon name="block" size="24px" class="q-mr-sm" />
       <span class="text-grey-7">
-        You have blocked this user. 
-        <q-btn 
-          flat 
-          dense 
-          color="primary" 
-          label="Unblock" 
-          class="q-ml-sm" 
+        You have blocked this user.
+        <q-btn
+          flat
+          dense
+          color="primary"
+          label="Unblock"
+          class="q-ml-sm"
           @click="unblockOtherUser"
         />
       </span>
@@ -469,6 +490,7 @@ watch(
           @edit="startEdit"
           @delete="deleteMessage"
           @save="saveMessageAction"
+          @forward="handleForwardMessage"
         />
 
         <!-- Typing indicator placeholder -->
