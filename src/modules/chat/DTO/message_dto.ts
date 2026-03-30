@@ -11,4 +11,6 @@ export type MessageDTO = {
     isDeleted: boolean,
     createdAt: string,
     updatedAt: string,
+    originalSenderId?: string,
+    isResent: boolean,
 }
