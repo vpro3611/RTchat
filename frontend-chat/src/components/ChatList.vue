@@ -37,6 +37,36 @@ function getAvatarId(chat: CreateGroupChatResponse) {
   return opponentId ? UserCacheStore.getAvatarId(opponentId) : null
 }
 
+function formatLastMessageTime(dateString: string | null) {
+  if (!dateString) return ""
+  const date = new Date(dateString)
+  const now = new Date()
+
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  if (date.toDateString() === yesterday.toDateString()) {
+    return "Yesterday"
+  }
+
+  return date.toLocaleDateString([], { day: '2-digit', month: '2-digit' })
+}
+
+function getLastMessageDisplay(chat: CreateGroupChatResponse) {
+  if (!chat.lastMessageContent) return "No messages"
+
+  const senderId = chat.lastMessageSenderId
+  if (!senderId) return chat.lastMessageContent
+
+  const isMe = senderId === AuthStore.user?.id
+  const name = isMe ? "You" : UserCacheStore.getUsername(senderId) || "User"
+
+  return `${name}: ${chat.lastMessageContent}`
+}
+
 function openChat(chatId: string) {
   void router.push(`/chat/${chatId}`)
 }
@@ -58,14 +88,18 @@ async function loadMoreChats() {
   }
 }
 
-const opponentIds = computed(() => {
-  return ChatStore.chats
-    .map(getOpponentId)
-    .filter((id): id is string => !!id)
+const userIdsToFetch = computed(() => {
+  const ids = new Set<string>()
+  ChatStore.chats.forEach(chat => {
+    const oppId = getOpponentId(chat)
+    if (oppId) ids.add(oppId)
+    if (chat.lastMessageSenderId) ids.add(chat.lastMessageSenderId)
+  })
+  return Array.from(ids)
 })
 
 watch(
-  opponentIds,
+  userIdsToFetch,
   (ids) => {
     void UserCacheStore.ensureUsers(ids)
   },
@@ -93,9 +127,12 @@ watch(
       </q-item-section>
 
       <q-item-section>
-        <q-item-label>{{ getChatTitle(chat) }}</q-item-label>
-        <q-item-label caption lines="1">
-          {{ chat.lastMessageAt ?? "No messages" }}
+        <div class="row no-wrap items-center justify-between">
+          <div class="text-subtitle1 text-weight-bold ellipsis col">{{ getChatTitle(chat) }}</div>
+          <div class="text-caption text-grey-5 q-ml-sm">{{ formatLastMessageTime(chat.lastMessageAt ?? chat.createdAt) }}</div>
+        </div>
+        <q-item-label caption lines="1" class="text-grey-4">
+          {{ getLastMessageDisplay(chat) }}
         </q-item-label>
       </q-item-section>
 

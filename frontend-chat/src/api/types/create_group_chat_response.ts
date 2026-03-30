@@ -8,4 +8,6 @@ export interface CreateGroupChatResponse {
   lastMessageAt: string | null,
   userLow: string | null,
   userHigh: string | null,
+  lastMessageContent?: string,
+  lastMessageSenderId?: string,
 }
