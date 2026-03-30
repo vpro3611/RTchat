@@ -34,7 +34,8 @@ export class ChangeEmailTxService {
                 userRepoWriter,
                 mapper,
                 userLookup,
-                sendVerifShared
+                sendVerifShared,
+                emailVerifRepo
             );
 
             return await changeEmailUseCase.changeEmailUseCase(actorId, newEmail);

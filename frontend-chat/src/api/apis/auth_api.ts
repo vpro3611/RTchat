@@ -70,5 +70,63 @@ export const AuthApi = {
           },
           body: JSON.stringify({email}),
        })
+    },
+
+    restoreForgottenPassword(email: string, newPassword: string) {
+        return fetchJson<User>(`${BaseUrl.apiBaseUrl}/public/restore-forgotten-password`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({email, newPassword}),
+        })
+    },
+
+    confirmResetPassword(token: string) {
+        return fetchJson<{ok: boolean}>(`${BaseUrl.apiBaseUrl}/public/confirm-reset-password?token=${token}`, {
+            method: "GET",
+        })
+    },
+
+    resendResetPassword(email: string) {
+        return fetchJson<{ok: boolean}>(`${BaseUrl.apiBaseUrl}/public/resend-reset-password`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({email}),
+        })
+    },
+
+    resendChangeEmailVerification() {
+        return fetchJson<{ok: boolean}>(`${BaseUrl.apiBaseUrl}/private/resend-change-email`, {
+          method: "POST"
+        })
+    },
+
+    resetUserStatus(email: string) {
+        return fetchJson<User>(`${BaseUrl.apiBaseUrl}/public/reset-user-status`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({email}),
+        })
+    },
+
+    confirmResetActivity(token: string) {
+        return fetchJson<{ok: boolean}>(`${BaseUrl.apiBaseUrl}/public/confirm-reset-activity?token=${token}`, {
+            method: "GET",
+        })
+    },
+
+    resendResetActivity(email: string) {
+        return fetchJson<{ok: boolean}>(`${BaseUrl.apiBaseUrl}/public/resend-reset-activity`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({email}),
+        })
     }
 }

@@ -91,8 +91,18 @@ import {
 } from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
 import {SetConversationAvatarParamsSchema} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
 import {DeleteConversationAvatarParamsSchema} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
-export function createApp(dependencies: AppContainer): Express
-{
+import {RestoreForgottenPasswordBodySchema} from "./modules/users/controllers/restore_forgotten_password_controller";
+import {
+    ResendResetForgottenPasswordBodySchema
+} from "./modules/users/controllers/resend_reset_forgotten_password_controller";
+import {
+    ResetUserStatusToTrueBodySchema
+} from "./modules/users/controllers/reset_user_status_to_true_controller";
+import {
+    ResendUserStatusToTrueBodySchema
+} from "./modules/users/controllers/resend_user_status_to_true_controller";
+
+export const createApp = (dependencies: AppContainer): Express => {
     const app = express();
 
     const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 } });
@@ -158,6 +168,34 @@ export function createApp(dependencies: AppContainer): Express
         validateBody(ResendRegisterVerificationBodySchema),
         dependencies.resendVerificationRegisterController.resendRegisterVerificationCont
     ); //
+
+    publicRouter.post("/restore-forgotten-password",
+        validateBody(RestoreForgottenPasswordBodySchema),
+        dependencies.restoreForgottenPasswordController.restoreForgottenPasswordCont
+    );
+
+    publicRouter.get("/confirm-reset-password",
+        dependencies.confirmResetPasswordController.confirmPasswordReset
+    );
+
+    publicRouter.post("/resend-reset-password",
+        validateBody(ResendResetForgottenPasswordBodySchema),
+        dependencies.resendForgottenPasswordController.resendResetForgottenPasswordCont
+    );
+
+    publicRouter.post("/reset-user-status",
+        validateBody(ResetUserStatusToTrueBodySchema),
+        dependencies.resetUserStatusToTrueController.resetUserStatusToTrueCont
+    );
+
+    publicRouter.get("/confirm-reset-activity",
+        dependencies.confirmResetActivityController.confirmResetActivity
+    );
+
+    publicRouter.post("/resend-reset-activity",
+        validateBody(ResendUserStatusToTrueBodySchema),
+        dependencies.resendUserStatusToTrueController.resendUserStatusToTrueCont
+    );
 
     publicRouter.post("/login-email",
         validateBody(LoginEmailBodySchema),

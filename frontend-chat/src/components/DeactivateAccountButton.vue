@@ -49,7 +49,7 @@ function handleDeactivate() {
           • You will not be able to login again
           • All actions will be disabled
 
-          You can only restore access through support.
+          You can restore your account later using the "Restore Account" option on the sign-in page.
           `,
     cancel: true,
     persistent: true,

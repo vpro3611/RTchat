@@ -6,6 +6,7 @@ import {
 } from "../../infrasctructure/ports/email_verif_infra/email_verification/email_verification_interface";
 import crypto from "node:crypto";
 import {User} from "../domain/user";
+import {FlowType} from "../../infrasctructure/ports/email_verif_infra/email_sender/email_sender";
 
 
 export class SendVerifEmailShared {
@@ -21,13 +22,14 @@ export class SendVerifEmailShared {
         return crypto.createHash('sha256').update(rawToken).digest('hex');
     }
 
-    private async saveToRepo(tokenHash: string, saved: User) {
+    private async saveToRepo(tokenHash: string, saved: User, tokenType: string) {
         await this.emailVerificationRepo.saveToken({
             id: crypto.randomUUID(),
             userId: saved.id,
             tokenHash: tokenHash,
             createdAt: new Date(),
             expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+            tokenType: tokenType,
         })
     }
 
@@ -35,13 +37,13 @@ export class SendVerifEmailShared {
         email: string,
         saved: User,
         path: string,
-        flowType: "register" | "change"
+        flowType: FlowType,
     ) {
         const rawToken = this.createToken();
 
         const tokenHash = this.createTokenHash(rawToken);
 
-        await this.saveToRepo(tokenHash, saved);
+        await this.saveToRepo(tokenHash, saved, flowType);
 
         await this.emailSender.sendVerificationEmail(email, rawToken, path, flowType);
     }

@@ -52,6 +52,7 @@ export class AuthService {
     async refresh(refreshToken: string) {
         return this.txManager.runInTransaction(async (client) => {
             const refreshRepo = new RefreshTokenRepoPg(client);
+            const userRepoReader = new UserRepoReaderPg(client);
 
             const payload = this.jwtService.verifyRefreshToken(refreshToken);
 
@@ -66,6 +67,13 @@ export class AuthService {
             if (existingToken.expiresAt < new Date()) {
                 throw new TokenExpiredError("Refresh token expired");
             }
+
+            const user = await userRepoReader.getUserById(payload.sub);
+            if (!user) {
+                throw new InvalidTokenJWTError("User not found");
+            }
+
+            user.canLogin();
 
             await refreshRepo.revoke(existingToken.id);
 
@@ -89,7 +97,8 @@ export class AuthService {
                 userRepoWriter,
                 bcrypter,
                 mapper,
-                sendVerifEmailShared
+                sendVerifEmailShared,
+                emailVerifRepo
             );
 
             const user = await registerUseCase.registerUseCase(username, email, password);

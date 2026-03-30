@@ -3,7 +3,7 @@
 
     <q-page-container>
 
-      <q-page class="flex flex-center bg-grey-2">
+      <q-page class="flex flex-center">
 
         <div style="width:100%; max-width:900px;">
           <router-view />

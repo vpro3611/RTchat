@@ -8,6 +8,7 @@ describe("ChangeEmailUseCase", () => {
     let mapper: any;
     let userLookup: any;
     let sendEmailVerifShared: any;
+    let emailVerificationService: any;
     let useCase: ChangeEmailUseCase;
     let user: User;
 
@@ -33,12 +34,17 @@ describe("ChangeEmailUseCase", () => {
             sendIt: jest.fn(),
         };
 
+        emailVerificationService = {
+            deleteByUserIdAndType: jest.fn(),
+        };
+
         useCase = new ChangeEmailUseCase(
             reader,
             writer,
             mapper,
             userLookup,
-            sendEmailVerifShared
+            sendEmailVerifShared,
+            emailVerificationService
         );
 
         user = User.restore(
@@ -74,6 +80,8 @@ describe("ChangeEmailUseCase", () => {
             .toHaveBeenCalledWith("new@example.com");
 
         expect(writer.setPendingEmail).toHaveBeenCalledWith(user.id, "new@example.com");
+
+        expect(emailVerificationService.deleteByUserIdAndType).toHaveBeenCalledWith(user.id, "change");
 
         expect(sendEmailVerifShared.sendIt).toHaveBeenCalledWith(
             "new@example.com",

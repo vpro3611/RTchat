@@ -147,6 +147,58 @@ export class UserRepoWriterPg implements UserRepoWriter {
         }
     }
 
+    async setPendingPassword(userId: string, password: string): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET pending_password = $1, updated_at = NOW()
+                WHERE id = $2
+            `;
+            await this.pool.query(query, [password, userId]);
+        } catch (error: any) {
+            this.mapSaveError(error);
+        }
+    }
+
+    async confirmPendingPassword(userId: string): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET password_hash = pending_password, updated_at = NOW(), pending_password = NULL
+                WHERE id = $1 AND pending_password IS NOT NULL
+            `;
+            await this.pool.query(query, [userId]);
+        } catch (error: any) {
+            this.mapSaveError(error);
+        }
+    }
+
+    async setPendingIsActive(userId: string): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET pending_is_active = TRUE, updated_at = NOW()
+                WHERE id = $1
+            `;
+            await this.pool.query(query, [ userId]);
+        } catch (error: any) {
+            this.mapSaveError(error);
+        }
+    }
+
+    async confirmPendingIsActive(userId: string): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET is_active = pending_is_active, updated_at = NOW(), pending_is_active = NULL
+                WHERE id = $1 AND pending_is_active IS NOT NULL
+            `;
+            await this.pool.query(query, [userId]);
+        } catch (error: any) {
+            this.mapSaveError(error);
+        }
+    }
+
     async updateAvatarId(userId: string, avatarId: string | null): Promise<void> {
         try {
             const query = "UPDATE users SET avatar_id = $1 WHERE id = $2";

@@ -50,6 +50,4 @@ async function handleRegister(data: {
     :error="error"
     @submit="handleRegister"
   />
-
-  <p v-if="error" class="modern-form__error">Error: {{error}}</p>
 </template>

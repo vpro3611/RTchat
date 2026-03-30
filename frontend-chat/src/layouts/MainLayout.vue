@@ -14,6 +14,7 @@ import SearchConversationsComponent from "components/SearchConversationsComponen
 import UserSearchDialog from "components/UserSearchDialog.vue";
 import MyRequestsDialog from "components/MyRequestsDialog.vue";
 import SavedMessagesDialog from "components/SavedMessagesDialog.vue";
+import ThemeSwitcher from "components/ThemeSwitcher.vue";
 
 const showProfileDialog = ref(false)
 const drawer = ref(true)
@@ -92,6 +93,7 @@ onMounted(loadChats)
         <q-btn flat dense round icon="block" @click="$router.push('/blacklist')">
           <q-tooltip>Blocked users</q-tooltip>
         </q-btn>
+        <ThemeSwitcher />
         <q-btn flat dense round icon="person" @click="showProfileDialog = true" />
         <q-btn flat dense round icon="add" @click="openCreateGroupDialog" />
       </q-toolbar>

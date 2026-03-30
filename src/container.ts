@@ -16,11 +16,11 @@ import {LoginEmailUseCase} from "./modules/users/application/login_email_use_cas
 import {LoginUsernameUseCase} from "./modules/users/application/login_username_use_case";
 import {RegisterUseCase} from "./modules/users/application/register_use_case";
 import {EmailSenderNodemailer} from "./modules/infrasctructure/ports/email_verif_infra/email_sender/email_sender";
-import {ToggleIsActiveUseCase} from "./modules/users/application/toggle_status_use_case";
+import {ToggleIsActiveUseCase} from "./modules/users/application/toggle_status_use_case_to_false";
 import {ChangeEmailTxService} from "./modules/users/transactional_services/change_email_tx_service";
 import {ChangePasswordTxService} from "./modules/users/transactional_services/change_password_tx_service";
 import {ChangeUsernameTxService} from "./modules/users/transactional_services/change_username_tx_service";
-import {ToggleStatusTxService} from "./modules/users/transactional_services/toggle_status_tx_service";
+import {ToggleStatusTxService} from "./modules/users/transactional_services/toggle_status_tx_service_to_false";
 import {
     EmailVerificationUseCase
 } from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/email_verification_use_case";
@@ -36,7 +36,7 @@ import {ChangeEmailController} from "./modules/users/controllers/change_email_co
 import {ExtractUserIdFromReq} from "./modules/users/shared/extract_user_id_from_req";
 import {ChangePasswordController} from "./modules/users/controllers/change_password_controller";
 import {ChangeUsernameController} from "./modules/users/controllers/change_username_controller";
-import {ToggleStatusController} from "./modules/users/controllers/toggle_status_controller";
+import {ToggleStatusController} from "./modules/users/controllers/toggle_status_controller_to_false";
 import {CacheService} from "./modules/infrasctructure/ports/cache_service/cache_service";
 import {redisClient} from "./modules/infrasctructure/ports/cache_service/reddis_client";
 import {ConversationRepositoryPg} from "./modules/chat/repositories_pg_realization/conversation_repository_pg";
@@ -301,6 +301,26 @@ import {DeleteConversationAvatarTxService} from "./modules/chat/transactional_se
 import {SetConversationAvatarController} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
 import {DeleteConversationAvatarController} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
 import {Server} from "socket.io";
+import {RestoreForgottenPasswordUseCase} from "./modules/users/application/restore_forgotten_password_use_case";
+import {ResetPasswordTxService} from "./modules/users/transactional_services/reset_password_tx_service";
+import {RestoreForgottenPasswordController} from "./modules/users/controllers/restore_forgotten_password_controller";
+import {
+    ConfirmResetPasswordUseCase
+} from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/confirm_reset_password_use_case";
+import {
+    ConfirmForgottenPasswordRestoreController
+} from "./modules/users/controllers/confirm_forgotten_password_restore_controller";
+import {
+    ResendResetForgottenPasswordController
+} from "./modules/users/controllers/resend_reset_forgotten_password_controller";
+import {ResetUserStatusToTrueUseCase} from "./modules/users/application/reset_user_status_to_true_use_case";
+import {ResetUserStatusToTrueTxService} from "./modules/users/transactional_services/reset_user_status_to_true_tx_service";
+import {ResetUserStatusToTrueController} from "./modules/users/controllers/reset_user_status_to_true_controller";
+import {
+    ConfirmResetActivityUseCase
+} from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/confirm_reset_activity_use_case";
+import {ConfirmResetActivityController} from "./modules/users/controllers/confirm_reset_activity_controller";
+import {ResendUserStatusToTrueController} from "./modules/users/controllers/resend_user_status_to_true_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -338,12 +358,12 @@ export function assembleContainer(io: Server)
     const sendEmailVerifShared = new SendVerifEmailShared(emailSender, emailVerificationTokenRepoPG);
 
     // TODO : USER USE CASES
-    const changeEmailUseCase = new ChangeEmailUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup, sendEmailVerifShared);
+    const changeEmailUseCase = new ChangeEmailUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup, sendEmailVerifShared, emailVerificationTokenRepoPG);
     const changePasswordUseCase = new ChangePasswordUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, userMapper, userLookup);
     const changeUsernameUseCase = new ChangeUsernameUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup);
     const loginEmailUseCase = new LoginEmailUseCase(userRepoReaderPG, bcrypter, userMapper);
     const loginUsernameUseCase = new LoginUsernameUseCase(userRepoReaderPG, bcrypter, userMapper);
-    const registerUseCase = new RegisterUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, userMapper, sendEmailVerifShared);
+    const registerUseCase = new RegisterUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, userMapper, sendEmailVerifShared, emailVerificationTokenRepoPG);
     const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriterPG, userMapper, userLookup);
     const getSelfProfileUseCase = new GetSelfProfileUseCase(userLookup);
     const searchUsersUseCase = new SearchUsersUseCase(userRepoReaderPG, userLookup, userMapper, RedisCacheService);
@@ -352,6 +372,17 @@ export function assembleContainer(io: Server)
     const blockSpecificUserUseCase = new BlockSpecificUserUseCase(userToUserBlocksPG, userRepoReaderPG, userMapper);
     const unblockSpecificUserUseCase = new UnblockSpecificUserUseCase(userToUserBlocksPG, userRepoReaderPG, userMapper);
     const getFullBlackListUseCase = new GetFullBlackListUseCase(userToUserBlocksPG, userLookup, userMapper);
+    const restoreForgottenPasswordUseCase = new RestoreForgottenPasswordUseCase(
+        userRepoWriterPG,
+        userRepoReaderPG,
+        sendEmailVerifShared,
+        userMapper,
+        bcrypter
+    );
+    const confirmResetPasswordUseCase = new ConfirmResetPasswordUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
+    const resetUserStatusToTrueUseCase = new ResetUserStatusToTrueUseCase(userRepoWriterPG, userRepoReaderPG, userMapper, sendEmailVerifShared, emailVerificationTokenRepoPG);
+    const confirmResetActivityUseCase = new ConfirmResetActivityUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
+
 
     // TODO : USER SERVICES
     const changeEmailService = new ChangeEmailTxService(txManager);
@@ -364,6 +395,8 @@ export function assembleContainer(io: Server)
     const blockSpecificUserService = new BlockSpecificUserTxService(txManager);
     const unblockSpecificUserService = new UnblockSpecificUserTxService(txManager);
     const getFullBlackListService = new GetFullBlackListTxService(txManager);
+    const restoreForgottenPasswordService = new ResetPasswordTxService(txManager);
+    const resetUserStatusToTrueService = new ResetUserStatusToTrueTxService(txManager);
 
     // TODO : USER CONTROLLERS
     const changeEmailController = new ChangeEmailController(changeEmailService, extractUserId);
@@ -377,6 +410,10 @@ export function assembleContainer(io: Server)
     const blockSpecificUserController = new BlockSpecificUserController(blockSpecificUserService, extractUserId);
     const unblockSpecificUserController = new UnblockSpecificUserController(unblockSpecificUserService, extractUserId);
     const getFullBlackListController = new GetFullBlackListController(getFullBlackListService, extractUserId);
+    const restoreForgottenPasswordController = new RestoreForgottenPasswordController(restoreForgottenPasswordService);
+    const confirmResetPasswordController = new ConfirmForgottenPasswordRestoreController(confirmResetPasswordUseCase);
+    const resetUserStatusToTrueController = new ResetUserStatusToTrueController(resetUserStatusToTrueService);
+    const confirmResetActivityController = new ConfirmResetActivityController(confirmResetActivityUseCase);
 
 
     // TODO : AUTHENTIFICATION
@@ -404,6 +441,8 @@ export function assembleContainer(io: Server)
         extractUserId
     );
 
+    const resendForgottenPasswordController = new ResendResetForgottenPasswordController(resendVerificationService);
+    const resendUserStatusToTrueController = new ResendUserStatusToTrueController(resendVerificationService);
 
 
     // TODO : CHAT
@@ -866,6 +905,7 @@ export function assembleContainer(io: Server)
     return {
         resendVerificationRegisterController,
         resendVerificationChangeEmailController,
+        resendForgottenPasswordController,
 
         // user
         changeEmailController,
@@ -879,6 +919,11 @@ export function assembleContainer(io: Server)
         blockSpecificUserController,
         unblockSpecificUserController,
         getFullBlackListController,
+        restoreForgottenPasswordController,
+        confirmResetPasswordController,
+        resetUserStatusToTrueController,
+        confirmResetActivityController,
+        resendUserStatusToTrueController,
 
         // jwt token service
         jwtTokenService,

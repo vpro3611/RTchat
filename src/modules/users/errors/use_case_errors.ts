@@ -25,6 +25,12 @@ export class PendingEmailNotFoundError extends ValidationError {
     }
 }
 
+export class PendingPasswordNotFoundError extends ValidationError {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
 export class CannotBlockYourselfError extends ConflictError {
     constructor(message: string) {
         super(message);

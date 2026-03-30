@@ -87,7 +87,7 @@ function formatDate(dateStr: string) {
         <q-btn icon="close" flat round dense v-close-popup />
       </q-card-section>
 
-      <q-card-section class="q-pa-none bg-grey-2" style="height: 60vh;">
+      <q-card-section class="q-pa-none" style="height: 60vh;">
         <q-scroll-area class="fit q-pa-md">
           <q-infinite-scroll @load="loadMore" :offset="100" v-if="SavedMessagesStore.messages.length > 0 || SavedMessagesStore.isLoading">
             

@@ -22,8 +22,12 @@ export class ConfirmEmailChangeUseCase {
 
         const record = await this.getRecord(tokenHash);
 
+        if (record.tokenType !== 'change') {
+            throw new InvalidTokenError('Invalid token type');
+        }
+
         await this.userRepoWriter.confirmPendingEmail(record.userId);
 
-        await this.verificationService.deleteByUserId(record.userId);
+        await this.verificationService.deleteByTokenHash(tokenHash);
     }
 }

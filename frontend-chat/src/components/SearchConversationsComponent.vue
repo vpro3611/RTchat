@@ -160,7 +160,6 @@ onMounted(() => {
       outlined
       dense
       class="q-mb-md discovery-search-input"
-      bg-color="white"
     >
       <template v-slot:prepend>
         <q-icon name="explore" color="primary" />
@@ -253,9 +252,12 @@ onMounted(() => {
 
 .discovery-result-card {
   border-radius: 10px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   cursor: default;
-  background: white;
+}
+
+.body--dark .discovery-result-card {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .member-card {
