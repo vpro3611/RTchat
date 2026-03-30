@@ -20,6 +20,7 @@ export class User {
         private last_seen_at: Date,
         private readonly created_at: Date,
         private updated_at: Date,
+        private avatar_id: string | null = null,
     ) {}
 
     static restore(
@@ -32,6 +33,7 @@ export class User {
         last_seen_at: Date,
         created_at: Date,
         updated_at: Date,
+        avatar_id: string | null = null,
     ): User {
         return new User(
             id,
@@ -43,6 +45,7 @@ export class User {
             last_seen_at,
             created_at,
             updated_at,
+            avatar_id,
         );
     }
 
@@ -110,6 +113,7 @@ export class User {
             new Date(),
             new Date(),
             new Date(),
+            null,
         );
     };
 
@@ -129,9 +133,8 @@ export class User {
         this.password = password;
         this.setUpdatedAt(new Date());
     }
-    setIsActive(): void {
-        this.ensureIsVerified();
-        this.is_active = !this.is_active;
+    setIsActiveTo(value: boolean): void {
+        this.is_active = value;
         this.setUpdatedAt(new Date());
     }
     setLastSeenAt(date: Date): void {
@@ -170,5 +173,8 @@ export class User {
     }
     getUpdatedAtString(): Date {
         return this.updated_at;
+    }
+    getAvatarId(): string | null {
+        return this.avatar_id;
     }
 }

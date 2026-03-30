@@ -4,8 +4,12 @@ import {
 import {ConversationRepositoryPg} from "../../repositories_pg_realization/conversation_repository_pg";
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {JoinConversationUseCase} from "../../application/participant/join_conversation_use_case";
-import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {RedisCacheService} from "../../../../container";
+import {ConversationBansRepositoryPg} from "../../repositories_pg_realization/conversation_bans_repository_pg";
+import {
+    ConversationRequestsRepositoryPg
+} from "../../repositories_pg_realization/conversation_requests_repository_pg";
+import {MapToRequestDto} from "../../shared/map_to_request_dto";
 
 
 export class JoinConversationTxService {
@@ -15,14 +19,18 @@ export class JoinConversationTxService {
     async joinConversationTxService(actorId: string, conversationId: string,) {
         return await this.txManager.runInTransaction(async (client) => {
             const conversationRepo = new ConversationRepositoryPg(client);
-            const participantMapper = new MapToParticipantDto();
             const participantRepo = new ParticipantRepositoryPg(client);
+            const conversationBansRepo = new ConversationBansRepositoryPg(client);
+            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client);
+            const requestMapper = new MapToRequestDto();
 
             const joinConversationUseCase = new JoinConversationUseCase(
                 conversationRepo,
                 participantRepo,
-                participantMapper,
-                RedisCacheService
+                RedisCacheService,
+                conversationBansRepo,
+                conversationRequestsRepo,
+                requestMapper
             );
 
             return await joinConversationUseCase.joinConversationUseCase(actorId, conversationId)

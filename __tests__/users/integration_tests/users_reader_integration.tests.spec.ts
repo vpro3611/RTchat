@@ -18,6 +18,13 @@ describe("UserRepoReaderPg (integration - transactional)", () => {
     beforeEach(async () => {
         client = await pool.connect();
         await client.query("BEGIN");
+
+        // Clean up before test
+        await client.query(`DELETE FROM users WHERE id IN ($1, $2)`, [
+            "11111111-1111-1111-1111-111111111111",
+            "22222222-2222-2222-2222-222222222222"
+        ]);
+
         repo = new UserRepoReaderPg(client);
     });
 

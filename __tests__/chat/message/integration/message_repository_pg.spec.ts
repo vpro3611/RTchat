@@ -23,6 +23,12 @@ describe("MessageRepositoryPg (integration)", () => {
         client = await pool.connect();
         await client.query("BEGIN");
 
+        // Clean up before test
+        await client.query(`DELETE FROM messages WHERE conversation_id = $1`, [CONVERSATION_ID]);
+        await client.query(`DELETE FROM conversation_participants WHERE conversation_id = $1`, [CONVERSATION_ID]);
+        await client.query(`DELETE FROM conversations WHERE id = $1`, [CONVERSATION_ID]);
+        await client.query(`DELETE FROM users WHERE id = $1`, [USER_ID]);
+
         repo = new MessageRepositoryPg(client);
 
         // user

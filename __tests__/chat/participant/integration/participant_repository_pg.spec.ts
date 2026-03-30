@@ -25,6 +25,11 @@ describe("ParticipantRepositoryPg (integration)", () => {
         client = await pool.connect();
         await client.query("BEGIN");
 
+        // Clean up before test
+        await client.query(`DELETE FROM conversation_participants WHERE conversation_id = $1`, [CONVERSATION_ID]);
+        await client.query(`DELETE FROM conversations WHERE id = $1`, [CONVERSATION_ID]);
+        await client.query(`DELETE FROM users WHERE id IN ($1, $2)`, [USER_A, USER_B]);
+
         repo = new ParticipantRepositoryPg(client);
 
         // users

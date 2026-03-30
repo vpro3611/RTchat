@@ -19,6 +19,10 @@ describe("RefreshTokenRepoPg (integration - transactional)", () => {
         client = await pool.connect();
         await client.query("BEGIN");
 
+        // Clean up before test
+        await client.query(`DELETE FROM refresh_tokens WHERE user_id = $1`, [userId]);
+        await client.query(`DELETE FROM users WHERE id = $1`, [userId]);
+
         repo = new RefreshTokenRepoPg(client);
 
         // создаём тестового юзера (FK требует)

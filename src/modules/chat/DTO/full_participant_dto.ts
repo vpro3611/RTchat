@@ -3,6 +3,7 @@
 export type FullParticipantDto = {
     conversationId: string,
     userId: string,
+    avatarId: string | null,
     role: string,
     canSendMessages: boolean,
     mutedUntil: Date | null,

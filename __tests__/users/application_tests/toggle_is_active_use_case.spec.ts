@@ -1,4 +1,4 @@
-import { ToggleIsActiveUseCase } from "../../../src/modules/users/application/toggle_status_use_case";
+import { ToggleIsActiveUseCase } from "../../../src/modules/users/application/toggle_status_use_case_to_false";
 import { User } from "../../../src/modules/users/domain/user";
 
 describe("ToggleIsActiveUseCase", () => {
@@ -62,25 +62,17 @@ describe("ToggleIsActiveUseCase", () => {
         });
     });
 
-    it("should toggle active from false to true", async () => {
+    it("should throw if user is already inactive", async () => {
         const user = createUser(false, true);
 
         lookup.getUserOrThrow.mockResolvedValue(user);
-        writer.save.mockResolvedValue(user);
-        mapper.mapToDto.mockReturnValue({
-            id: user.id,
-            is_active: true,
-        });
 
-        const result = await useCase.toggleIsActiveUseCase(user.id);
+        await expect(
+            useCase.toggleIsActiveUseCase(user.id)
+        ).rejects.toThrow();
 
-        expect(user.getIsActive()).toBe(true);
-        expect(writer.save).toHaveBeenCalledWith(user);
-        expect(mapper.mapToDto).toHaveBeenCalledWith(user);
-        expect(result).toEqual({
-            id: user.id,
-            is_active: true,
-        });
+        expect(writer.save).not.toHaveBeenCalled();
+        expect(mapper.mapToDto).not.toHaveBeenCalled();
     });
 
     it("should throw if user is not verified", async () => {

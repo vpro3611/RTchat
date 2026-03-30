@@ -7,6 +7,8 @@ describe("ChangeEmailUseCase", () => {
     let writer: any;
     let mapper: any;
     let userLookup: any;
+    let sendEmailVerifShared: any;
+    let emailVerificationService: any;
     let useCase: ChangeEmailUseCase;
     let user: User;
 
@@ -17,6 +19,7 @@ describe("ChangeEmailUseCase", () => {
 
         writer = {
             save: jest.fn(),
+            setPendingEmail: jest.fn(),
         };
 
         mapper = {
@@ -27,11 +30,21 @@ describe("ChangeEmailUseCase", () => {
             getUserOrThrow: jest.fn(),
         };
 
+        sendEmailVerifShared = {
+            sendIt: jest.fn(),
+        };
+
+        emailVerificationService = {
+            deleteByUserIdAndType: jest.fn(),
+        };
+
         useCase = new ChangeEmailUseCase(
             reader,
             writer,
             mapper,
-            userLookup
+            userLookup,
+            sendEmailVerifShared,
+            emailVerificationService
         );
 
         user = User.restore(
@@ -50,7 +63,8 @@ describe("ChangeEmailUseCase", () => {
     it("should change email successfully", async () => {
         userLookup.getUserOrThrow.mockResolvedValue(user);
         reader.getUserByEmail.mockResolvedValue(null);
-        writer.save.mockResolvedValue(user);
+        writer.setPendingEmail.mockResolvedValue(undefined);
+        sendEmailVerifShared.sendIt.mockResolvedValue(undefined);
 
         mapper.mapToDto.mockReturnValue({
             id: user.id,
@@ -65,12 +79,18 @@ describe("ChangeEmailUseCase", () => {
         expect(reader.getUserByEmail)
             .toHaveBeenCalledWith("new@example.com");
 
-        expect(writer.save).toHaveBeenCalledWith(user);
+        expect(writer.setPendingEmail).toHaveBeenCalledWith(user.id, "new@example.com");
+
+        expect(emailVerificationService.deleteByUserIdAndType).toHaveBeenCalledWith(user.id, "change");
+
+        expect(sendEmailVerifShared.sendIt).toHaveBeenCalledWith(
+            "new@example.com",
+            user,
+            "/public/confirm-email-change",
+            "change"
+        );
 
         expect(mapper.mapToDto).toHaveBeenCalledWith(user);
-
-        expect(user.getEmail().getValue())
-            .toBe("new@example.com");
 
         expect(result).toEqual({
             id: user.id,
@@ -90,52 +110,6 @@ describe("ChangeEmailUseCase", () => {
         expect(mapper.mapToDto).not.toHaveBeenCalled();
     });
 
-    it("should throw if user is inactive", async () => {
-        const inactiveUser = User.restore(
-            user.id,
-            "testuser",
-            "old@example.com",
-            "hash",
-            false,
-            true,
-            new Date(),
-            new Date(),
-            new Date()
-        );
-
-        userLookup.getUserOrThrow.mockResolvedValue(inactiveUser);
-        reader.getUserByEmail.mockResolvedValue(null);
-
-        await expect(
-            useCase.changeEmailUseCase(user.id, "new@example.com")
-        ).rejects.toThrow();
-
-        expect(writer.save).not.toHaveBeenCalled();
-    });
-
-    it("should throw if user is not verified", async () => {
-        const notVerifiedUser = User.restore(
-            user.id,
-            "testuser",
-            "old@example.com",
-            "hash",
-            true,
-            false,
-            new Date(),
-            new Date(),
-            new Date()
-        );
-
-        userLookup.getUserOrThrow.mockResolvedValue(notVerifiedUser);
-        reader.getUserByEmail.mockResolvedValue(null);
-
-        await expect(
-            useCase.changeEmailUseCase(user.id, "new@example.com")
-        ).rejects.toThrow();
-
-        expect(writer.save).not.toHaveBeenCalled();
-    });
-
     it("should throw if email is invalid", async () => {
         await expect(
             useCase.changeEmailUseCase(user.id, "invalid-email")
@@ -153,6 +127,6 @@ describe("ChangeEmailUseCase", () => {
             useCase.changeEmailUseCase(user.id, "new@example.com")
         ).rejects.toThrow("USER_NOT_FOUND");
 
-        expect(writer.save).not.toHaveBeenCalled();
+        expect(writer.setPendingEmail).not.toHaveBeenCalled();
     });
 });

@@ -19,6 +19,17 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
     beforeEach(async () => {
         client = await pool.connect();
         await client.query("BEGIN");
+
+        // Clean up related tables first (due to FK constraints)
+        await client.query(`DELETE FROM conversation_reads`);
+        await client.query(`DELETE FROM messages`);
+        await client.query(`DELETE FROM conversation_participants`);
+        await client.query(`DELETE FROM conversations`);
+        await client.query(`DELETE FROM user_blocks`);
+        await client.query(`DELETE FROM refresh_tokens`);
+        await client.query(`DELETE FROM email_verification_tokens`);
+        await client.query(`DELETE FROM users`);
+
         repo = new UserRepoWriterPg(client);
     });
 
@@ -75,7 +86,9 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
         await repo.save(user);
 
         const updatedUser = createTestUser({
+            id: user.id,
             username: "updateduser",
+            email: "test@example.com",
         });
 
         const saved = await repo.save(updatedUser);
@@ -111,6 +124,7 @@ describe("UserRepoWriterPg (integration - transactional)", () => {
     it("should throw DATABASE_QUERY_ERROR", async () => { // the contract has changed, and now we do not have invalid uuid
         const user = createTestUser({
             id: "invalid-query",
+            email: "invalidquery@test.com",
         });
 
         await expect(repo.save(user))

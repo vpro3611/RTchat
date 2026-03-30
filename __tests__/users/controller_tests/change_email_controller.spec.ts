@@ -57,9 +57,10 @@ describe("ChangeEmailController (HTTP)", () => {
         email: "new@mail.com",
         isActive: true,
         isVerified: true,
+        avatarId: null,
         lastSeenAt: "",
         createdAt: "",
-        updated_at: ""
+        updatedAt: ""
     };
 
     // -------------------------

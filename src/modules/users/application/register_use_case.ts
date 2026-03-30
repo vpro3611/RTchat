@@ -14,6 +14,7 @@ import * as crypto from "node:crypto";
 import {
     EmailVerificationInterface
 } from "../../infrasctructure/ports/email_verif_infra/email_verification/email_verification_interface";
+import {SendVerifEmailShared} from "../shared/send_verif_email_shared";
 import {UserMapper} from "../shared/map_to_dto";
 
 
@@ -21,9 +22,9 @@ export class RegisterUseCase {
     constructor(private readonly userRepoReader: UserRepoReader,
                 private readonly userRepoWriter: UserRepoWriter,
                 private readonly bcrypter: BcryptInterface,
-                private readonly emailSender: EmailSenderInterface,
-                private readonly emailVerificationRepo: EmailVerificationInterface,
-                private readonly mapper: UserMapper
+                private readonly mapper: UserMapper,
+                private readonly sendVerifEmailShared: SendVerifEmailShared,
+                private readonly emailVerificationService: EmailVerificationInterface,
     ) {}
 
 
@@ -59,19 +60,24 @@ export class RegisterUseCase {
 
         const saved = await this.userRepoWriter.save(user);
 
-        const rawToken = crypto.randomBytes(32).toString('hex');
+        // Clear any old registration tokens for this user (e.g. if they retry registration)
+        await this.emailVerificationService.deleteByUserIdAndType(saved.id, "register");
 
-        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+        await this.sendVerifEmailShared.sendIt(emailValid.getValue(), saved, "/public/verify-email", "register");
 
-        await this.emailVerificationRepo.saveToken({
-            id: crypto.randomUUID(),
-            userId: saved.id,
-            tokenHash: tokenHash,
-            createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 1000 * 60 * 60),
-        })
-
-        await this.emailSender.sendVerificationEmail(emailValid.getValue(), rawToken);
+        // const rawToken = crypto.randomBytes(32).toString('hex');
+        //
+        // const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+        //
+        // await this.emailVerificationRepo.saveToken({
+        //     id: crypto.randomUUID(),
+        //     userId: saved.id,
+        //     tokenHash: tokenHash,
+        //     createdAt: new Date(),
+        //     expiresAt: new Date(Date.now() + 1000 * 60 * 60),
+        // })
+        //
+        // await this.emailSender.sendVerificationEmail(emailValid.getValue(), rawToken);
 
         return this.mapper.mapToDto(saved);
     }

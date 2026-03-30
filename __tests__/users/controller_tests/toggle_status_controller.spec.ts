@@ -1,8 +1,8 @@
 import express from "express";
 import request from "supertest";
 
-import { ToggleStatusController } from "../../../src/modules/users/controllers/toggle_status_controller";
-import { ToggleStatusTxService } from "../../../src/modules/users/transactional_services/toggle_status_tx_service";
+import { ToggleStatusController } from "../../../src/modules/users/controllers/toggle_status_controller_to_false";
+import { ToggleStatusTxService } from "../../../src/modules/users/transactional_services/toggle_status_tx_service_to_false";
 import { ExtractUserIdFromReq } from "../../../src/modules/users/shared/extract_user_id_from_req";
 import { errorMiddleware } from "../../../src/modules/middlewares/error_middleware";
 
@@ -40,9 +40,10 @@ describe("ToggleStatusController (HTTP)", () => {
         email: "test@mail.com",
         isActive: false,
         isVerified: true,
+        avatarId: null,
         lastSeenAt: "",
         createdAt: "",
-        updated_at: ""
+        updatedAt: ""
     };
 
     // -------------------------

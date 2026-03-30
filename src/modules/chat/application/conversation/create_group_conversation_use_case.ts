@@ -25,7 +25,7 @@ export class CreateGroupConversationUseCase {
         const owner = Participant.createAsOwner(conversation.id, actorId);
 
         await this.participantRepo.save(owner);
-
+        
         await this.cacheService.delByPattern(`conv:user:${actorId}:*`);
 
         return this.conversationMapper.mapToConversationDto(conversation);

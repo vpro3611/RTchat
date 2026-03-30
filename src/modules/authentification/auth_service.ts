@@ -18,6 +18,7 @@ import {
     EmailVerificationUseCase
 } from "../infrasctructure/ports/email_verif_infra/email_verif_service/email_verification_use_case";
 import {InvalidTokenJWTError, TokenExpiredError} from "./errors/token_errors";
+import {SendVerifEmailShared} from "../users/shared/send_verif_email_shared";
 
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -51,6 +52,7 @@ export class AuthService {
     async refresh(refreshToken: string) {
         return this.txManager.runInTransaction(async (client) => {
             const refreshRepo = new RefreshTokenRepoPg(client);
+            const userRepoReader = new UserRepoReaderPg(client);
 
             const payload = this.jwtService.verifyRefreshToken(refreshToken);
 
@@ -65,6 +67,13 @@ export class AuthService {
             if (existingToken.expiresAt < new Date()) {
                 throw new TokenExpiredError("Refresh token expired");
             }
+
+            const user = await userRepoReader.getUserById(payload.sub);
+            if (!user) {
+                throw new InvalidTokenJWTError("User not found");
+            }
+
+            user.canLogin();
 
             await refreshRepo.revoke(existingToken.id);
 
@@ -81,7 +90,16 @@ export class AuthService {
             const emailVerifRepo = new EmailVerificationTokenRepoPg(client);
             const mapper = new UserMapper();
 
-            const registerUseCase = new RegisterUseCase(userRepoReader, userRepoWriter, bcrypter, emailSender, emailVerifRepo, mapper);
+            const sendVerifEmailShared = new SendVerifEmailShared(emailSender, emailVerifRepo);
+
+            const registerUseCase = new RegisterUseCase(
+                userRepoReader,
+                userRepoWriter,
+                bcrypter,
+                mapper,
+                sendVerifEmailShared,
+                emailVerifRepo
+            );
 
             const user = await registerUseCase.registerUseCase(username, email, password);
 

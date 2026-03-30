@@ -52,9 +52,10 @@ describe("LoginUsernameController (HTTP)", () => {
         email: "test@mail.com",
         isActive: true,
         isVerified: true,
+        avatarId: null,
         lastSeenAt: "2024-01-01T00:00:00Z",
         createdAt: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-01T00:00:00Z"
+        updatedAt: "2024-01-01T00:00:00Z"
     };
 
     // -------------------------

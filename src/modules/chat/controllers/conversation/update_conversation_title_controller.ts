@@ -4,6 +4,7 @@ import {
 import {ExtractActorId} from "../../shared/extract_actor_id_req";
 import {Request, Response} from "express";
 import {z} from "zod";
+import {Server} from "socket.io";
 
 export const UpdateConversationTitleBodySchema = z.object({
     title: z.string().min(1)
@@ -20,7 +21,8 @@ type UpdateConversationTitleParamsSchemaType = z.infer<typeof UpdateConversation
 
 export class UpdateConversationTitleController {
     constructor(private readonly updateConversationTitleService: UpdateConversationTitleTxService,
-                private readonly extractActorId: ExtractActorId
+                private readonly extractActorId: ExtractActorId,
+                private readonly io: Server
     ) {}
 
     updateConversationTitleCont =
@@ -37,6 +39,11 @@ export class UpdateConversationTitleController {
                 conversationId,
                 title
             )
+
+            this.io.to(conversationId).emit("conversation:updated", {
+                conversationId,
+                conversation: result
+            });
 
             return res.status(200).json(result);
         }

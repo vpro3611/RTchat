@@ -67,10 +67,16 @@ export class MessageRepositoryPg implements MessageRepoInterface {
         try {
             const params: any[] = [conversationId];
             let cursorCondition = "";
+            let orderBy = "ORDER BY created_at ASC";
 
+            // При первом запросе (без курсора) - получаем последние сообщения (новые)
+            // При пагинации (с курсором) - получаем более старые сообщения
             if (cursor) {
                 params.push(cursor);
-                cursorCondition = `AND created_at > $${params.length}`;
+                cursorCondition = `AND created_at < $${params.length}`;
+                orderBy = "ORDER BY created_at ASC";
+            } else {
+                orderBy = "ORDER BY created_at DESC";
             }
 
             params.push(limit + 1);
@@ -81,7 +87,7 @@ export class MessageRepositoryPg implements MessageRepoInterface {
                     FROM messages
                     WHERE conversation_id = $1
                         ${cursorCondition}
-                    ORDER BY created_at DESC
+                    ${orderBy}
                         LIMIT $${params.length}
                 `,
                 params
@@ -97,6 +103,11 @@ export class MessageRepositoryPg implements MessageRepoInterface {
             }
 
             const items = rows.map(row => this.mapToMessage(row));
+
+            // При первом запросе переворачиваем, чтобы старые были сверху
+            if (!cursor) {
+                items.reverse();
+            }
 
             return {items, nextCursor};
         } catch (error) {

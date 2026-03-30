@@ -139,28 +139,14 @@ describe("CacheService", () => {
 
     it("should delete keys by pattern", async () => {
 
-        const del = jest.fn();
-
-        const exec = jest.fn();
-
-        redis.multi.mockReturnValue({
-            del,
-            exec
-        });
-
-        async function* keys() {
-            yield "user:1";
-            yield "user:2";
-        }
-
-        redis.scanIterator.mockReturnValue(keys());
+        redis.scanIterator.mockReturnValue([
+            ["user:1", "user:2"]
+        ]);
+        redis.del.mockResolvedValue(2);
 
         await cache.delByPattern("user:*");
 
-        expect(del).toHaveBeenCalledWith("user:1");
-        expect(del).toHaveBeenCalledWith("user:2");
-
-        expect(exec).toHaveBeenCalled();
+        expect(redis.del).toHaveBeenCalledWith(["user:1", "user:2"]);
     });
 
 });

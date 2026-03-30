@@ -22,6 +22,11 @@ describe("ConversationRepositoryPg (integration)", () => {
         client = await pool.connect();
         await client.query("BEGIN");
 
+        // Clean up before test
+        await client.query(`DELETE FROM conversation_participants WHERE user_id IN ($1, $2)`, [USER_A, USER_B]);
+        await client.query(`DELETE FROM conversations WHERE user_low IN ($1, $2) OR user_high IN ($1, $2) OR created_by IN ($1, $2)`, [USER_A, USER_B]);
+        await client.query(`DELETE FROM users WHERE id IN ($1, $2)`, [USER_A, USER_B]);
+
         repo = new ConversationRepositoryPg(client);
 
         // создаём пользователей для FK

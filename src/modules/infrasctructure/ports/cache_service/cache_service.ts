@@ -45,15 +45,20 @@ export class CacheService implements CacheServiceInterface {
     }
 
     async delByPattern(pattern: string) {
-        const pipeline = this.redis.multi();
+        const keys: string[] = [];
 
-        for await (const key of this.redis.scanIterator({
+        for await (const chunk of this.redis.scanIterator({
             MATCH: pattern,
             COUNT: 100
         })) {
-            pipeline.del(key);
+            if (Array.isArray(chunk)) {
+                keys.push(...chunk);
+            }
         }
-        await pipeline.exec();
+
+        if (keys.length > 0) {
+            await this.redis.del(keys)
+        }
     }
 }
 

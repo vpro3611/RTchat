@@ -3,6 +3,7 @@ import {ExtractActorId} from "../../shared/extract_actor_id_req";
 import {Request, Response} from "express";
 import {z} from "zod";
 import {MuteDuration} from "../../domain/participant/mute_duration";
+import {Server} from "socket.io";
 
 export const MuteParticipantParamsSchema = z.object({
     conversationId: z.string().uuid(),
@@ -24,7 +25,8 @@ type MuteDurationSchemaType = z.infer<typeof MuteParticipantBodySchema>;
 
 export class MuteParticipantController {
     constructor(private readonly muteParticipantService: MuteParticipantTxService,
-                private readonly extractActorId: ExtractActorId
+                private readonly extractActorId: ExtractActorId,
+                private readonly io: Server
     ) {}
 
 
@@ -43,6 +45,11 @@ export class MuteParticipantController {
                 conversationId,
                 duration
             );
+
+            this.io.to(conversationId).emit("participant:updated", {
+                conversationId,
+                participant: result
+            });
 
             return res.status(200).json(result);
         }

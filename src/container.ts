@@ -16,11 +16,11 @@ import {LoginEmailUseCase} from "./modules/users/application/login_email_use_cas
 import {LoginUsernameUseCase} from "./modules/users/application/login_username_use_case";
 import {RegisterUseCase} from "./modules/users/application/register_use_case";
 import {EmailSenderNodemailer} from "./modules/infrasctructure/ports/email_verif_infra/email_sender/email_sender";
-import {ToggleIsActiveUseCase} from "./modules/users/application/toggle_status_use_case";
+import {ToggleIsActiveUseCase} from "./modules/users/application/toggle_status_use_case_to_false";
 import {ChangeEmailTxService} from "./modules/users/transactional_services/change_email_tx_service";
 import {ChangePasswordTxService} from "./modules/users/transactional_services/change_password_tx_service";
 import {ChangeUsernameTxService} from "./modules/users/transactional_services/change_username_tx_service";
-import {ToggleStatusTxService} from "./modules/users/transactional_services/toggle_status_tx_service";
+import {ToggleStatusTxService} from "./modules/users/transactional_services/toggle_status_tx_service_to_false";
 import {
     EmailVerificationUseCase
 } from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/email_verification_use_case";
@@ -36,7 +36,7 @@ import {ChangeEmailController} from "./modules/users/controllers/change_email_co
 import {ExtractUserIdFromReq} from "./modules/users/shared/extract_user_id_from_req";
 import {ChangePasswordController} from "./modules/users/controllers/change_password_controller";
 import {ChangeUsernameController} from "./modules/users/controllers/change_username_controller";
-import {ToggleStatusController} from "./modules/users/controllers/toggle_status_controller";
+import {ToggleStatusController} from "./modules/users/controllers/toggle_status_controller_to_false";
 import {CacheService} from "./modules/infrasctructure/ports/cache_service/cache_service";
 import {redisClient} from "./modules/infrasctructure/ports/cache_service/reddis_client";
 import {ConversationRepositoryPg} from "./modules/chat/repositories_pg_realization/conversation_repository_pg";
@@ -138,10 +138,193 @@ import {
 import {GetSpecificMessageUseCase} from "./modules/chat/application/message/get_specific_message_use_case";
 import {GetSpecificMessageService} from "./modules/chat/transactional_services/message/get_specific_message_service";
 import {GetSpecificMessageController} from "./modules/chat/controllers/message/get_specific_message_controller";
+import {GetSelfProfileUseCase} from "./modules/users/application/get_self_profile_use_case";
+import {GetSelfProfileTxService} from "./modules/users/transactional_services/get_self_profile_tx_service";
+import {GetSelfProfileController} from "./modules/users/controllers/get_self_profile_controller";
+import {SearchConversationUseCase} from "./modules/chat/application/conversation/search_conversations_use_case";
+import {SearchUsersUseCase} from "./modules/users/application/search_users_use_case";
+import {SearchUsersTxService} from "./modules/users/transactional_services/search_users_tx_service";
+import {
+    SearchConversationsService
+} from "./modules/chat/transactional_services/conversation/search_conversations_service";
+import {SearchConversationsController} from "./modules/chat/controllers/conversation/search_conversations_controller";
+import {SearchUsersController} from "./modules/users/controllers/search_users_controller";
+import {GetSpecificUserUseCase} from "./modules/users/application/get_specific_user_use_case";
+import {GetSpecificUserTxService} from "./modules/users/transactional_services/get_specific_user_tx_service";
+import {GetSpecificUserController} from "./modules/users/controllers/get_specific_user_controller";
+import {SendVerifEmailShared} from "./modules/users/shared/send_verif_email_shared";
+import {ConfirmEmailChangeController} from "./modules/users/controllers/confirm_email_change_controller";
+import {
+    ConfirmEmailChangeUseCase
+} from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/confirm_email_change_use_case";
+import {
+    ResendVerificationService
+} from "./modules/infrasctructure/ports/email_verif_infra/email_sender/resend_verification_service";
+import {
+    ResendRegisterVerificationController
+} from "./modules/users/controllers/resend_register_verification_controller";
+import {
+    ResendChangeEmailVerificationController
+} from "./modules/users/controllers/resend_change_email_verification_controller";
+import {UserToUserBlocksPg} from "./modules/users/repositories/user_to_user_blocks_pg";
+import {BlockSpecificUserUseCase} from "./modules/users/application/block_specific_user_use_case";
+import {UnblockSpecificUserUseCase} from "./modules/users/application/unblock_specific_user_use_case";
+import {BlockSpecificUserTxService} from "./modules/users/transactional_services/block_specific_user_tx_service";
+import {UnblockSpecificUserTxService} from "./modules/users/transactional_services/unblock_specific_user_tx_service";
+import {BlockSpecificUserController} from "./modules/users/controllers/block_specific_user_controller";
+import {UnblockSpecificUserController} from "./modules/users/controllers/unblock_specific_user_controller";
+import {GetFullBlackListUseCase} from "./modules/users/application/get_full_black_list_use_case";
+import {GetFullBlackListTxService} from "./modules/users/transactional_services/get_full_black_list_tx_service";
+import {GetFullBlackListController} from "./modules/users/controllers/get_full_black_list_controller";
+import {ConversationBansRepositoryPg} from "./modules/chat/repositories_pg_realization/conversation_bans_repository_pg";
+import {BanGroupParticipantUseCase} from "./modules/chat/application/participant/ban_group_participant_use_case";
+import {UnbanGroupParticipantUseCase} from "./modules/chat/application/participant/unban_group_participant_use_case";
+import {GetBannedUsersUseCase} from "./modules/chat/application/participant/get_banned_users_use_case";
+import {
+    BanGroupParticipantService
+} from "./modules/chat/transactional_services/participant/ban_group_participant_service";
+import {
+    UnbanGroupParticipantService
+} from "./modules/chat/transactional_services/participant/unban_group_participant_service";
+import {GetBannedUsersService} from "./modules/chat/transactional_services/participant/get_banned_users_service";
+import {BanGroupParticipantController} from "./modules/chat/controllers/participant/ban_group_participant_controller";
+import {
+    UnbanGroupParticipantController
+} from "./modules/chat/controllers/participant/unban_group_participant_controller";
+import {GetBannedUsersController} from "./modules/chat/controllers/participant/get_banned_users_controller";
+import {
+    ConversationRequestsRepositoryPg
+} from "./modules/chat/repositories_pg_realization/conversation_requests_repository_pg";
+import {MapToRequestDto} from "./modules/chat/shared/map_to_request_dto";
+import {
+    ChangeRequestStatusUseCase
+} from "./modules/chat/application/conversation_requests/change_request_status_use_case";
+import {WithdrawRequestUseCase} from "./modules/chat/application/conversation_requests/withdraw_request_use_case";
+import {
+    CreateConversationRequestUseCase
+} from "./modules/chat/application/conversation_requests/create_conversation_request_use_case";
+import {
+    ChangeRequestStatusService
+} from "./modules/chat/transactional_services/conversation_requests/change_request_status_service";
+import {
+    WithdrawRequestService
+} from "./modules/chat/transactional_services/conversation_requests/withdraw_request_service";
+import {
+    CreateConversationRequestService
+} from "./modules/chat/transactional_services/conversation_requests/cretate_conversation_reques_service";
+import {
+    ChangeConversationRequestStatusController
+} from "./modules/chat/controllers/conversation_requests/change_conversation_request_status_controller";
+import {
+    WithdrawConversationRequestController
+} from "./modules/chat/controllers/conversation_requests/withdraw_conversation_request_controller";
+import {
+    CreateConversationRequestController
+} from "./modules/chat/controllers/conversation_requests/create_conversation_request_controller";
+import {GetAllRequestListUseCase} from "./modules/chat/application/conversation_requests/get_all_requst_list_use_case";
+import {
+    GetAllRequestListService
+} from "./modules/chat/transactional_services/conversation_requests/get_all_request_list_service";
+import {
+    GetAllRequestListController
+} from "./modules/chat/controllers/conversation_requests/get_all_request_list_controller";
+import {GetUsersRequestsUseCase} from "./modules/chat/application/conversation_requests/get_users_requests_use_case";
+import {RemoveRequestUseCase} from "./modules/chat/application/conversation_requests/remove_request_use_case";
+import {
+    GetUsersRequestsService
+} from "./modules/chat/transactional_services/conversation_requests/get_users_requests_service";
+import {RemoveRequestService} from "./modules/chat/transactional_services/conversation_requests/remove_request_service";
+import {GetUsersRequestController} from "./modules/chat/controllers/conversation_requests/get_users_request_controller";
+import {RemoveRequestController} from "./modules/chat/controllers/conversation_requests/remove_request_controller";
+import {
+    GetSpecificRequestUserUseCase
+} from "./modules/chat/application/conversation_requests/get_specific_request_user_use_case";
+import {
+    GetSpecificRequestGroupUseCase
+} from "./modules/chat/application/conversation_requests/get_specific_request_group_use_case";
+import {
+    GetSpecificRequestUserService
+} from "./modules/chat/transactional_services/conversation_requests/get_specific_request_user_service";
+import {
+    GetSpecificRequestGroupService
+} from "./modules/chat/transactional_services/conversation_requests/get_specific_request_group_service";
+import {
+    GetSpecificRequestUserController
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_user_controller";
+import {
+    GetSpecificRequestGroupController
+} from "./modules/chat/controllers/conversation_requests/get_specific_request_group_controller";
+import {
+    AddParticipantToConversationUseCase
+} from "./modules/chat/application/participant/add_participant_to_conversation_use_case";
+import {
+    AddParticipantToConversationTxService
+} from "./modules/chat/transactional_services/participant/add_participant_to_conversation_tx_service";
+import {
+    AddParticipantToAConversationController
+} from "./modules/chat/controllers/participant/add_participant_to_a_conversation_controller";
+import {GetSavedMessagesListUseCase} from "./modules/chat/application/saved_messages/get_saved_messages_list_use_case";
+import {SavedMessagesRepoPg} from "./modules/chat/repositories_pg_realization/saved_messages_repo_pg";
+import {MapToSavedMessageDto} from "./modules/chat/shared/map_to_saved_message_dto";
+import {
+    GetSpecificSavedMessageUseCase
+} from "./modules/chat/application/saved_messages/get_specific_saved_message_use_case";
+import {RemoveSavedMessageUseCase} from "./modules/chat/application/saved_messages/remove_saved_message_use_case";
+import {SaveMessageUseCase} from "./modules/chat/application/saved_messages/save_message_use_case";
+import {
+    GetSavedMessagesListService
+} from "./modules/chat/transactional_services/saved_messages/get_saved_messages_list_service";
+import {
+    GetSpecificSavedMessageService
+} from "./modules/chat/transactional_services/saved_messages/get_specific_saved_message_service";
+import {
+    RemoveSavedMessageService
+} from "./modules/chat/transactional_services/saved_messages/remove_saved_message_service";
+import {SaveMessageService} from "./modules/chat/transactional_services/saved_messages/save_message_service";
+import {
+    GetSavedMessagesListController
+} from "./modules/chat/controllers/saved_messages/get_saved_messages_list_controller";
+import {
+    GetSpecificSavedMessageController
+} from "./modules/chat/controllers/saved_messages/get_specific_saved_message_controller";
+import {RemoveSavedMessageController} from "./modules/chat/controllers/saved_messages/remove_saved_message_controller";
+import {SaveMessageController} from "./modules/chat/controllers/saved_messages/save_message_controller";
+import {AvatarRepositoryPg} from "./modules/chat/repositories_pg_realization/avatar_repository_pg";
+import {GetAvatarUseCase} from "./modules/chat/application/avatar/get_avatar_use_case";
+import {GetAvatarController} from "./modules/chat/controllers/avatar/get_avatar_controller";
+import {SetUserAvatarTxService} from "./modules/chat/transactional_services/avatar/set_user_avatar_tx_service";
+import {DeleteUserAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_user_avatar_tx_service";
+import {SetUserAvatarController} from "./modules/chat/controllers/avatar/set_user_avatar_controller";
+import {DeleteUserAvatarController} from "./modules/chat/controllers/avatar/delete_user_avatar_controller";
+import {SetConversationAvatarTxService} from "./modules/chat/transactional_services/avatar/set_conversation_avatar_tx_service";
+import {DeleteConversationAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_conversation_avatar_tx_service";
+import {SetConversationAvatarController} from "./modules/chat/controllers/avatar/set_conversation_avatar_controller";
+import {DeleteConversationAvatarController} from "./modules/chat/controllers/avatar/delete_conversation_avatar_controller";
+import {Server} from "socket.io";
+import {RestoreForgottenPasswordUseCase} from "./modules/users/application/restore_forgotten_password_use_case";
+import {ResetPasswordTxService} from "./modules/users/transactional_services/reset_password_tx_service";
+import {RestoreForgottenPasswordController} from "./modules/users/controllers/restore_forgotten_password_controller";
+import {
+    ConfirmResetPasswordUseCase
+} from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/confirm_reset_password_use_case";
+import {
+    ConfirmForgottenPasswordRestoreController
+} from "./modules/users/controllers/confirm_forgotten_password_restore_controller";
+import {
+    ResendResetForgottenPasswordController
+} from "./modules/users/controllers/resend_reset_forgotten_password_controller";
+import {ResetUserStatusToTrueUseCase} from "./modules/users/application/reset_user_status_to_true_use_case";
+import {ResetUserStatusToTrueTxService} from "./modules/users/transactional_services/reset_user_status_to_true_tx_service";
+import {ResetUserStatusToTrueController} from "./modules/users/controllers/reset_user_status_to_true_controller";
+import {
+    ConfirmResetActivityUseCase
+} from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/confirm_reset_activity_use_case";
+import {ConfirmResetActivityController} from "./modules/users/controllers/confirm_reset_activity_controller";
+import {ResendUserStatusToTrueController} from "./modules/users/controllers/resend_user_status_to_true_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
-export function assembleContainer()
+export function assembleContainer(io: Server)
 {
 
 
@@ -154,6 +337,7 @@ export function assembleContainer()
     // TODO : USERS REPOSITORIES
     const userRepoReaderPG = new UserRepoReaderPg(pool);
     const userRepoWriterPG = new UserRepoWriterPg(pool);
+    const userToUserBlocksPG = new UserToUserBlocksPg(pool);
 
     // TODO : SHARED FOR USER
     const userMapper = new UserMapper();
@@ -171,27 +355,66 @@ export function assembleContainer()
 
     const jwtTokenService = new TokenServiceJWT();
 
+    const sendEmailVerifShared = new SendVerifEmailShared(emailSender, emailVerificationTokenRepoPG);
 
     // TODO : USER USE CASES
-    const changeEmailUseCase = new ChangeEmailUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup);
+    const changeEmailUseCase = new ChangeEmailUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup, sendEmailVerifShared, emailVerificationTokenRepoPG);
     const changePasswordUseCase = new ChangePasswordUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, userMapper, userLookup);
     const changeUsernameUseCase = new ChangeUsernameUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup);
     const loginEmailUseCase = new LoginEmailUseCase(userRepoReaderPG, bcrypter, userMapper);
     const loginUsernameUseCase = new LoginUsernameUseCase(userRepoReaderPG, bcrypter, userMapper);
-    const registerUseCase = new RegisterUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, emailSender, emailVerificationTokenRepoPG, userMapper);
+    const registerUseCase = new RegisterUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, userMapper, sendEmailVerifShared, emailVerificationTokenRepoPG);
     const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriterPG, userMapper, userLookup);
+    const getSelfProfileUseCase = new GetSelfProfileUseCase(userLookup);
+    const searchUsersUseCase = new SearchUsersUseCase(userRepoReaderPG, userLookup, userMapper, RedisCacheService);
+    const getSpecificUserUseCase = new GetSpecificUserUseCase(userLookup, userMapper);
+    const confirmEmailChangeUseCase = new ConfirmEmailChangeUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
+    const blockSpecificUserUseCase = new BlockSpecificUserUseCase(userToUserBlocksPG, userRepoReaderPG, userMapper);
+    const unblockSpecificUserUseCase = new UnblockSpecificUserUseCase(userToUserBlocksPG, userRepoReaderPG, userMapper);
+    const getFullBlackListUseCase = new GetFullBlackListUseCase(userToUserBlocksPG, userLookup, userMapper);
+    const restoreForgottenPasswordUseCase = new RestoreForgottenPasswordUseCase(
+        userRepoWriterPG,
+        userRepoReaderPG,
+        sendEmailVerifShared,
+        userMapper,
+        bcrypter
+    );
+    const confirmResetPasswordUseCase = new ConfirmResetPasswordUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
+    const resetUserStatusToTrueUseCase = new ResetUserStatusToTrueUseCase(userRepoWriterPG, userRepoReaderPG, userMapper, sendEmailVerifShared, emailVerificationTokenRepoPG);
+    const confirmResetActivityUseCase = new ConfirmResetActivityUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
+
 
     // TODO : USER SERVICES
     const changeEmailService = new ChangeEmailTxService(txManager);
     const changePasswordService = new ChangePasswordTxService(txManager);
     const changeUsernameService = new ChangeUsernameTxService(txManager);
     const toggleStatusService = new ToggleStatusTxService(txManager);
+    const getSelfProfileService = new GetSelfProfileTxService(txManager);
+    const searchUsersService = new SearchUsersTxService(txManager);
+    const getSpecificUserService = new GetSpecificUserTxService(txManager);
+    const blockSpecificUserService = new BlockSpecificUserTxService(txManager);
+    const unblockSpecificUserService = new UnblockSpecificUserTxService(txManager);
+    const getFullBlackListService = new GetFullBlackListTxService(txManager);
+    const restoreForgottenPasswordService = new ResetPasswordTxService(txManager);
+    const resetUserStatusToTrueService = new ResetUserStatusToTrueTxService(txManager);
 
     // TODO : USER CONTROLLERS
     const changeEmailController = new ChangeEmailController(changeEmailService, extractUserId);
     const changePasswordController = new ChangePasswordController(changePasswordService, extractUserId);
     const changeUsernameController = new ChangeUsernameController(changeUsernameService, extractUserId);
     const toggleStatusController = new ToggleStatusController(toggleStatusService, extractUserId);
+    const getSelfProfileController = new GetSelfProfileController(getSelfProfileService, extractUserId);
+    const searchUsersController = new SearchUsersController(searchUsersService, extractUserId);
+    const getSpecificUserController = new GetSpecificUserController(getSpecificUserService, extractUserId);
+    const confirmEmailChangeController = new ConfirmEmailChangeController(confirmEmailChangeUseCase);
+    const blockSpecificUserController = new BlockSpecificUserController(blockSpecificUserService, extractUserId);
+    const unblockSpecificUserController = new UnblockSpecificUserController(unblockSpecificUserService, extractUserId);
+    const getFullBlackListController = new GetFullBlackListController(getFullBlackListService, extractUserId);
+    const restoreForgottenPasswordController = new RestoreForgottenPasswordController(restoreForgottenPasswordService);
+    const confirmResetPasswordController = new ConfirmForgottenPasswordRestoreController(confirmResetPasswordUseCase);
+    const resetUserStatusToTrueController = new ResetUserStatusToTrueController(resetUserStatusToTrueService);
+    const confirmResetActivityController = new ConfirmResetActivityController(confirmResetActivityUseCase);
+
 
     // TODO : AUTHENTIFICATION
     const authService = new AuthService(refreshTokenRepoPG, jwtTokenService, txManager);
@@ -204,12 +427,32 @@ export function assembleContainer()
     const verifyEmailController = new VerifyEmailController(authService);
 
 
+    const resendVerificationService = new ResendVerificationService(
+        userRepoReaderPG,
+        sendEmailVerifShared,
+        emailVerificationTokenRepoPG
+    );
+
+    const resendVerificationRegisterController = new ResendRegisterVerificationController(
+        resendVerificationService
+    );
+    const resendVerificationChangeEmailController = new ResendChangeEmailVerificationController(
+        resendVerificationService,
+        extractUserId
+    );
+
+    const resendForgottenPasswordController = new ResendResetForgottenPasswordController(resendVerificationService);
+    const resendUserStatusToTrueController = new ResendUserStatusToTrueController(resendVerificationService);
 
 
     // TODO : CHAT
     const conversationRepo = new ConversationRepositoryPg(pool);
     const messageRepo = new MessageRepositoryPg(pool);
     const participantRepo = new ParticipantRepositoryPg(pool);
+    const conversationBansRepo = new ConversationBansRepositoryPg(pool);
+    const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool);
+    const savedMessageRepo = new SavedMessagesRepoPg(pool);
+    const avatarRepo = new AvatarRepositoryPg(pool);
 
     // TODO : SHARED FOR CHAT
     const conversationMapper = new MapToConversationDto();
@@ -217,6 +460,8 @@ export function assembleContainer()
     const participantMapper = new MapToParticipantDto();
     const checkIsParticipant = new CheckIsParticipant(participantRepo);
     const findMessageById = new FindMessageById(messageRepo);
+    const mapToRequestDto = new MapToRequestDto();
+    const mapToSavedMessageDto = new MapToSavedMessageDto();
 
 
     // TODO : CHAT (USE CASES)
@@ -224,7 +469,8 @@ export function assembleContainer()
         conversationRepo,
         participantRepo,
         conversationMapper,
-        RedisCacheService
+        RedisCacheService,
+        userToUserBlocksPG,
     );
     const createGroupConversationUseCase = new CreateGroupConversationUseCase(
         conversationRepo,
@@ -248,6 +494,12 @@ export function assembleContainer()
         RedisCacheService,
         participantRepo
     );
+    const searchConversationsUseCase = new SearchConversationUseCase(
+        conversationRepo,
+        userLookup,
+        conversationMapper,
+        RedisCacheService,
+    )
     // ____ //
     const deleteMessageUseCase = new DeleteMessageUseCase(
         messageRepo,
@@ -275,7 +527,9 @@ export function assembleContainer()
         messageMapper,
         checkIsParticipant,
         RedisCacheService,
-        participantRepo
+        participantRepo,
+        userToUserBlocksPG,
+        conversationBansRepo,
     );
     const getSpecificMessageUseCase = new GetSpecificMessageUseCase(
         messageMapper,
@@ -291,7 +545,6 @@ export function assembleContainer()
     );
     const getParticipantsRoleUseCase = new GetParticipantsUseCase(
         participantRepo,
-        participantMapper,
         RedisCacheService,
     );
     const getSpecificParticipantUseCase = new GetSpecificParticipantUseCase(
@@ -301,8 +554,10 @@ export function assembleContainer()
     const joinConversationUseCase = new JoinConversationUseCase(
         conversationRepo,
         participantRepo,
-        participantMapper,
-        RedisCacheService
+        RedisCacheService,
+        conversationBansRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
     );
     const leaveConversationUseCase = new LeaveConversationUseCase(
         participantRepo,
@@ -322,6 +577,115 @@ export function assembleContainer()
         participantMapper,
         RedisCacheService
     );
+    const banConversationParticipantUseCase = new BanGroupParticipantUseCase(
+        participantRepo,
+        conversationBansRepo,
+        RedisCacheService,
+    );
+    const unbanConversationParticipantUseCase = new UnbanGroupParticipantUseCase(
+        participantRepo,
+        conversationBansRepo,
+        RedisCacheService,
+    );
+    const getBannedParticipantsUseCase = new GetBannedUsersUseCase(
+        participantRepo,
+        conversationBansRepo,
+        RedisCacheService,
+    );
+    const addParticipantToConversationUseCase = new AddParticipantToConversationUseCase(
+        userRepoReaderPG,
+        participantRepo,
+        conversationBansRepo,
+        participantMapper,
+        conversationRepo,
+        userToUserBlocksPG,
+        RedisCacheService,
+    );
+
+    // ____ //
+
+    const changeRequestStatusUseCase = new ChangeRequestStatusUseCase(
+        participantRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const withdrawRequestUseCase = new WithdrawRequestUseCase(
+        userRepoReaderPG,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const createConversationRequestUseCase = new CreateConversationRequestUseCase(
+        userRepoReaderPG,
+        participantRepo,
+        conversationRepo,
+        conversationBansRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const getAllRequestsUseCase = new GetAllRequestListUseCase(
+        participantRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const getAllUsersRequestUseCase = new GetUsersRequestsUseCase(
+        userRepoReaderPG,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const removeSpecificRequestUseCase = new RemoveRequestUseCase(
+        userRepoReaderPG,
+        conversationRequestsRepo,
+        RedisCacheService,
+    );
+    const getSpecificRequestUserUseCase = new GetSpecificRequestUserUseCase(
+        conversationRequestsRepo,
+        userRepoReaderPG,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+    const getSpecificRequestConversationUseCase = new GetSpecificRequestGroupUseCase(
+        participantRepo,
+        conversationRequestsRepo,
+        mapToRequestDto,
+        RedisCacheService,
+    );
+
+    // ____ //
+
+    const getSavedMessagesListUseCase = new GetSavedMessagesListUseCase(
+        userRepoReaderPG,
+        savedMessageRepo,
+        mapToSavedMessageDto,
+        RedisCacheService,
+    );
+
+    const getSpecificSavedMessageUseCase = new GetSpecificSavedMessageUseCase(
+        userRepoReaderPG,
+        savedMessageRepo,
+        mapToSavedMessageDto,
+        RedisCacheService,
+    );
+
+    const removeSavedMessageUseCase = new RemoveSavedMessageUseCase(
+        userRepoReaderPG,
+        savedMessageRepo,
+        RedisCacheService,
+    );
+
+    const saveMessageUseCase = new SaveMessageUseCase(
+        participantRepo,
+        savedMessageRepo,
+        messageRepo,
+        mapToSavedMessageDto,
+        RedisCacheService,
+    );
+
+    const getAvatarUseCase = new GetAvatarUseCase(avatarRepo);
 
     // TODO : CHAT (SERVICES)
     const createDirectConversationService = new CreateDirectConversationTxService(txManager);
@@ -329,6 +693,7 @@ export function assembleContainer()
     const getUserConversationsService = new GetUserConversationsTxService(txManager);
     const markConversationReadService = new MarkConversationReadTxService(txManager);
     const updateConversationTitleService = new UpdateConversationTitleTxService(txManager);
+    const searchConversationsService = new SearchConversationsService(txManager);
 
     // ____ //
 
@@ -348,7 +713,33 @@ export function assembleContainer()
     const muteParticipantService = new MuteParticipantTxService(txManager);
     const removeParticipantService = new RemoveParticipantTxService(txManager);
     const unmuteParticipantService = new UnmuteParticipantTxService(txManager);
+    const banParticipantService = new BanGroupParticipantService(txManager);
+    const unbanParticipantService = new UnbanGroupParticipantService(txManager);
+    const getBannedUsersService = new GetBannedUsersService(txManager);
+    const addParticipantToConversationService = new AddParticipantToConversationTxService(txManager);
 
+    // ____ //
+
+    const changeRequestStatusService = new ChangeRequestStatusService(txManager);
+    const withdrawRequestService = new WithdrawRequestService(txManager);
+    const createConversationRequestService = new CreateConversationRequestService(txManager);
+    const getAllRequestsService = new GetAllRequestListService(txManager);
+    const getAllUsersRequestService = new GetUsersRequestsService(txManager);
+    const removeSpecificRequestService = new RemoveRequestService(txManager);
+    const getSpecificRequestUserService = new GetSpecificRequestUserService(txManager);
+    const getSpecificRequestConversationService = new GetSpecificRequestGroupService(txManager);
+
+    // ____ //
+
+    const getSavedMessagesListService = new GetSavedMessagesListService(txManager);
+    const getSpecificSavedMessageService = new GetSpecificSavedMessageService(txManager);
+    const removeSavedMessageService = new RemoveSavedMessageService(txManager);
+    const saveMessageService = new SaveMessageService(txManager);
+
+    const setUserAvatarService = new SetUserAvatarTxService(txManager);
+    const deleteUserAvatarService = new DeleteUserAvatarTxService(txManager);
+    const setConversationAvatarService = new SetConversationAvatarTxService(txManager);
+    const deleteConversationAvatarService = new DeleteConversationAvatarTxService(txManager);
 
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
@@ -379,8 +770,13 @@ export function assembleContainer()
     );
     const updateConversationTitleController = new UpdateConversationTitleController(
         updateConversationTitleService,
-        extractActorId
+        extractActorId,
+        io
     );
+    const searchConversationsController = new SearchConversationsController(
+        searchConversationsService,
+        extractActorId
+    )
 
     const getMessagesController = new GetMessagesController(
         getMessagesService,
@@ -393,7 +789,8 @@ export function assembleContainer()
 
     const changeParticipantRoleController = new ChangeParticipantRoleController(
         changeParticipantRoleService,
-        extractActorId
+        extractActorId,
+        io
     );
     const getParticipantsController = new GetParticipantsController(
         getParticipantsService,
@@ -413,26 +810,120 @@ export function assembleContainer()
     );
     const muteParticipantController = new MuteParticipantController(
         muteParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const removeParticipantController = new RemoveParticipantController(
         removeParticipantService,
-        extractActorId
+        extractActorId,
+        io
     );
     const unmuteParticipantController = new UnmuteParticipantController(
         unmuteParticipantService,
+        extractActorId,
+        io
+    );
+    const banParticipantController = new BanGroupParticipantController(
+        banParticipantService,
+        extractActorId,
+        io
+    );
+    const unbanParticipantController = new UnbanGroupParticipantController(
+        unbanParticipantService,
+        extractActorId
+    );
+    const getBannedUsersController = new GetBannedUsersController(
+        getBannedUsersService,
+        extractActorId
+    );
+    const addParticipantToConversationController = new AddParticipantToAConversationController(
+        addParticipantToConversationService,
+        extractActorId,
+        io
+    );
+    // ____ //
+
+    const changeConversationRequestStatusController = new ChangeConversationRequestStatusController(
+        changeRequestStatusService,
+        extractActorId
+    );
+    const withdrawConversationRequestController = new WithdrawConversationRequestController(
+        withdrawRequestService,
+        extractActorId
+    );
+    const createConversationRequestController = new CreateConversationRequestController(
+        createConversationRequestService,
+        extractActorId
+    );
+    const getAllConversationRequestsController = new GetAllRequestListController(
+        getAllRequestsService,
+        extractActorId
+    );
+    const getUsersRequestsController = new GetUsersRequestController (
+        getAllUsersRequestService,
+        extractActorId
+    );
+    const removeConversationRequestController = new RemoveRequestController(
+        removeSpecificRequestService,
+        extractActorId
+    );
+    const getSpecificRequestUserController = new GetSpecificRequestUserController(
+        getSpecificRequestUserService,
+        extractActorId
+    );
+    const getSpecificRequestGroupController = new GetSpecificRequestGroupController(
+        getSpecificRequestConversationService,
         extractActorId
     );
 
 
+    // ____ //
+    const getSavedMessagesListController = new GetSavedMessagesListController(
+        getSavedMessagesListService,
+        extractActorId
+    );
+    const getSpecificSavedMessageController = new GetSpecificSavedMessageController(
+        getSpecificSavedMessageService,
+        extractActorId
+    );
+    const removeSavedMessageController = new RemoveSavedMessageController(
+        removeSavedMessageService,
+        extractActorId
+    );
+    const saveMessageController = new SaveMessageController(
+        saveMessageService,
+        extractActorId
+    )
 
+    const getAvatarController = new GetAvatarController(getAvatarUseCase);
+
+    const setUserAvatarController = new SetUserAvatarController(setUserAvatarService, extractActorId);
+    const deleteUserAvatarController = new DeleteUserAvatarController(deleteUserAvatarService, extractActorId);
+    const setConversationAvatarController = new SetConversationAvatarController(setConversationAvatarService, extractActorId, io);
+    const deleteConversationAvatarController = new DeleteConversationAvatarController(deleteConversationAvatarService, extractActorId, io);
 
     return {
+        resendVerificationRegisterController,
+        resendVerificationChangeEmailController,
+        resendForgottenPasswordController,
+
         // user
         changeEmailController,
         changePasswordController,
         changeUsernameController,
         toggleStatusController,
+        getSelfProfileController,
+        searchUsersController,
+        getSpecificUserController,
+        confirmEmailChangeController,
+        blockSpecificUserController,
+        unblockSpecificUserController,
+        getFullBlackListController,
+        restoreForgottenPasswordController,
+        confirmResetPasswordController,
+        resetUserStatusToTrueController,
+        confirmResetActivityController,
+        resendUserStatusToTrueController,
 
         // jwt token service
         jwtTokenService,
@@ -466,6 +957,7 @@ export function assembleContainer()
         createGroupConversationController,
         getUserConversationController,
         updateConversationTitleController,
+        searchConversationsController,
 
         getMessagesController,
         getSpecificMessageController,
@@ -477,7 +969,31 @@ export function assembleContainer()
         muteParticipantController,
         removeParticipantController,
         unmuteParticipantController,
-        getSpecificParticipantController
+        getSpecificParticipantController,
+        banParticipantController,
+        unbanParticipantController,
+        getBannedUsersController,
+        addParticipantToConversationController,
+
+        changeConversationRequestStatusController,
+        withdrawConversationRequestController,
+        createConversationRequestController,
+        getAllConversationRequestsController,
+        getUsersRequestsController,
+        removeConversationRequestController,
+        getSpecificRequestUserController,
+        getSpecificRequestGroupController,
+
+        getSavedMessagesListController,
+        getSpecificSavedMessageController,
+        removeSavedMessageController,
+        saveMessageController,
+
+        getAvatarController,
+        setUserAvatarController,
+        deleteUserAvatarController,
+        setConversationAvatarController,
+        deleteConversationAvatarController,
     }
 }
 

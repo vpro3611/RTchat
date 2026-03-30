@@ -3,6 +3,8 @@ import {Transporter} from "nodemailer";
 import nodemailer from "nodemailer";
 import {EmailSendError} from "../errors/email_send_errors";
 
+export type FlowType = "register" | "change" | "reset-pass" | "reset-activity";
+
 export class EmailSenderNodemailer implements EmailSenderInterface {
     private readonly transporter: Transporter;
 
@@ -18,15 +20,33 @@ export class EmailSenderNodemailer implements EmailSenderInterface {
         });
     }
 
-//
+    private normalizeBaseUrl(rawUrl: string | undefined, envName: "API_URL" | "FRONTEND_URL"): string {
+        if (!rawUrl) {
+            throw new Error(`${envName} is not defined`);
+        }
+
+        const sanitized = rawUrl.replace(/^\/+(https?:\/\/)/i, "$1").trim();
+
+        return sanitized.endsWith("/") ? sanitized : `${sanitized}/`;
+    }
+
     async sendVerificationEmail(
         email: string,
-        token: string
+        token: string,
+        path: string,
+        flowType: FlowType
     ): Promise<void> {
+        const apiBaseUrl = this.normalizeBaseUrl(process.env.API_URL, "API_URL");
+        const verificationUrl = new URL(path.replace(/^\//, ""), apiBaseUrl);
+        verificationUrl.searchParams.set("token", token);
+        verificationUrl.searchParams.set("type", flowType);
 
-        const verificationUrl =
-            `${process.env.APP_URL}/public/verify-email?token=${token}`;
-
+        console.info("[email-verification] generated link", {
+            flowType,
+            path,
+            verificationUrl: verificationUrl.toString(),
+            recipient: email,
+        });
         try {
             await this.transporter.verify();
 
@@ -36,8 +56,8 @@ export class EmailSenderNodemailer implements EmailSenderInterface {
                 subject: "Verify your email",
                 html: `
           <h3>Email verification</h3>
-          <p>Click the link below to verify your account:</p>
-          <a href="${verificationUrl}">${verificationUrl}</a>
+          <p>Click the link below to verify your email and account:</p>
+          <a href="${verificationUrl.toString()}">${verificationUrl.toString()}</a>
         `,
             });
         } catch (error) {

@@ -29,7 +29,24 @@ export class GetSpecificParticipantUseCase {
                 if (!result) {
                     throw new UserNotFoundError("User is not a member of the conversation or user not found");
                 }
-                return result;
+                
+                // Маппим даты в строки для фронтенда
+                return {
+                    participant: {
+                        conversationId: result.conversationId,
+                        userId: result.userId,
+                        username: result.username,
+                        email: result.email,
+                        role: result.role,
+                        canSendMessages: result.canSendMessages,
+                        mutedUntil: result.mutedUntil instanceof Date 
+                            ? result.mutedUntil.toISOString() 
+                            : result.mutedUntil,
+                        joinedAt: result.joinedAt instanceof Date 
+                            ? result.joinedAt.toISOString() 
+                            : result.joinedAt,
+                    }
+                };
             }
         )
     }

@@ -17,14 +17,15 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
             row.last_message_at,
             row.user_low,
             row.user_high,
+            row.avatar_id,
         );
     }
 
     async create(conversation: Conversation): Promise<void> {
         try {
             await this.pool.query(`INSERT INTO conversations (id, conversation_type, title, created_by, created_at,
-                                                              last_message_at, user_low, user_high)
-                                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                                                              last_message_at, user_low, user_high, avatar_id)
+                                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
                 [
                     conversation.id,
                     conversation.getConversationType(),
@@ -34,6 +35,7 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
                     conversation.getLastMessageAt(),
                     conversation.getUserLow(),
                     conversation.getUserHigh(),
+                    conversation.getAvatarId(),
                 ]);
         } catch (error) {
             throw mapPgError(error);
@@ -153,6 +155,17 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
         }
     }
 
+    async updateAvatarId(conversationId: string, avatarId: string | null): Promise<void> {
+        try {
+            await this.pool.query(`UPDATE conversations
+                                   SET avatar_id = $1
+                                   WHERE id = $2`,
+                [avatarId, conversationId]);
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
+
     async markRead(conversationId: string, userId: string, messageId: string) {
         try {
             await this.pool.query(
@@ -168,6 +181,46 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
                 [conversationId, userId, messageId]
             )
         } catch (error) {
+            throw mapPgError(error);
+        }
+    }
+
+    async searchConversations(
+        query: string,
+        limit = 20,
+        cursor?: string
+    ): Promise<{ items: Conversation[]; nextCursor?: string }> {
+        try {
+            const result = await this.pool.query(
+                `
+                    WITH groups_page AS (SELECT c.*,
+                                                similarity(c.title, $1) AS score
+                                         FROM conversations c
+                                         WHERE c.conversation_type = 'group'
+                                           AND c.title
+                        ILIKE '%' || $1 || '%'
+                        AND ($2::text IS NULL OR c.title
+                       > $2)
+                    ORDER BY score DESC, c.title ASC
+                        LIMIT $3 + 1
+                        )
+                    SELECT *,
+                           (SELECT title
+                            FROM groups_page OFFSET $3
+                        LIMIT 1 ) AS next_cursor
+                    FROM groups_page
+                        LIMIT $3
+                `,
+                [query, cursor ?? null, limit]
+            )
+
+            const rows = result.rows
+
+            return {
+                items: rows.map(r => this.mapToConversation(r)),
+                nextCursor: rows[0]?.next_cursor ?? undefined
+            }
+        } catch (error: any) {
             throw mapPgError(error);
         }
     }
