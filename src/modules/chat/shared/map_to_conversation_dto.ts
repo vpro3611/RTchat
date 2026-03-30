@@ -14,6 +14,8 @@ export class MapToConversationDto {
             lastMessageAt: conversation.getLastMessageAt()?.toISOString() ?? null,
             userLow: conversation.getUserLow(),
             userHigh: conversation.getUserHigh(),
+            lastMessageContent: conversation.getLastMessageContent(),
+            lastMessageSenderId: conversation.getLastMessageSenderId(),
         }
     }
 }
