@@ -13,6 +13,8 @@ export class Message {
         private isDeleted: boolean,
         private readonly createdAt: Date,
         private updatedAt: Date,
+        private readonly originalSenderId?: string,
+        private readonly isResent: boolean = false,
     ) {}
 
     static restore(
@@ -21,9 +23,11 @@ export class Message {
         senderId: string,
         content: string,
         isEdited: boolean,
-        idDeleted: boolean,
+        isDeleted: boolean,
         createdAt: Date,
         updatedAt: Date,
+        originalSenderId?: string,
+        isResent: boolean = false,
     ) {
         return new Message(
             id,
@@ -31,9 +35,11 @@ export class Message {
             senderId,
             Content.create(content),
             isEdited,
-            idDeleted,
+            isDeleted,
             createdAt,
             updatedAt,
+            originalSenderId,
+            isResent,
         );
     }
 
@@ -51,6 +57,26 @@ export class Message {
             false,
             new Date(),
             new Date(),
+        );
+    }
+
+    static createResent(
+        targetConversationId: string,
+        actorId: string,
+        content: Content,
+        originalSenderId: string
+    ) {
+        return new Message(
+            crypto.randomUUID(),
+            targetConversationId,
+            actorId,
+            content,
+            false,
+            false,
+            new Date(),
+            new Date(),
+            originalSenderId,
+            true
         );
     }
 
@@ -91,4 +117,6 @@ export class Message {
     getIsDeleted = () => this.isDeleted;
     getCreatedAt = () => this.createdAt;
     getUpdatedAt = () => this.updatedAt;
+    getOriginalSenderId = () => this.originalSenderId;
+    getIsResent = () => this.isResent;
 }
