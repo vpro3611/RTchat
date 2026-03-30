@@ -42,6 +42,10 @@ import {
     GetSpecificParticipantParamsSchema
 } from "./modules/chat/controllers/participant/get_specific_participant_controller";
 import {GetSpecificMessageParamsSchema} from "./modules/chat/controllers/message/get_specific_message_controller";
+import {
+    ResendMessageBodySchema,
+    ResendMessageParamsSchema
+} from "./modules/chat/controllers/message/resend_message_controller";
 import cors from "cors";
 import multer from "multer";
 import {GetSpecificUserParamsSchema} from "./modules/users/controllers/get_specific_user_controller";
@@ -275,6 +279,12 @@ export const createApp = (dependencies: AppContainer): Express => {
         validateParams(GetSpecificMessageParamsSchema),
         dependencies.getSpecificMessageController.getSpecificMessageCont
     ); //
+
+    privateRouter.post("/conversation/:conversationId/messages/:messageId/resend",
+        validateParams(ResendMessageParamsSchema),
+        validateBody(ResendMessageBodySchema),
+        dependencies.resendMessageController.resendMessageCont
+    );
 
     privateRouter.patch("/conversation/:conversationId/:targetId/role",
         validateParams(ChangeParticipantRoleParamsSchema),
