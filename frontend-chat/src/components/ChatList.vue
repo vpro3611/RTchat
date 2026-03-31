@@ -131,9 +131,19 @@ watch(
           <div class="text-subtitle1 text-weight-bold ellipsis col">{{ getChatTitle(chat) }}</div>
           <div class="text-caption text-grey-5 q-ml-sm">{{ formatLastMessageTime(chat.lastMessageAt ?? chat.createdAt) }}</div>
         </div>
-        <q-item-label caption lines="1" class="text-grey-4">
-          {{ getLastMessageDisplay(chat) }}
-        </q-item-label>
+        <div class="row no-wrap items-center justify-between">
+          <q-item-label caption lines="1" class="text-grey-4 col">
+            {{ getLastMessageDisplay(chat) }}
+          </q-item-label>
+          <q-badge
+            v-if="chat.unreadCount > 0"
+            color="primary"
+            rounded
+            class="q-ml-sm"
+          >
+            {{ chat.unreadCount }}
+          </q-badge>
+        </div>
       </q-item-section>
 
     </q-item>
