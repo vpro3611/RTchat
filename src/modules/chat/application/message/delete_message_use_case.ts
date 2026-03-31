@@ -8,6 +8,7 @@ import {Participant} from "../../domain/participant/participant";
 import {MessageNotAPartOfConversationError} from "../../errors/message_errors/message_errors";
 import {UserIsNotAllowedToPerformError, UserIsNotAnAuthorError} from "../../errors/participants_errors/participant_errors";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
+import {ConversationRepoInterface} from "../../domain/ports/conversation_repo_interface";
 
 
 export class DeleteMessageUseCase {
@@ -16,6 +17,7 @@ export class DeleteMessageUseCase {
                 private readonly checkIsParticipant: CheckIsParticipant,
                 private readonly findMessageById: FindMessageById,
                 private readonly cacheService: CacheServiceInterface,
+                private readonly conversationRepo: ConversationRepoInterface,
     ) {}
 
     private checkMessage(message: Message, participant: Participant) {
@@ -48,6 +50,8 @@ export class DeleteMessageUseCase {
 
         await this.cacheService.delByPattern(`messages:${conversationId}:*`);
 
-        return this.messageMapper.mapToMessage(message);
+        const maxReadAt = await this.conversationRepo.getMaxReadAtForOthers(conversationId, actorId);
+
+        return this.messageMapper.mapToMessage(message, maxReadAt);
     }
 }
