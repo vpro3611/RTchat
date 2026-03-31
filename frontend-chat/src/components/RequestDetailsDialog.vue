@@ -84,28 +84,28 @@ function getStatusColor(status: string) {
           <q-separator />
 
           <div>
-            <div class="text-overline">Request Message</div>
-            <div class="bg-grey-2 q-pa-md rounded-borders text-body2">
+            <div class="text-overline text-grey-7">Request Message</div>
+            <div class="message-box q-pa-md rounded-borders text-body2">
               {{ request.requestMessage }}
             </div>
           </div>
 
           <div class="row justify-between items-center">
             <div>
-              <div class="text-overline">Status</div>
+              <div class="text-overline text-grey-7">Status</div>
               <q-badge :color="getStatusColor(request.status)" class="q-pa-xs">
                 {{ request.status.toUpperCase() }}
               </q-badge>
             </div>
             <div class="text-right">
-              <div class="text-overline">Submitted At</div>
-              <div class="text-caption">{{ new Date(request.submittedAt).toLocaleString() }}</div>
+              <div class="text-overline text-grey-7">Submitted At</div>
+              <div class="text-caption text-grey-8">{{ new Date(request.submittedAt).toLocaleString() }}</div>
             </div>
           </div>
 
-          <div v-if="request.reviewedAt" class="bg-blue-1 q-pa-md rounded-borders">
-            <div class="text-weight-bold q-mb-xs">Review Details</div>
-            <div class="row justify-between text-caption q-mb-sm">
+          <div v-if="request.reviewedAt" class="review-box q-pa-md rounded-borders">
+            <div class="text-weight-bold q-mb-xs text-primary">Review Details</div>
+            <div class="row justify-between text-caption q-mb-sm text-grey-8">
               <span>Reviewed by: {{ request.reviewedBy ? UserCacheStore.getUsername(request.reviewedBy) : 'System' }}</span>
               <span>{{ new Date(request.reviewedAt).toLocaleString() }}</span>
             </div>
@@ -117,8 +117,30 @@ function getStatusColor(status: string) {
       </q-card-section>
 
       <q-card-actions align="right" class="q-pa-md">
-        <q-btn flat label="Close" v-close-popup />
+        <q-btn flat label="Close" v-close-popup color="primary" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
+
+<style scoped>
+.message-box {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+}
+
+.body--dark .message-box {
+  background: #2a2a2a !important;
+  border-color: #333 !important;
+}
+
+.review-box {
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+}
+
+.body--dark .review-box {
+  background: #2a2a2a !important;
+  border-color: #fb7185 !important;
+}
+</style>
