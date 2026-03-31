@@ -14,6 +14,7 @@ describe("DeleteMessageUseCase", () => {
     let checkIsParticipant: any;
     let findMessageById: any;
     let cacheService: any;
+    let conversationRepo: any;
 
     let useCase: DeleteMessageUseCase;
 
@@ -43,12 +44,17 @@ describe("DeleteMessageUseCase", () => {
             delByPattern: jest.fn()
         };
 
+        conversationRepo = {
+            getMaxReadAtForOthers: jest.fn()
+        };
+
         useCase = new DeleteMessageUseCase(
             messageRepo,
             mapper,
             checkIsParticipant,
             findMessageById,
-            cacheService
+            cacheService,
+            conversationRepo
         );
     });
 

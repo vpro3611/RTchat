@@ -10,6 +10,7 @@ describe("GetSpecificMessageUseCase", () => {
     let findMessageById: any;
     let participantRepo: any;
     let cacheService: any;
+    let conversationRepo: any;
 
     let useCase: GetSpecificMessageUseCase;
 
@@ -35,11 +36,16 @@ describe("GetSpecificMessageUseCase", () => {
             remember: jest.fn()
         };
 
+        conversationRepo = {
+            getMaxReadAtForOthers: jest.fn()
+        };
+
         useCase = new GetSpecificMessageUseCase(
             messageMapper,
             findMessageById,
             participantRepo,
-            cacheService
+            cacheService,
+            conversationRepo
         );
 
     });
