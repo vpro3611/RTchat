@@ -10,4 +10,5 @@ export interface CreateGroupChatResponse {
   userHigh: string | null,
   lastMessageContent?: string | undefined,
   lastMessageSenderId?: string | undefined,
+  unreadCount: number,
 }
