@@ -509,25 +509,29 @@ export function assembleContainer(io: Server)
         RedisCacheService,
     )
     // ____ //
-    const deleteMessageUseCase = new DeleteMessageUseCase(
-        messageRepo,
-        messageMapper,
-        checkIsParticipant,
-        findMessageById,
-        RedisCacheService
-    );
     const editMessageUseCase = new EditMessageUseCase(
         messageRepo,
         messageMapper,
         checkIsParticipant,
         findMessageById,
         RedisCacheService,
+        conversationRepo
     );
+    const deleteMessageUseCase = new DeleteMessageUseCase(
+        messageRepo,
+        messageMapper,
+        checkIsParticipant,
+        findMessageById,
+        RedisCacheService,
+        conversationRepo
+    );
+
     const getMessagesUseCase = new GetMessagesUseCase(
         messageRepo,
         messageMapper,
         RedisCacheService,
         participantRepo,
+        conversationRepo
     );
     const sendMessageUseCase = new SendMessageUseCase(
         messageRepo,
@@ -544,7 +548,9 @@ export function assembleContainer(io: Server)
         findMessageById,
         participantRepo,
         RedisCacheService,
+        conversationRepo
     );
+
     // ____ //
     const changeParticipantRoleUseCase = new ChangeParticipantRoleUseCase(
         participantRepo,

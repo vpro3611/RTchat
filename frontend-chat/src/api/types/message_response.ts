@@ -11,6 +11,7 @@ export interface Message {
   senderAvatarId?: string | null;
   isResent: boolean;
   originalSenderId?: string;
+  isRead: boolean;
 }
 
 export interface MessagesResponse {
