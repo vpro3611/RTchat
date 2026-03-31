@@ -84,8 +84,27 @@ input:-webkit-autofill:active {
 }
 
 // Global transitions for theme switching
-body {
+body, html {
+  height: 100%;
+  overflow: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.q-layout {
+  height: 100vh;
+}
+
+.q-page-container {
+  height: 100vh !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.q-page-container > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .q-layout, .q-card, .q-header, .q-drawer, .q-field__control {
