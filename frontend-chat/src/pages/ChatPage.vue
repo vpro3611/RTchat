@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router"
 import {computed, ref, onMounted, onUnmounted, nextTick, watch} from "vue";
-import { useQuasar } from "quasar"
+import { QInput, useQuasar } from "quasar"
 import {ChatStore} from "stores/chat_store";
 import {MessageStore} from "stores/message_store";
 import {AuthStore} from "stores/auth_store";
@@ -25,6 +25,7 @@ const route = useRoute();
 
 const message = ref("");
 const messagesContainer = ref<HTMLElement | null>(null);
+const messageInputRef = ref<QInput | null>(null);
 const dialogRef = ref();
 const resendDialogRef = ref<{ open: () => void } | null>(null);
 const forwardingMessageId = ref<string>("");
@@ -35,6 +36,7 @@ const editContent = ref("");
 const isOtherUserBlocked = ref(false);
 const isCurrentUserCanSendMessages = ref(true);
 const sendRestrictionMessage = ref<string | null>(null);
+const isUserScrollingUp = ref(false);
 
 const chat = computed(() => {
   return ChatStore.findById(route.params.id as string);
@@ -66,6 +68,30 @@ const otherUserAvatarId = computed(() => {
   if (!userId) return null;
   return UserCacheStore.getAvatarId(userId);
 });
+
+// Focus input
+function focusInput() {
+  void nextTick(() => {
+    messageInputRef.value?.focus();
+  });
+}
+
+// Scroll detection
+function handleScroll() {
+  if (!messagesContainer.value) return;
+  const { scrollTop, scrollHeight, clientHeight } = messagesContainer.value;
+  // If user is more than 150px away from bottom, consider them "scrolling up"
+  isUserScrollingUp.value = (scrollHeight - scrollTop - clientHeight) > 150;
+}
+
+// Прокрутка к низу
+function scrollToBottom(force = false) {
+  void nextTick(() => {
+    if (messagesContainer.value && (!isUserScrollingUp.value || force)) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+    }
+  });
+}
 
 // Проверить статус блокировки собеседника
 async function checkOtherUserBlocked() {
@@ -103,7 +129,6 @@ async function checkCurrentUserCanSendMessages() {
     isCurrentUserCanSendMessages.value = response.participant.canSendMessages;
   } catch (e) {
     console.error('Failed to check send permission:', e);
-    // fail-safe: не блокируем ввод на transient ошибке
     isCurrentUserCanSendMessages.value = true;
   }
 }
@@ -118,10 +143,7 @@ function unblockOtherUser() {
     message: `Do you want to unblock ${otherUserName.value || 'this user'}?`,
     cancel: true,
     persistent: true,
-    ok: {
-      label: 'Unblock',
-      color: 'positive',
-    },
+    ok: { label: 'Unblock', color: 'positive' },
   }).onOk(() => {
     void (async () => {
       try {
@@ -149,28 +171,22 @@ async function loadMessages() {
     MessageStore.setMessages(response.items, response.nextCursor);
     MessageStore.finishBootstrapping();
 
-    // Загружаем данные об отправителях в кэш (включая originalSenderId для пересланных сообщений)
     const senderIds = response.items.map(m => m.senderId);
     const originalSenderIds = response.items.map(m => m.originalSenderId).filter(Boolean);
     const allIds = Array.from(new Set([...senderIds, ...originalSenderIds])) as string[];
 
     await UserCacheStore.ensureUsers(allIds);
 
-    // Подключаемся к WebSocket и ждём готовности
     chatSocket.connect();
     await chatSocket.waitForConnection();
-
-    // Подписываемся на комнату
     chatSocket.getSocket()?.emit('conversation:join', { conversationId: conversationId.value });
 
-    // Прокрутка к последнему сообщению
-    await nextTick();
-    scrollToBottom();
+    scrollToBottom(true);
+    focusInput();
 
-    // Отмечаем сообщения как прочитанные
     if (MessageStore.messages.length > 0) {
       const lastMessage = MessageStore.messages[MessageStore.messages.length - 1];
-      if (lastMessage) {
+      if (lastMessage && lastMessage.senderId !== AuthStore.user?.id) {
         chatSocket.markAsRead(conversationId.value, lastMessage.id);
       }
     }
@@ -187,13 +203,9 @@ async function loadMoreMessages() {
 
   MessageStore.setLoading(true);
   try {
-    const response = await MessageApi.getMessages(
-      conversationId.value,
-      MessageStore.nextCursor ?? undefined
-    );
+    const response = await MessageApi.getMessages(conversationId.value, MessageStore.nextCursor ?? undefined);
     MessageStore.appendMessages(response.items, response.nextCursor);
 
-    // Загружаем данные об отправителях в кэш
     const senderIds = response.items.map(m => m.senderId);
     const originalSenderIds = response.items.map(m => m.originalSenderId).filter(Boolean);
     const allIds = Array.from(new Set([...senderIds, ...originalSenderIds])) as string[];
@@ -213,6 +225,8 @@ function sendMessage() {
   sendRestrictionMessage.value = null;
   chatSocket.sendMessage(conversationId.value, message.value.trim());
   message.value = "";
+  scrollToBottom(true);
+  focusInput();
 }
 
 // Начало редактирования
@@ -227,12 +241,12 @@ function cancelEdit() {
   isEditing.value = false;
   editingMessageId.value = null;
   editContent.value = "";
+  focusInput();
 }
 
 // Сохранить редактирование через WebSocket
 function saveEdit() {
   if (!editContent.value.trim() || !editingMessageId.value || !conversationId.value) return;
-
   chatSocket.editMessage(conversationId.value, editingMessageId.value, editContent.value.trim());
   cancelEdit();
 }
@@ -240,7 +254,6 @@ function saveEdit() {
 // Удаление сообщения через WebSocket
 function deleteMessage(messageId: string) {
   if (!conversationId.value) return;
-
   chatSocket.deleteMessage(conversationId.value, messageId);
 }
 
@@ -254,19 +267,12 @@ async function handleForwardMessage(messageId: string) {
 // Сохранить сообщение
 function saveMessageAction(messageId: string) {
   if (!conversationId.value) return;
-
   void (async () => {
     try {
       await SavedMessagesStore.saveMessage(conversationId.value, messageId);
-      $q.notify({
-        type: 'positive',
-        message: 'Message saved to bookmarks'
-      });
+      $q.notify({ type: 'positive', message: 'Message saved to bookmarks' });
     } catch {
-      $q.notify({
-        type: 'negative',
-        message: 'Failed to save message'
-      });
+      $q.notify({ type: 'negative', message: 'Failed to save message' });
     }
   })();
 }
@@ -275,25 +281,12 @@ function isMessageSaved(messageId: string) {
   return SavedMessagesStore.messages.some(m => m.messageId === messageId);
 }
 
-// Прокрутка к низу
-function scrollToBottom() {
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
-  }
-}
-
 // Обработка typing индикатора
 let typingTimeout: NodeJS.Timeout | null = null;
-
 function handleTyping() {
   if (!conversationId.value || !isCurrentUserCanSendMessages.value) return;
-
   chatSocket.startTyping(conversationId.value);
-
-  if (typingTimeout) {
-    clearTimeout(typingTimeout);
-  }
-
+  if (typingTimeout) clearTimeout(typingTimeout);
   typingTimeout = setTimeout(() => {
     chatSocket.stopTyping(conversationId.value);
   }, 2000);
@@ -305,24 +298,16 @@ function openParticipantsDialog() {
   participantsDialogRef.value?.openDialog();
 }
 
-// Очистка при выходе
 function handleSocketError(data: { message: string }) {
   const msg = data.message.toLowerCase();
-
   console.error('Socket error received:', data.message);
-
   if (msg.includes('block') || msg.includes('cannot send') || msg.includes('not allowed')) {
     isCurrentUserCanSendMessages.value = false;
     sendRestrictionMessage.value = data.message;
-    $q.notify({
-      type: 'warning',
-      message: data.message,
-      timeout: 5000
-    });
+    $q.notify({ type: 'warning', message: data.message, timeout: 5000 });
   }
 }
 
-// Слушать события block/unblock из диалогов
 function handleBlockChange() {
   void checkOtherUserBlocked();
   void checkCurrentUserCanSendMessages();
@@ -331,42 +316,43 @@ function handleBlockChange() {
 onMounted(() => {
   chatSocket.onError(handleSocketError);
   window.addEventListener('block-status-changed', handleBlockChange);
-
-  // Подгружаем сохраненные сообщения, чтобы обновлять UI (кнопку Save)
   void SavedMessagesStore.fetchMessages(50);
-
-  if (conversationId.value) {
-    chatSocket.setCurrentChat(conversationId.value);
-    void loadMessages();
-    void checkOtherUserBlocked();
-    void checkCurrentUserCanSendMessages();
-  }
 });
 
 onUnmounted(() => {
   chatSocket.offError(handleSocketError);
   window.removeEventListener('block-status-changed', handleBlockChange);
-
   if (conversationId.value) {
     chatSocket.setCurrentChat(null);
     chatSocket.getSocket()?.emit('conversation:leave', { conversationId: conversationId.value });
   }
-  // Очищаем участники при выходе из чата
   ParticipantStore.clearParticipants();
 });
 
-// Перезагрузка при смене чата
-watch(() => route.params.id, (newId) => {
-  sendRestrictionMessage.value = null;
+// Computed for message input to handle both normal and edit modes cleanly
+const inputModel = computed({
+  get: () => isEditing.value ? editContent.value : message.value,
+  set: (val) => {
+    if (isEditing.value) {
+      editContent.value = val;
+    } else {
+      message.value = val;
+    }
+  }
+});
 
+// Watch for chat changes
+watch(conversationId, (newId) => {
   if (newId) {
-    chatSocket.setCurrentChat(newId as string);
+    chatSocket.setCurrentChat(newId);
     void loadMessages();
+    void checkOtherUserBlocked();
     void checkCurrentUserCanSendMessages();
+    focusInput();
   } else {
     chatSocket.setCurrentChat(null);
   }
-});
+}, { immediate: true });
 
 // FIX : FIXED статус блока не обновлялся, когда чат догружался в Store позже
 watch(
@@ -381,30 +367,29 @@ watch(
       sendRestrictionMessage.value = null;
       await checkCurrentUserCanSendMessages();
     }
-  },
-  { immediate: true }
+  }
 );
 
-// MARK AS READ LOGIC
+// MARK AS READ LOGIC & AUTO SCROLL
 watch(
   () => MessageStore.messages.length,
   (newCount) => {
     if (newCount > 0 && conversationId.value) {
       const lastMessage = MessageStore.messages[MessageStore.messages.length - 1];
-      // Only mark as read if it's an incoming message or we just want to sync our read pointer
       if (lastMessage && lastMessage.senderId !== AuthStore.user?.id) {
         chatSocket.markAsRead(conversationId.value, lastMessage.id);
       }
+      scrollToBottom();
     }
   }
 );
 </script>
 
 <template>
-  <div class="column full-height">
+  <div class="chat-page-container column no-wrap">
 
     <!-- HEADER -->
-    <div class="q-pa-md border-bottom row items-center justify-between">
+    <header class="chat-header q-pa-md border-bottom row items-center justify-between">
       <div class="row items-center q-gutter-x-md">
         <AppAvatar
           :avatar-id="chat?.conversationType === 'direct' ? otherUserAvatarId : chat?.avatarId"
@@ -412,7 +397,7 @@ watch(
           size="48px"
         />
         <div>
-          <div class="text-h6">
+          <div class="text-h6 line-height-1">
             {{ chat?.conversationType === 'direct' ? (otherUserName || 'Direct Chat') : (chat?.title || 'Chat') }}
           </div>
           <div class="text-caption text-grey">
@@ -422,33 +407,15 @@ watch(
       </div>
 
       <div class="row q-gutter-sm">
-        <!-- Кнопка списка участников для групп -->
-        <q-btn
-          v-if="chat?.conversationType === 'group'"
-          icon="group"
-          flat
-          round
-          @click="openParticipantsDialog"
-        >
+        <q-btn v-if="chat?.conversationType === 'group'" icon="group" flat round @click="openParticipantsDialog">
           <q-tooltip>Participants</q-tooltip>
         </q-btn>
-
-        <q-btn
-          v-if="chat?.conversationType === 'group'"
-          icon="edit"
-          flat
-          round
-          @click="dialogRef.openDialog(chat.id, chat.title)"
-        >
+        <q-btn v-if="chat?.conversationType === 'group'" icon="edit" flat round @click="dialogRef.openDialog(chat.id, chat.title)">
           <q-tooltip>Edit title</q-tooltip>
         </q-btn>
-
-        <LeaveGroupButton
-          v-if="chat?.conversationType === 'group'"
-          :chatId="chat.id"
-        />
+        <LeaveGroupButton v-if="chat?.conversationType === 'group'" :chatId="chat.id" />
       </div>
-    </div>
+    </header>
 
     <EditGroupTitleDialog ref="dialogRef" />
     <ResendMessageDialog
@@ -462,30 +429,18 @@ watch(
       :conversationType="(chat?.conversationType as 'direct' | 'group') ?? 'direct'"
     />
 
-    <!-- BLOCKED USER NOTICE (Telegram-style) -->
-    <div
-      v-if="isOtherUserBlocked"
-      class="bg-grey-3 q-pa-md text-center"
-    >
-      <q-icon name="block" size="24px" class="q-mr-sm" />
-      <span class="text-grey-7">
-        You have blocked this user.
-        <q-btn
-          flat
-          dense
-          color="primary"
-          label="Unblock"
-          class="q-ml-sm"
-          @click="unblockOtherUser"
-        />
-      </span>
+    <!-- BLOCKED NOTICE -->
+    <div v-if="isOtherUserBlocked" class="blocked-notice q-pa-sm text-center bg-grey-2">
+      <q-icon name="block" size="20px" class="q-mr-sm" color="negative" />
+      <span class="text-grey-8">You have blocked this user.</span>
+      <q-btn flat dense color="primary" label="Unblock" @click="unblockOtherUser" class="q-ml-sm" />
     </div>
 
     <!-- MESSAGES LIST -->
-    <div
+    <main
       ref="messagesContainer"
-      class="col q-pa-md scroll"
-      style="overflow-y: auto;"
+      class="messages-scroll-area col scroll relative-position q-pa-md"
+      @scroll="handleScroll"
     >
       <div v-if="MessageStore.isBootstrapping" class="flex flex-center full-height">
         <q-spinner-dots size="40px" color="primary" />
@@ -496,18 +451,12 @@ watch(
       </div>
 
       <div v-else>
-        <!-- Load more button -->
         <div v-if="MessageStore.hasMore" class="text-center q-pa-sm">
-          <q-btn
-            flat
-            :loading="MessageStore.isLoading"
-            @click="loadMoreMessages"
-          >
+          <q-btn flat size="sm" color="primary" :loading="MessageStore.isLoading" @click="loadMoreMessages">
             Load more
           </q-btn>
         </div>
 
-        <!-- Messages -->
         <MessageBubble
           v-for="message in MessageStore.messages"
           :key="message.id"
@@ -519,57 +468,143 @@ watch(
           @save="saveMessageAction"
           @forward="handleForwardMessage"
         />
-
-        <!-- Typing indicator placeholder -->
-        <div id="typing-indicator"></div>
+        <div id="typing-indicator" style="height: 20px;"></div>
       </div>
-    </div>
 
-    <!-- EDIT MESSAGE INPUT -->
-    <div v-if="isEditing" class="q-pa-md border-top row items-center q-gutter-sm">
-      <q-input
-        v-model="editContent"
-        dense
-        outlined
-        class="col"
-        placeholder="Edit message..."
-        @keyup.enter="saveEdit"
-        @keyup.escape="cancelEdit"
-      />
-      <q-btn flat color="primary" label="Save" @click="saveEdit" />
-      <q-btn flat color="grey" label="Cancel" @click="cancelEdit" />
-    </div>
+      <!-- SCROLL TO BOTTOM FAB -->
+      <transition
+        appear
+        enter-active-class="animated zoomIn"
+        leave-active-class="animated zoomOut"
+      >
+        <q-btn
+          v-if="isUserScrollingUp"
+          fab-mini
+          icon="keyboard_arrow_down"
+          color="primary"
+          class="scroll-bottom-btn absolute-bottom-right"
+          @click="scrollToBottom(true)"
+        />
+      </transition>
+    </main>
 
-    <!-- INPUT -->
-    <div v-else class="q-pa-md">
-      <q-input
-        v-model="message"
-        @keyup.enter="sendMessage"
-        @input="handleTyping"
-        dense
-        outlined
-        :disable="!isCurrentUserCanSendMessages"
-        :placeholder="isCurrentUserCanSendMessages ? 'Type a message...' : 'You cannot send messages in this chat'"
-      >
-        <template v-slot:append>
-          <q-btn
-            flat
-            round
-            dense
-            icon="send"
-            color="primary"
-            @click="sendMessage"
-            :disable="!message.trim() || !isCurrentUserCanSendMessages"
-          />
-        </template>
-      </q-input>
-      <div
-        v-if="!isCurrentUserCanSendMessages"
-        class="text-caption text-negative q-mt-xs"
-      >
+    <!-- INPUT AREA (STICKY) -->
+    <footer class="input-area border-top q-pa-md">
+      <!-- Edit Mode -->
+      <div v-if="isEditing" class="row items-center q-gutter-sm q-mb-sm bg-grey-2 q-pa-sm rounded-borders">
+        <q-icon name="edit" color="primary" />
+        <div class="col ellipsis text-caption">Editing message...</div>
+        <q-btn flat round dense icon="close" size="sm" @click="cancelEdit" />
+      </div>
+
+      <div class="row items-end q-gutter-x-sm">
+        <q-input
+          ref="messageInputRef"
+          v-model="inputModel"
+          @keyup.enter="isEditing ? saveEdit() : sendMessage()"
+          @input="handleTyping"
+          dense
+          outlined
+          autogrow
+          class="col"
+          :placeholder="isCurrentUserCanSendMessages ? (isEditing ? 'Edit message...' : 'Type a message...') : 'Sending disabled'"
+          :disable="!isCurrentUserCanSendMessages"
+          bg-color="input-bg"
+        >
+          <template v-slot:append>
+            <q-btn
+              flat round dense
+              :icon="isEditing ? 'check' : 'send'"
+              :color="isEditing ? 'positive' : 'primary'"
+              @click="isEditing ? saveEdit() : sendMessage()"
+              :disable="isEditing ? !editContent.trim() : !message.trim() || !isCurrentUserCanSendMessages"
+            />
+          </template>
+        </q-input>
+      </div>
+      
+      <div v-if="!isCurrentUserCanSendMessages" class="text-caption text-negative q-mt-xs text-center">
         {{ sendRestrictionMessage || "You can't send messages in this chat." }}
       </div>
-    </div>
+    </footer>
 
   </div>
 </template>
+
+<style scoped>
+.chat-page-container {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+.chat-header {
+  flex-shrink: 0;
+  height: 72px;
+  background: white;
+  z-index: 20;
+}
+
+.body--dark .chat-header {
+  background: #1e1e1e;
+}
+
+.messages-scroll-area {
+  flex-grow: 1;
+  overflow-y: auto !important;
+  background: #fdfdfd;
+}
+
+.body--dark .messages-scroll-area {
+  background: #121212;
+}
+
+.input-area {
+  flex-shrink: 0;
+  background: white;
+  z-index: 20;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+}
+
+.body--dark .input-area {
+  background: #1e1e1e;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+}
+
+.scroll-bottom-btn {
+  margin-bottom: 20px;
+  margin-right: 20px;
+  z-index: 30;
+}
+
+.border-bottom {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.body--dark .border-bottom {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.border-top {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.body--dark .border-top {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.line-height-1 {
+  line-height: 1.2;
+}
+
+.blocked-notice {
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.body--dark .blocked-notice {
+  background: #2a2a2a;
+  border-color: rgba(255,255,255,0.05);
+}
+</style>
