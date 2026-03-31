@@ -14,6 +14,7 @@ describe("EditMessageUseCase", () => {
     let checkIsParticipant: any;
     let findMessageById: any;
     let cacheService: any;
+    let conversationRepo: any;
 
     let useCase: EditMessageUseCase;
 
@@ -43,12 +44,17 @@ describe("EditMessageUseCase", () => {
             delByPattern: jest.fn()
         };
 
+        conversationRepo = {
+            getMaxReadAtForOthers: jest.fn()
+        };
+
         useCase = new EditMessageUseCase(
             messageRepo,
             mapper,
             checkIsParticipant,
             findMessageById,
-            cacheService
+            cacheService,
+            conversationRepo
         );
     });
 
