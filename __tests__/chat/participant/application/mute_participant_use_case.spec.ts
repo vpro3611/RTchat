@@ -30,7 +30,8 @@ describe("MuteParticipantUseCase", () => {
         };
 
         cacheService = {
-            del: jest.fn()
+            del: jest.fn(),
+            delByPattern: jest.fn().mockResolvedValue(undefined)
         };
 
         useCase = new MuteParticipantUseCase(
@@ -173,8 +174,11 @@ describe("MuteParticipantUseCase", () => {
 
         expect(participantRepo.save).toHaveBeenCalledWith(target);
 
+        expect(cacheService.delByPattern)
+            .toHaveBeenCalledWith(`participants:conv:${CONVERSATION_ID}:*`);
+
         expect(cacheService.del)
-            .toHaveBeenCalledWith(`participants:conv:${CONVERSATION_ID}`);
+            .toHaveBeenCalledWith(`participant:conv:${CONVERSATION_ID}:user:${TARGET_ID}`);
 
         expect(result).toEqual({ userId: TARGET_ID });
 

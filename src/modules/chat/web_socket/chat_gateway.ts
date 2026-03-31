@@ -42,12 +42,16 @@ export class ChatGateway {
         deleteMessageController: DeleteMessageController,
         markConversationAsReadController: MarkConversationAsReadController,
         getUserConversationsService: GetUserConversationsTxService,
+        startTypingController: StartTypingController,
+        stopTypingController: StopTypingController,
     ) {
         this.sendMessageController = sendMessageController;
         this.editMessageController = editMessageController;
         this.deleteMessageController = deleteMessageController;
         this.markConversationAsReadController = markConversationAsReadController;
         this.getUserConversationsService = getUserConversationsService;
+        this.startTypingController = startTypingController;
+        this.stopTypingController = stopTypingController;
     }
 
     isConnected() {
@@ -117,6 +121,9 @@ export class ChatGateway {
             sockets.add(socket.id);
 
             this.ONLINE_USERS.set(userId.sub, sockets);
+
+            // Join personal room for targeted notifications
+            socket.join(`user:${userId.sub}`);
 
             this.io.emit("user:online", {userId: userId.sub});
 

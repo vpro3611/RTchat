@@ -4,13 +4,15 @@ import {UsernameAlreadyExistsError} from "../errors/username_errors";
 import {UserMapper} from "../shared/map_to_dto";
 import {UserLookup} from "../shared/user_exists_by_id";
 import {UsernameAlreadyExistDatabaseError} from "../errors/user_database_error";
+import {CacheServiceInterface} from "../../infrasctructure/ports/cache_service/cache_service_interface";
 
 
 export class ChangeUsernameUseCase {
     constructor(private readonly userRepoReader: UserRepoReader,
                 private readonly userRepoWriter: UserRepoWriter,
                 private readonly mapper: UserMapper,
-                private readonly userLookup: UserLookup
+                private readonly userLookup: UserLookup,
+                private readonly cacheService: CacheServiceInterface
     ) {}
 
 
@@ -33,6 +35,9 @@ export class ChangeUsernameUseCase {
             user.setUsername(usernameValid);
 
             const saved = await this.userRepoWriter.save(user);
+
+            // Invalidate search cache
+            await this.cacheService.delByPattern("users:search:*");
 
             return this.mapper.mapToDto(saved)
         } catch (error) {

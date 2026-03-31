@@ -6,6 +6,7 @@ import {UserLookup} from "../shared/user_exists_by_id";
 import {UserRepoReaderPg} from "../repositories/user_repo_reader_pg";
 import {UserMapper} from "../shared/map_to_dto";
 import {ToggleIsActiveUseCase} from "../application/toggle_status_use_case_to_false";
+import {RedisCacheService} from "../../../container";
 
 
 export class ToggleStatusTxService {
@@ -19,7 +20,7 @@ export class ToggleStatusTxService {
             const userLookup = new UserLookup(userRepoReader);
             const mapper = new UserMapper();
 
-            const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriter, mapper, userLookup);
+            const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriter, mapper, userLookup, RedisCacheService);
 
             return await toggleStatusUseCase.toggleIsActiveUseCase(actorId);
         })

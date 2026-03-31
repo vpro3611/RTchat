@@ -49,7 +49,12 @@ import {MapToConversationDto} from "./modules/chat/shared/map_to_conversation_dt
 import {
     CreateGroupConversationUseCase
 } from "./modules/chat/application/conversation/create_group_conversation_use_case";
-import {GetUserConversationsUseCase} from "./modules/chat/application/conversation/get_user_conversations_use_case";
+import {GetSpecificConversationTxService} from "./modules/chat/transactional_services/conversation/get_specific_conversation_service";
+import {GetSpecificConversationController} from "./modules/chat/controllers/conversation/get_specific_conversation_controller";
+import {
+    GetUserConversationsUseCase
+} from "./modules/chat/application/conversation/get_user_conversations_use_case";
+
 import {MarkConversationReadUseCase} from "./modules/chat/application/conversation/mark_conversation_read_use_case";
 import {
     UpdateConversationTitleUseCase
@@ -362,11 +367,11 @@ export function assembleContainer(io: Server)
     // TODO : USER USE CASES
     const changeEmailUseCase = new ChangeEmailUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup, sendEmailVerifShared, emailVerificationTokenRepoPG);
     const changePasswordUseCase = new ChangePasswordUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, userMapper, userLookup);
-    const changeUsernameUseCase = new ChangeUsernameUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup);
+    const changeUsernameUseCase = new ChangeUsernameUseCase(userRepoReaderPG, userRepoWriterPG, userMapper, userLookup, RedisCacheService);
     const loginEmailUseCase = new LoginEmailUseCase(userRepoReaderPG, bcrypter, userMapper);
     const loginUsernameUseCase = new LoginUsernameUseCase(userRepoReaderPG, bcrypter, userMapper);
     const registerUseCase = new RegisterUseCase(userRepoReaderPG, userRepoWriterPG, bcrypter, userMapper, sendEmailVerifShared, emailVerificationTokenRepoPG);
-    const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriterPG, userMapper, userLookup);
+    const toggleStatusUseCase = new ToggleIsActiveUseCase(userRepoWriterPG, userMapper, userLookup, RedisCacheService);
     const getSelfProfileUseCase = new GetSelfProfileUseCase(userLookup);
     const searchUsersUseCase = new SearchUsersUseCase(userRepoReaderPG, userLookup, userMapper, RedisCacheService);
     const getSpecificUserUseCase = new GetSpecificUserUseCase(userLookup, userMapper);
@@ -694,6 +699,7 @@ export function assembleContainer(io: Server)
     const createDirectConversationService = new CreateDirectConversationTxService(txManager);
     const createGroupConversationService = new CreateGroupConversationTxService(txManager);
     const getUserConversationsService = new GetUserConversationsTxService(txManager);
+    const getSpecificConversationService = new GetSpecificConversationTxService(txManager);
     const markConversationReadService = new MarkConversationReadTxService(txManager);
     const updateConversationTitleService = new UpdateConversationTitleTxService(txManager);
     const searchConversationsService = new SearchConversationsService(txManager);
@@ -762,7 +768,8 @@ export function assembleContainer(io: Server)
     // TODO : HTTP CONTROLLERS
     const createDirectConversationController = new CreateDirectConversationController(
         createDirectConversationService,
-        extractActorId
+        extractActorId,
+        io
     );
     const createGroupConversationController = new CreateGroupConversationController(
         createGroupConversationService,
@@ -770,6 +777,10 @@ export function assembleContainer(io: Server)
     );
     const getUserConversationController = new GetUserConversationController(
         getUserConversationsService,
+        extractActorId
+    );
+    const getSpecificConversationController = new GetSpecificConversationController(
+        getSpecificConversationService,
         extractActorId
     );
     const updateConversationTitleController = new UpdateConversationTitleController(
@@ -811,11 +822,13 @@ export function assembleContainer(io: Server)
     )
     const joinConversationController = new JoinConversationController(
         joinConversationService,
-        extractActorId
+        extractActorId,
+        io
     );
     const leaveConversationController = new LeaveConversationController(
         leaveConversationService,
-        extractActorId
+        extractActorId,
+        io
     );
     const muteParticipantController = new MuteParticipantController(
         muteParticipantService,
@@ -854,7 +867,8 @@ export function assembleContainer(io: Server)
 
     const changeConversationRequestStatusController = new ChangeConversationRequestStatusController(
         changeRequestStatusService,
-        extractActorId
+        extractActorId,
+        io
     );
     const withdrawConversationRequestController = new WithdrawConversationRequestController(
         withdrawRequestService,
@@ -965,6 +979,7 @@ export function assembleContainer(io: Server)
         createDirectConversationController,
         createGroupConversationController,
         getUserConversationController,
+        getSpecificConversationController,
         updateConversationTitleController,
         searchConversationsController,
 

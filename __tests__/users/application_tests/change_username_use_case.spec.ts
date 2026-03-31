@@ -7,16 +7,21 @@ describe("ChangeUsernameUseCase", () => {
     let writer: any;
     let mapper: any;
     let userLookup: any;
+    let cacheService: any;
     let useCase: ChangeUsernameUseCase;
     let user: User;
 
     beforeEach(() => {
         reader = {
             getUserByUsername: jest.fn(),
+            searchUsers: jest.fn(),
+            getUserById: jest.fn(),
+            save: jest.fn(),
         };
 
         writer = {
             save: jest.fn(),
+            updateAvatarId: jest.fn(),
         };
 
         mapper = {
@@ -27,11 +32,20 @@ describe("ChangeUsernameUseCase", () => {
             getUserOrThrow: jest.fn(),
         };
 
+        cacheService = {
+            delByPattern: jest.fn().mockResolvedValue(undefined),
+            del: jest.fn().mockResolvedValue(undefined),
+            get: jest.fn(),
+            set: jest.fn(),
+            remember: jest.fn(),
+        };
+
         useCase = new ChangeUsernameUseCase(
             reader,
             writer,
             mapper,
-            userLookup
+            userLookup,
+            cacheService
         );
 
         user = User.restore(

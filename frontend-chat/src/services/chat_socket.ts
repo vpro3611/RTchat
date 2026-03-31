@@ -10,6 +10,9 @@ import type {Participant} from "src/api/types/participant_response";
 import type {CreateGroupChatResponse} from "src/api/types/create_group_chat_response";
 import {UserApi} from "src/api/apis/user_api";
 
+import type {CreateChatResponse} from "src/api/types/create_chat_response";
+import type {ConversationRequestsResponse} from "src/api/types/conversation_request_response";
+
 type TypingCallback = (data: { conversationId: string; userId: string; username: string }) => void;
 type ErrorCallback = (data: { message: string }) => void;
 
@@ -145,6 +148,49 @@ class ChatSocketService {
 
     this.socket.on('conversation:updated', (data: { conversationId: string, conversation: CreateGroupChatResponse }) => {
       ChatStore.updateChatData(data.conversationId, data.conversation);
+    });
+
+    this.socket.on('conversation:new', async (data: CreateChatResponse | { conversationId: string, participant: Participant }) => {
+      const conversationId = 'id' in data ? data.id : data.conversationId;
+
+      // Join the room for the new conversation to start receiving messages
+      if (this.socket) {
+        this.socket.emit('conversation:join', { conversationId });
+      }
+
+      try {
+        // Fetch full conversation details and add to store
+        const chat = await UserApi.getSpecificConversation(conversationId);
+        ChatStore.addChat(chat);
+        console.log('New conversation added to store:', chat);
+      } catch (error) {
+        console.error('Failed to fetch new conversation details:', error);
+      }
+    });
+
+    this.socket.on('conversation:removed', (data: { conversationId: string }) => {
+      console.log('Conversation removed:', data.conversationId);
+      ChatStore.removeChat(data.conversationId);
+    });
+
+    this.socket.on('conversation:request_new', (data: { conversationId: string, request: ConversationRequestsResponse }) => {
+      console.log('New join request received:', data);
+      // Optional: Update request store if it exists globally
+    });
+
+    this.socket.on('conversation:request_status_changed', async (data: ConversationRequestsResponse) => {
+      console.log('Join request status changed:', data);
+      if (data.status === 'accepted') {
+        if (this.socket) {
+          this.socket.emit('conversation:join', { conversationId: data.conversationId });
+        }
+        try {
+          const chat = await UserApi.getSpecificConversation(data.conversationId);
+          ChatStore.addChat(chat);
+        } catch (error) {
+          console.error('Failed to fetch accepted conversation details:', error);
+        }
+      }
     });
 
     // Ошибка подключения

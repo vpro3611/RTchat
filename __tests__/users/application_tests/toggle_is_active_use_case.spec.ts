@@ -5,6 +5,7 @@ describe("ToggleIsActiveUseCase", () => {
     let writer: any;
     let mapper: any;
     let lookup: any;
+    let cacheService: any;
     let useCase: ToggleIsActiveUseCase;
 
     beforeEach(() => {
@@ -20,10 +21,16 @@ describe("ToggleIsActiveUseCase", () => {
             getUserOrThrow: jest.fn(),
         };
 
+        cacheService = {
+            delByPattern: jest.fn().mockResolvedValue(undefined),
+            del: jest.fn().mockResolvedValue(undefined),
+        };
+
         useCase = new ToggleIsActiveUseCase(
             writer,
             mapper,
-            lookup
+            lookup,
+            cacheService
         );
     });
 
