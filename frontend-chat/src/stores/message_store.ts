@@ -74,5 +74,19 @@ export const MessageStore = reactive({
 
   setLoading(loading: boolean) {
     this.isLoading = loading;
+  },
+
+  markMessagesAsRead(conversationId: string, readerId: string, readAt: string) {
+    const readDate = new Date(readAt);
+    this.messages.forEach(msg => {
+      if (
+        msg.conversationId === conversationId &&
+        msg.senderId !== readerId && // Double ticks are for the SENDER to see that SOMEONE ELSE read it
+        !msg.isRead &&
+        new Date(msg.createdAt) <= readDate
+      ) {
+        msg.isRead = true;
+      }
+    });
   }
 });
