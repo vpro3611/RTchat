@@ -8,6 +8,7 @@ import {ParticipantRepositoryPg} from "../../repositories_pg_realization/partici
 import {FindMessageById} from "../../shared/find_message_by_id";
 import {DeleteMessageUseCase} from "../../application/message/delete_message_use_case";
 import {RedisCacheService} from "../../../../container";
+import {ConversationRepositoryPg} from "../../repositories_pg_realization/conversation_repository_pg";
 
 
 export class DeleteMessageTxService {
@@ -18,6 +19,7 @@ export class DeleteMessageTxService {
             const messageRepo = new MessageRepositoryPg(client);
             const messageMapper = new MapToMessage();
             const participantRepo = new ParticipantRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client);
             const checkIsParticipant = new CheckIsParticipant(participantRepo);
             const findMessageById = new FindMessageById(messageRepo);
 
@@ -26,7 +28,8 @@ export class DeleteMessageTxService {
                 messageMapper,
                 checkIsParticipant,
                 findMessageById,
-                RedisCacheService
+                RedisCacheService,
+                conversationRepo
             );
 
             return await deleteMessageUseCase.deleteMessageUseCase(actorId, conversationId, messageId);
