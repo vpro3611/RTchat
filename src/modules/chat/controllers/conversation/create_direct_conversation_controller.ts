@@ -4,6 +4,7 @@ import {
 import {Request, Response} from "express";
 import {ExtractActorId} from "../../shared/extract_actor_id_req";
 import {z} from "zod";
+import {Server} from "socket.io";
 
 export const CreateDirectConversationParamsSchema = z.object({
     targetId: z.string().uuid(),
@@ -13,7 +14,8 @@ type CreateDirectConversationSchemaType = z.infer<typeof CreateDirectConversatio
 
 export class CreateDirectConversationController {
     constructor(private readonly createDirectConversationService: CreateDirectConversationTxService,
-                private readonly extractActorId: ExtractActorId
+                private readonly extractActorId: ExtractActorId,
+                private readonly io: Server
     ) {};
 
     createDirectConversationCont = async (req: Request<CreateDirectConversationSchemaType>, res: Response) => {
@@ -25,6 +27,10 @@ export class CreateDirectConversationController {
             actorId.sub,
             targetId
         )
+
+        // Notify both users about the new conversation
+        this.io.to(`user:${actorId.sub}`).emit("conversation:new", result);
+        this.io.to(`user:${targetId}`).emit("conversation:new", result);
 
         return res.status(201).json(result);
     }

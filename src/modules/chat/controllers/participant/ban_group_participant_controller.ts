@@ -41,6 +41,11 @@ export class BanGroupParticipantController {
                 userId: targetId
             });
 
+            // Notify target user specifically
+            this.io.to(`user:${targetId}`).emit("conversation:removed", {
+                conversationId
+            });
+
             return res.status(200).json(result);
         }
 

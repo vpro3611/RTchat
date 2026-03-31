@@ -22,6 +22,9 @@ import {
     UpdateConversationTitleBodySchema,
     UpdateConversationTitleParamsSchema
 } from "./modules/chat/controllers/conversation/update_conversation_title_controller";
+import {
+    GetSpecificConversationParamsSchema
+} from "./modules/chat/controllers/conversation/get_specific_conversation_controller";
 import {GetMessagesParamsSchema} from "./modules/chat/controllers/message/get_messages_controller";
 import {
     ChangeParticipantRoleParamsSchema
@@ -262,6 +265,11 @@ export const createApp = (dependencies: AppContainer): Express => {
 
     privateRouter.get("/conversations",
         dependencies.getUserConversationController.getUserConversationCont
+    ); //
+
+    privateRouter.get("/conversation/:conversationId/view",
+        validateParams(GetSpecificConversationParamsSchema),
+        dependencies.getSpecificConversationController.execute
     ); //
 
     privateRouter.patch("/conversation/:conversationId/title",

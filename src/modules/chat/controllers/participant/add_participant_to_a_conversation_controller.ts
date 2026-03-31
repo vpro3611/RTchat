@@ -35,6 +35,12 @@ export class AddParticipantToAConversationController {
                 participant: result // ParticipantListDTO
             });
 
+            // Notify new participant to refresh their conversation list
+            this.io.to(`user:${targetId}`).emit("conversation:new", {
+                conversationId,
+                participant: result
+            });
+
             return res.status(201).json(result);
     }
 }
