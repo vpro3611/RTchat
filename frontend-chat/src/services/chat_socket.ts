@@ -80,6 +80,9 @@ class ChatSocketService {
   private setupEventListeners() {
     if (!this.socket) return;
 
+    // Снимаем все старые слушатели перед установкой новых, чтобы избежать дубликатов
+    this.socket.off();
+
     // Новое сообщение
     this.socket.on('message:new', (data: Message) => {
       MessageStore.addMessage(data);
