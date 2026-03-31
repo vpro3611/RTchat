@@ -1,5 +1,6 @@
 import {reactive} from "vue";
 import type {CreateGroupChatResponse} from "src/api/types/create_group_chat_response";
+import { AuthStore } from "stores/auth_store";
 
 
 export const ChatStore = reactive({
@@ -76,13 +77,32 @@ export const ChatStore = reactive({
     }
   },
 
-  setLastMessage(chatId: string, content: string, senderId: string, date: string) {
+  setLastMessage(chatId: string, content: string, senderId: string, date: string, currentViewingChatId?: string) {
     const chat = this.chats.find(c => c.id === chatId);
     if (chat) {
       chat.lastMessageContent = content;
       chat.lastMessageSenderId = senderId;
       chat.lastMessageAt = date;
       this.bumpChat(chatId);
+      
+      // Increment unread if not currently viewing this chat AND we are not the sender
+      if (chatId !== currentViewingChatId && senderId !== AuthStore.user?.id) {
+        this.incrementUnread(chatId);
+      }
+    }
+  },
+
+  incrementUnread(chatId: string) {
+    const chat = this.chats.find(c => c.id === chatId);
+    if (chat) {
+      chat.unreadCount = (chat.unreadCount || 0) + 1;
+    }
+  },
+
+  resetUnread(chatId: string) {
+    const chat = this.chats.find(c => c.id === chatId);
+    if (chat) {
+      chat.unreadCount = 0;
     }
   },
 
