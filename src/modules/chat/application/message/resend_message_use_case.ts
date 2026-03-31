@@ -117,6 +117,8 @@ export class ResendMessageUseCase {
         const targetParticipants = await this.participantRepo.getParticipants(targetConversationId);
         await this.invalidateCache(targetParticipants.items);
 
-        return this.messageMapper.mapToMessage(message);
+        const maxReadAt = await this.conversationRepo.getMaxReadAtForOthers(targetConversationId, actorId);
+
+        return this.messageMapper.mapToMessage(message, maxReadAt);
     }
 }
