@@ -9,6 +9,7 @@ export interface ConversationRepoInterface {
     updateLastMessage(conversationId: string, date: Date): Promise<void>;
     updateAvatarId(conversationId: string, avatarId: string | null): Promise<void>;
     markRead(conversationId: string, userId: string, messageId: string): Promise<void>;
+    getMaxReadAtForOthers(conversationId: string, userId: string): Promise<Date | null>;
     searchConversations(query: string, limit?: number, cursor?: string): Promise<{items: Conversation[], nextCursor?: string}>;
 }
 
