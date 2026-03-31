@@ -155,12 +155,12 @@ describe("RemoveParticipantUseCase", () => {
         expect(participantRepo.remove)
             .toHaveBeenCalledWith(CONVERSATION_ID, TARGET_ID);
 
-        expect(cacheService.del)
-            .toHaveBeenCalledWith(`participants:conv:${CONVERSATION_ID}`);
+        expect(cacheService.delByPattern)
+            .toHaveBeenCalledWith(`participants:conv:${CONVERSATION_ID}:*`);
 
         expect(cacheService.delByPattern)
             .toHaveBeenCalledWith(`conv:user:${TARGET_ID}:*`);
+        });
 
-    });
 
 });

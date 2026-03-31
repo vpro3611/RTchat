@@ -5,6 +5,7 @@ import {ExtractActorId} from "../../shared/extract_actor_id_req";
 import {Request, Response} from "express";
 import {z} from "zod";
 import {ConversationRequestsStatus} from "../../domain/conversation_requests/conversation_requests";
+import {Server} from "socket.io";
 
 const ConversationReqStatusSchema = z.enum([
     ConversationRequestsStatus.ACCEPTED,
@@ -29,7 +30,8 @@ type ChangeRequestStatusParamsSchemaType = z.infer<typeof ChangeRequestStatusPar
 
 export class ChangeConversationRequestStatusController {
     constructor(private readonly changeConversationRequestStatusService: ChangeRequestStatusService,
-                private readonly extractActorId: ExtractActorId
+                private readonly extractActorId: ExtractActorId,
+                private readonly io: Server
     ) {}
 
     changeConversationRequestStatusCont =
@@ -47,6 +49,10 @@ export class ChangeConversationRequestStatusController {
                 reviewMessage,
                 status,
             );
+
+            // Notify requester about status change
+            this.io.to(`user:${result.userId}`).emit("conversation:request_status_changed", result);
+
             return res.status(200).json(result);
     }
 }

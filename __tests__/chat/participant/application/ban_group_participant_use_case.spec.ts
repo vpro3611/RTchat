@@ -220,9 +220,9 @@ describe("BanGroupParticipantUseCase", () => {
         expect(participantRepo.remove).toHaveBeenCalledWith(CONVERSATION_ID, TARGET_ID);
 
         // Cache invalidation
-        expect(cacheService.del).toHaveBeenCalledWith(`participants:conv:${CONVERSATION_ID}`);
+        expect(cacheService.delByPattern).toHaveBeenCalledWith(`participants:conv:${CONVERSATION_ID}:*`);
         expect(cacheService.delByPattern).toHaveBeenCalledWith(`conv:user:${TARGET_ID}:*`);
-        expect(cacheService.del).toHaveBeenCalledWith(`bans:conv:${CONVERSATION_ID}`);
+        expect(cacheService.delByPattern).toHaveBeenCalledWith(`bans:conv:${CONVERSATION_ID}:*`);
 
         expect(result.userId).toBe(TARGET_ID);
         expect(result.conversationId).toBe(CONVERSATION_ID);
@@ -302,8 +302,7 @@ describe("BanGroupParticipantUseCase", () => {
         });
 
         // Verify all cache invalidation calls
-        expect(cacheService.del).toHaveBeenCalledTimes(2); // participants + bans
-        expect(cacheService.delByPattern).toHaveBeenCalledTimes(1);
+        expect(cacheService.delByPattern).toHaveBeenCalledTimes(3); // participants + conv:user + bans
     });
 
     // =========================

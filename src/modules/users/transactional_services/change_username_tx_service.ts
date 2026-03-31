@@ -6,6 +6,7 @@ import {UserRepoWriterPg} from "../repositories/user_repo_writer_pg";
 import {UserMapper} from "../shared/map_to_dto";
 import {UserLookup} from "../shared/user_exists_by_id";
 import {ChangeUsernameUseCase} from "../application/change_username_use_case";
+import {RedisCacheService} from "../../../container";
 
 
 export class ChangeUsernameTxService {
@@ -20,7 +21,7 @@ export class ChangeUsernameTxService {
             const mapper = new UserMapper();
             const userLookup = new UserLookup(userRepoReader);
 
-            const changeUsernameUseCase = new ChangeUsernameUseCase(userRepoReader, userRepoWriter, mapper, userLookup);
+            const changeUsernameUseCase = new ChangeUsernameUseCase(userRepoReader, userRepoWriter, mapper, userLookup, RedisCacheService);
 
             return await changeUsernameUseCase.changeUsernameUseCase(actorId, newUsername);
         })

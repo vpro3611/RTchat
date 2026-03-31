@@ -32,7 +32,9 @@ export async function startServer() {
         dependencies.editMessageController,
         dependencies.deleteMessageController,
         dependencies.readMessageController,
-        dependencies.getUserConversationsService
+        dependencies.getUserConversationsService,
+        dependencies.startTypingController,
+        dependencies.stopTypingController
     );
 
     const app = createApp(dependencies);
