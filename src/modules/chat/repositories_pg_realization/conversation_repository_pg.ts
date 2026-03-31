@@ -19,7 +19,8 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
             row.user_high,
             row.avatar_id,
             row.last_message_content,
-            row.last_message_sender_id
+            row.last_message_sender_id,
+            parseInt(row.unread_count || "0")
         );
     }
 
@@ -58,11 +59,34 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
         }
     }
 
-    async findById(id: string): Promise<Conversation | null> {
+    async findById(id: string, userId?: string): Promise<Conversation | null> {
         try {
-            const result = await this.pool.query(`SELECT *
-                                                  FROM conversations
-                                                  WHERE id = $1`, [id]);
+            const params: any[] = [id];
+            let unreadSubquery = "0 as unread_count";
+
+            if (userId) {
+                params.push(userId);
+                unreadSubquery = `
+                    (SELECT COUNT(*) FROM messages m2 
+                     WHERE m2.conversation_id = c.id 
+                     AND m2.created_at > COALESCE((SELECT read_at FROM conversation_reads cr WHERE cr.conversation_id = c.id AND cr.user_id = $2), '1970-01-01')
+                     AND m2.sender_id != $2
+                    ) as unread_count
+                `;
+            }
+
+            const result = await this.pool.query(
+                `SELECT c.*, m.content as last_message_content, m.sender_id as last_message_sender_id, ${unreadSubquery}
+                 FROM conversations c
+                 LEFT JOIN LATERAL (
+                     SELECT content, sender_id
+                     FROM messages
+                     WHERE conversation_id = c.id
+                     ORDER BY created_at DESC
+                     LIMIT 1
+                 ) m ON true
+                 WHERE c.id = $1`,
+                params);
 
             if (!result.rows.length) {
                 return null;
@@ -116,7 +140,12 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
 
             const result = await this.pool.query(
                 `
-                    SELECT c.*, m.content as last_message_content, m.sender_id as last_message_sender_id
+                    SELECT c.*, m.content as last_message_content, m.sender_id as last_message_sender_id,
+                           (SELECT COUNT(*) FROM messages m2 
+                            WHERE m2.conversation_id = c.id 
+                            AND m2.created_at > COALESCE((SELECT read_at FROM conversation_reads cr WHERE cr.conversation_id = c.id AND cr.user_id = $1), '1970-01-01')
+                            AND m2.sender_id != $1
+                           ) as unread_count
                     FROM conversations c
                              JOIN conversation_participants p
                                   ON p.conversation_id = c.id

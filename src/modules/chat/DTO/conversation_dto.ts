@@ -14,4 +14,5 @@ export type ConversationDTO = {
     userHigh: string | null,
     lastMessageContent?: string,
     lastMessageSenderId?: string,
+    unreadCount: number,
 }
