@@ -371,6 +371,20 @@ watch(
   },
   { immediate: true }
 );
+
+// MARK AS READ LOGIC
+watch(
+  () => MessageStore.messages.length,
+  (newCount) => {
+    if (newCount > 0 && conversationId.value) {
+      const lastMessage = MessageStore.messages[MessageStore.messages.length - 1];
+      // Only mark as read if it's an incoming message or we just want to sync our read pointer
+      if (lastMessage && lastMessage.senderId !== AuthStore.user?.id) {
+        chatSocket.markAsRead(conversationId.value, lastMessage.id);
+      }
+    }
+  }
+);
 </script>
 
 <template>
