@@ -4,6 +4,7 @@ import {CheckIsParticipant} from "../../shared/is_participant";
 import {CacheServiceInterface} from "../../../infrasctructure/ports/cache_service/cache_service_interface";
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
 import {ActorIsNotParticipantError} from "../../errors/participants_errors/participant_errors";
+import {ConversationRepoInterface} from "../../domain/ports/conversation_repo_interface";
 
 
 export class GetMessagesUseCase {
@@ -11,6 +12,7 @@ export class GetMessagesUseCase {
                 private readonly messageMapper: MapToMessage,
                 private readonly cacheService: CacheServiceInterface,
                 private readonly participantRepo: ParticipantRepoInterface,
+                private readonly conversationRepo: ConversationRepoInterface,
     ) {}
 
     private async actorIsParticipant(actorId: string, conversationId: string) {
@@ -25,13 +27,15 @@ export class GetMessagesUseCase {
 
         await this.actorIsParticipant(actorId, conversationId);
 
+        const maxReadAt = await this.conversationRepo.getMaxReadAtForOthers(conversationId, actorId);
+
         return this.cacheService.remember(
             cacheKey,
             60,
             async () => {
                 const result = await this.messageRepo.findByConversationId(conversationId, limit, cursor);
                 return {
-                    items: result.items.map(message => this.messageMapper.mapToMessage(message)),
+                    items: result.items.map(message => this.messageMapper.mapToMessage(message, maxReadAt)),
                     nextCursor: result.nextCursor,
                 }
             }

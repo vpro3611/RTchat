@@ -98,6 +98,6 @@ export class SendMessageUseCase {
         // invalidate user conversation list
         await this.invalidateCache(participants.items);
 
-        return this.messageMapper.mapToMessage(message);
+        return this.messageMapper.mapToMessage(message, null);
     }
 }
