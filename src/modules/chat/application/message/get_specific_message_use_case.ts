@@ -5,6 +5,7 @@ import {FindMessageById} from "../../shared/find_message_by_id";
 import {ParticipantRepoInterface} from "../../domain/ports/participant_repo_interface";
 import {ActorIsNotParticipantError} from "../../errors/participants_errors/participant_errors";
 import {MessageNotAPartOfConversationError, MessageNotFoundError} from "../../errors/message_errors/message_errors";
+import {ConversationRepoInterface} from "../../domain/ports/conversation_repo_interface";
 
 
 export class GetSpecificMessageUseCase {
@@ -12,7 +13,8 @@ export class GetSpecificMessageUseCase {
                 private readonly messageMapper: MapToMessage,
                 private readonly findMessageById: FindMessageById,
                 private readonly participantRepo: ParticipantRepoInterface,
-                private readonly cacheService: CacheServiceInterface
+                private readonly cacheService: CacheServiceInterface,
+                private readonly conversationRepo: ConversationRepoInterface
     ) {}
 
     private actorExists = async (conversationId: string, actorId: string) => {
@@ -36,7 +38,8 @@ export class GetSpecificMessageUseCase {
                 if (message.getConversationId() !== conversationId) {
                     throw new MessageNotAPartOfConversationError("Message not found in the given conversation context")
                 }
-                return this.messageMapper.mapToMessage(message);
+                const maxReadAt = await this.conversationRepo.getMaxReadAtForOthers(conversationId, actorId);
+                return this.messageMapper.mapToMessage(message, maxReadAt);
             }
         )
     }
