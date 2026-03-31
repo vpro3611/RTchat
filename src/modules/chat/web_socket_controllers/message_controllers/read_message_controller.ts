@@ -28,6 +28,7 @@ export class MarkConversationAsReadController {
                 userId: userId.sub,
                 conversationId: conversationId,
                 messageId: messageId,
+                readAt: new Date().toISOString()
         });
     }
 }

@@ -28,7 +28,7 @@ export class GetMessagesController {
 
         const {limit, cursor} = GetMessagesQuerySchema.parse(req.query);
 
-        const result = await this.getMessagesService.getMessageTxService(
+        const result = await this.getMessagesService.getMessagesTxService(
             actorId.sub,
             conversationId,
             limit,
