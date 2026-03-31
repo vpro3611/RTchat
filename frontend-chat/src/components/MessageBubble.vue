@@ -131,6 +131,27 @@ function handleForward() {
         >
           {{ formatDate(message.createdAt) }} {{ formatTime(message.createdAt) }}
           <q-icon v-if="isSaved" name="bookmark" size="14px" class="q-ml-xs" />
+
+          <!-- Read status ticks for own messages -->
+          <template v-if="isOwn">
+            <q-icon
+              v-if="message.isRead"
+              name="done_all"
+              size="16px"
+              class="q-ml-xs text-blue-2"
+              style="color: #bbdefb !important;"
+            >
+              <q-tooltip>Read</q-tooltip>
+            </q-icon>
+            <q-icon
+              v-else
+              name="done"
+              size="16px"
+              class="q-ml-xs text-white-70"
+            >
+              <q-tooltip>Sent</q-tooltip>
+            </q-icon>
+          </template>
         </div>
 
         <!-- Menu button (доступно для всех сообщений) -->

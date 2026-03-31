@@ -112,9 +112,9 @@ class ChatSocketService {
     });
 
     // Сообщение прочитано
-    this.socket.on('message:read', (data: { conversationId: string; messageId: string; userId: string }) => {
-      // Можно обновить статус прочтения в UI
+    this.socket.on('message:read', (data: { conversationId: string; messageId: string; userId: string; readAt: string }) => {
       console.log('Message read:', data);
+      MessageStore.markMessagesAsRead(data.conversationId, data.userId, data.readAt);
     });
 
     // Начало набора текста
