@@ -19,7 +19,7 @@ export class GetSpecificConversationUseCase {
             throw new ActorIsNotParticipantError("User is not a member of the conversation");
         }
 
-        const conversation = await this.conversationRepo.findById(conversationId);
+        const conversation = await this.conversationRepo.findById(conversationId, actorId);
         
         if (!conversation) {
             throw new ConversationNotFoundError("Conversation not found");

@@ -16,6 +16,7 @@ export class MapToConversationDto {
             userHigh: conversation.getUserHigh(),
             lastMessageContent: conversation.getLastMessageContent(),
             lastMessageSenderId: conversation.getLastMessageSenderId(),
+            unreadCount: conversation.getUnreadCount(),
         }
     }
 }
