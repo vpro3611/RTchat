@@ -60,6 +60,13 @@ const otherUserName = computed(() => {
   return UserCacheStore.getUsername(userId);
 });
 
+// Получить аватар собеседника
+const otherUserAvatarId = computed(() => {
+  const userId = otherUserId.value;
+  if (!userId) return null;
+  return UserCacheStore.getAvatarId(userId);
+});
+
 // Проверить статус блокировки собеседника
 async function checkOtherUserBlocked() {
   const userId = otherUserId.value;
@@ -361,6 +368,7 @@ watch(
   () => otherUserId.value,
   async (userId) => {
     if (userId) {
+      await UserCacheStore.ensureUser(userId);
       await checkOtherUserBlocked();
       await checkCurrentUserCanSendMessages();
     } else {
@@ -394,13 +402,13 @@ watch(
     <div class="q-pa-md border-bottom row items-center justify-between">
       <div class="row items-center q-gutter-x-md">
         <AppAvatar
-          :avatar-id="chat?.avatarId"
-          :name="chat?.title || 'Chat'"
+          :avatar-id="chat?.conversationType === 'direct' ? otherUserAvatarId : chat?.avatarId"
+          :name="chat?.conversationType === 'direct' ? (otherUserName || 'Direct Chat') : (chat?.title || 'Chat')"
           size="48px"
         />
         <div>
           <div class="text-h6">
-            {{ chat?.title || (chat?.conversationType === 'direct' ? 'Direct Chat' : 'Chat') }}
+            {{ chat?.conversationType === 'direct' ? (otherUserName || 'Direct Chat') : (chat?.title || 'Chat') }}
           </div>
           <div class="text-caption text-grey">
             {{ chat?.conversationType === 'group' ? 'Group' : 'Direct' }}
