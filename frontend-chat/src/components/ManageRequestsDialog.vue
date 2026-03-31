@@ -198,3 +198,23 @@ function getStatusColor(status: string) {
     <RequestDetailsDialog ref="detailsDialogRef" />
   </q-dialog>
 </template>
+
+<style scoped>
+.q-card {
+  border-radius: 12px;
+}
+
+.q-item {
+  transition: background 0.2s;
+  border-radius: 8px;
+  margin: 4px 8px;
+}
+
+.q-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.body--dark .q-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+</style>
