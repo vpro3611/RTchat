@@ -8,4 +8,5 @@ export interface CreateChatResponse {
   lastMessageAt: string | null,
   userLow: string | null,
   userHigh: string | null,
+  unreadCount: number,
 }
