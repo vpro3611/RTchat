@@ -20,6 +20,7 @@ class ChatSocketService {
   private socket: Socket | null = null;
   private typingCallbacks: TypingCallback[] = [];
   private errorCallbacks: ErrorCallback[] = [];
+  private currentViewingChatId: string | null = null;
 
   connect() {
     if (this.socket?.connected) return;
@@ -65,6 +66,17 @@ class ChatSocketService {
     });
   }
 
+  getSocket() {
+    return this.socket;
+  }
+
+  setCurrentChat(chatId: string | null) {
+    this.currentViewingChatId = chatId;
+    if (chatId) {
+      ChatStore.resetUnread(chatId);
+    }
+  }
+
   private setupEventListeners() {
     if (!this.socket) return;
 
@@ -72,7 +84,7 @@ class ChatSocketService {
     this.socket.on('message:new', (data: Message) => {
       MessageStore.addMessage(data);
       // Обновляем список чатов: поднимаем чат наверх и обновляем превью
-      ChatStore.setLastMessage(data.conversationId, data.content, data.senderId, data.createdAt);
+      ChatStore.setLastMessage(data.conversationId, data.content, data.senderId, data.createdAt, this.currentViewingChatId || undefined);
     });
 
     // Сообщение отредактировано - бэкенд отправляет { message: MessageDTO }
@@ -104,7 +116,7 @@ class ChatSocketService {
                 lastMessageAt: updatedChat.lastMessageAt
               });
             } catch (e) {
-              console.error('Failed to sync chat after message deletion:', e);
+              console.error('Failed to update chat after message deletion:', e);
             }
           })();
         }
@@ -115,6 +127,11 @@ class ChatSocketService {
     this.socket.on('message:read', (data: { conversationId: string; messageId: string; userId: string; readAt: string }) => {
       console.log('Message read:', data);
       MessageStore.markMessagesAsRead(data.conversationId, data.userId, data.readAt);
+      
+      // Reset unread count if we are the one who read it (sync across our own devices)
+      if (data.userId === AuthStore.user?.id) {
+        ChatStore.resetUnread(data.conversationId);
+      }
     });
 
     // Начало набора текста
@@ -206,60 +223,41 @@ class ChatSocketService {
     }
   }
 
-  // Отправить сообщение через WebSocket
   sendMessage(conversationId: string, content: string) {
-    if (!this.socket?.connected) {
-      console.error('Socket not connected');
-      return;
-    }
+    if (!this.socket?.connected) return;
     this.socket.emit('message:send', { conversationId, content });
   }
 
-  // Редактировать сообщение
-  editMessage(conversationId: string, messageId: string, newContent: string) {
-    if (!this.socket?.connected) {
-      console.error('Socket not connected');
-      return;
-    }
-    this.socket.emit('message:edit', { conversationId, messageId, newContent });
+  editMessage(conversationId: string, messageId: string, content: string) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('message:edit', { conversationId, messageId, newContent: content });
   }
 
-  // Удалить сообщение
   deleteMessage(conversationId: string, messageId: string) {
-    if (!this.socket?.connected) {
-      console.error('Socket not connected');
-      return;
-    }
+    if (!this.socket?.connected) return;
     this.socket.emit('message:delete', { conversationId, messageId });
   }
 
-  // Отметить сообщения как прочитанные
   markAsRead(conversationId: string, messageId: string) {
-    if (!this.socket?.connected) {
-      console.error('Socket not connected');
-      return;
-    }
+    if (!this.socket?.connected) return;
     this.socket.emit('message:read', { conversationId, messageId });
+    ChatStore.resetUnread(conversationId);
   }
 
-  // Начало набора текста
   startTyping(conversationId: string) {
     if (!this.socket?.connected) return;
     this.socket.emit('typing:start', { conversationId });
   }
 
-  // Конец набора текста
   stopTyping(conversationId: string) {
     if (!this.socket?.connected) return;
     this.socket.emit('typing:stop', { conversationId });
   }
 
-  // Подписаться на события набора текста
   onTyping(callback: TypingCallback) {
     this.typingCallbacks.push(callback);
   }
 
-  // Отписаться от событий набора текста
   offTyping(callback: TypingCallback) {
     const index = this.typingCallbacks.indexOf(callback);
     if (index !== -1) {
@@ -280,10 +278,6 @@ class ChatSocketService {
 
   isConnected() {
     return this.socket?.connected ?? false;
-  }
-
-  getSocket() {
-    return this.socket;
   }
 }
 
