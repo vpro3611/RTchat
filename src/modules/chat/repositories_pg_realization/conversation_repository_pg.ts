@@ -194,6 +194,23 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
         }
     }
 
+    async getMaxReadAtForOthers(conversationId: string, userId: string): Promise<Date | null> {
+        try {
+            const result = await this.pool.query(
+                `
+                SELECT MAX(read_at) as max_read_at 
+                FROM conversation_reads 
+                WHERE conversation_id = $1 AND user_id != $2
+                `,
+                [conversationId, userId]
+            );
+
+            return result.rows[0].max_read_at ? new Date(result.rows[0].max_read_at) : null;
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
+
     async searchConversations(
         query: string,
         limit = 20,

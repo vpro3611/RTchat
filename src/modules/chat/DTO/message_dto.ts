@@ -13,4 +13,5 @@ export type MessageDTO = {
     updatedAt: string,
     originalSenderId?: string,
     isResent: boolean,
+    isRead: boolean,
 }
