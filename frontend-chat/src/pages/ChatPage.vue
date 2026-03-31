@@ -336,6 +336,7 @@ onMounted(() => {
   void SavedMessagesStore.fetchMessages(50);
 
   if (conversationId.value) {
+    chatSocket.setCurrentChat(conversationId.value);
     void loadMessages();
     void checkOtherUserBlocked();
     void checkCurrentUserCanSendMessages();
@@ -347,6 +348,7 @@ onUnmounted(() => {
   window.removeEventListener('block-status-changed', handleBlockChange);
 
   if (conversationId.value) {
+    chatSocket.setCurrentChat(null);
     chatSocket.getSocket()?.emit('conversation:leave', { conversationId: conversationId.value });
   }
   // Очищаем участники при выходе из чата
@@ -358,8 +360,11 @@ watch(() => route.params.id, (newId) => {
   sendRestrictionMessage.value = null;
 
   if (newId) {
+    chatSocket.setCurrentChat(newId as string);
     void loadMessages();
     void checkCurrentUserCanSendMessages();
+  } else {
+    chatSocket.setCurrentChat(null);
   }
 });
 
