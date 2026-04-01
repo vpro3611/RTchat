@@ -60,7 +60,6 @@ export class Participant {
     private canChangeRole(actor: Participant, target: Participant) {
         return (
             actor.getRole() === ParticipantRole.OWNER &&
-            actor.canSendMessages &&
             actor.getConversationId() === target.getConversationId() &&
             actor.userId !== target.userId &&
             target.role === ParticipantRole.MEMBER
