@@ -10,4 +10,6 @@ export interface ParticipantRepoInterface {
     exists(conversationId: string, userId: string): Promise<boolean>;
     getParticipants(conversationId: string, limit?: number, cursor?: string): Promise<{items: ParticipantListDTO[], nextCursor?: string}>;
     getSpecificParticipant(conversationId: string, userId: string): Promise<FullParticipantDto | null>;
+    getOldestParticipantNotOwner(conversationId: string, actorId: string): Promise<Participant | null>;
+    getOwners(conversationId: string): Promise<Participant[]>;
 }
