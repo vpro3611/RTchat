@@ -10,7 +10,7 @@ export class LeaveConversationTxService {
     constructor(private readonly txManager: TransactionManagerInterface) {}
 
 
-    async leaveConversationTxService(actorId: string, conversationId: string) {
+    async leaveConversationTxService(actorId: string, conversationId: string): Promise<string | null> {
         return await this.txManager.runInTransaction(async (client) => {
             const participantRepo = new ParticipantRepositoryPg(client);
 
