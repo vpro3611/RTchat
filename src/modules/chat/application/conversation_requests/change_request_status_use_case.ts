@@ -75,10 +75,8 @@ export class ChangeRequestStatusUseCase {
     }
 
     private async invalidateParticipantCaches(conversationId: string, userId: string) {
-        await Promise.all([
-            this.cacheService.del(`participants:conv:${conversationId}`),
-            this.cacheService.delByPattern(`conv:user:${userId}:*`),
-        ]);
+        await this.cacheService.delByPattern(`participants:conv:${conversationId}:*`);
+        await this.cacheService.delByPattern(`conv:user:${userId}:*`);
     }
 
     async changeRequestStatusUseCase(

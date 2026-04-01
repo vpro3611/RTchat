@@ -16,8 +16,11 @@ export class LeaveConversationUseCase {
         return exists;
     }
 
-    private async invalidateParticipantsCache(conversationId: string) {
-        await this.cacheService.del(`participants:conv:${conversationId}`);
+    private async invalidateParticipantsCache(conversationId: string, newOwnerId: string | null) {
+        await this.cacheService.delByPattern(`participants:conv:${conversationId}:*`);
+        if (newOwnerId) {
+            await this.cacheService.del(`participant:conv:${conversationId}:user:${newOwnerId}`);
+        }
     }
 
     private async invalidateUserConversations(userId: string) {
@@ -45,10 +48,8 @@ export class LeaveConversationUseCase {
 
         await this.participantRepo.remove(conversationId, actorId);
 
-        await Promise.all([
-            this.invalidateParticipantsCache(conversationId),
-            this.invalidateUserConversations(actorId)
-        ]);
+        await this.invalidateParticipantsCache(conversationId, newOwnerId);
+        await this.invalidateUserConversations(actorId);
 
         return newOwnerId;
     }
