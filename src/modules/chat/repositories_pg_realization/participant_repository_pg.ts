@@ -193,4 +193,42 @@ export class ParticipantRepositoryPg implements ParticipantRepoInterface {
             throw mapPgError(error);
         }
     }
+
+    async getOldestParticipantNotOwner(conversationId: string, actorId: string): Promise<Participant | null> {
+        try {
+            const query = `
+                SELECT * FROM conversation_participants
+                WHERE conversation_id = $1 AND user_id != $2 AND role != 'owner'
+                ORDER BY joined_at ASC
+                LIMIT 1
+            `
+
+            const result = await this.pool.query(query, [conversationId, actorId]);
+
+            if (!result.rows.length) {
+                return null;
+            }
+
+            const row = result.rows[0];
+
+            return this.mapToParticipant(row);
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
+
+    async getOwners(conversationId: string): Promise<Participant[]> {
+        try {
+            const query = `
+                SELECT * FROM conversation_participants
+                WHERE conversation_id = $1 AND role = 'owner'
+            `
+
+            const result = await this.pool.query(query, [conversationId]);
+
+            return result.rows.map(row => this.mapToParticipant(row));
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
 }
