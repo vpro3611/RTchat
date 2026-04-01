@@ -833,6 +833,7 @@ export function assembleContainer(io: Server)
     );
     const leaveConversationController = new LeaveConversationController(
         leaveConversationService,
+        getSpecificParticipantService,
         extractActorId,
         io
     );
