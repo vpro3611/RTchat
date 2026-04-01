@@ -9,10 +9,11 @@ export class LeaveConversationUseCase {
     ) {}
 
     private async actorIsParticipant(conversationId: string, actorId: string){
-        const exists = await this.participantRepo.exists(conversationId, actorId);
+        const exists = await this.participantRepo.findParticipant(conversationId, actorId);
         if (!exists) {
             throw new ActorIsNotParticipantError("User is not a member of the conversation");
         }
+        return exists;
     }
 
     private async invalidateParticipantsCache(conversationId: string) {
@@ -23,15 +24,32 @@ export class LeaveConversationUseCase {
         await this.cacheService.delByPattern(`conv:user:${userId}:*`);
     }
 
-    async leaveConversationUseCase(actorId: string, conversationId: string): Promise<void> {
-        await this.actorIsParticipant(conversationId, actorId);
+    async leaveConversationUseCase(actorId: string, conversationId: string): Promise<string | null> {
+        const leaver = await this.actorIsParticipant(conversationId, actorId);
+        
+        let newOwnerId: string | null = null;
+
+        if (leaver.getRole() === 'owner') {
+            const owners = await this.participantRepo.getOwners(conversationId);
+            
+            // If the leaver is the only owner, try to transfer ownership
+            if (owners.length === 1) {
+                const candidate = await this.participantRepo.getOldestParticipantNotOwner(conversationId, actorId);
+                if (candidate) {
+                    candidate.changeRole(leaver, candidate);
+                    await this.participantRepo.save(candidate);
+                    newOwnerId = candidate.userId;
+                }
+            }
+        }
 
         await this.participantRepo.remove(conversationId, actorId);
 
         await Promise.all([
-            await this.invalidateParticipantsCache(conversationId),
-            await this.invalidateUserConversations(actorId)
+            this.invalidateParticipantsCache(conversationId),
+            this.invalidateUserConversations(actorId)
         ]);
 
+        return newOwnerId;
     }
 }
