@@ -24,3 +24,9 @@ export class CannotEditMessageError extends ConflictError {
         super(message);
     }
 }
+
+export class InsecureAttachmentError extends ValidationError {
+    constructor(message: string) {
+        super(message);
+    }
+}
