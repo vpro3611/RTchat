@@ -27,7 +27,8 @@ export class SendMessageController {
             await this.sendMessageService.sendMessageTxService(
                 userId.sub,
                 conversationId,
-                content
+                content,
+                []
             );
 
         io.to(conversationId).emit("message:new", message);
