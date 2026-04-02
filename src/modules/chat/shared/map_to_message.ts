@@ -18,6 +18,15 @@ export class MapToMessage {
             originalSenderId: message.getOriginalSenderId(),
             isResent: message.getIsResent(),
             isRead: isRead,
+            attachments: message.getAttachments().map(a => ({
+                id: a.id,
+                blobId: a.blobId,
+                type: a.type,
+                name: a.name,
+                mimeType: a.mimeType,
+                size: a.size,
+                createdAt: a.createdAt.toISOString()
+            }))
         }
     }
 }
