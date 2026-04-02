@@ -19,6 +19,8 @@ import ParticipantListDialog from "components/ParticipantListDialog.vue";
 import MessageBubble from "components/MessageBubble.vue";
 import ResendMessageDialog from "components/ResendMessageDialog.vue";
 import AppAvatar from "components/AppAvatar.vue";
+import MediaViewer from "components/MediaViewer.vue";
+import type { Attachment } from "src/api/types/attachment";
 
 const $q = useQuasar()
 const route = useRoute();
@@ -30,6 +32,7 @@ const dialogRef = ref();
 const resendDialogRef = ref<{ open: () => void } | null>(null);
 const forwardingMessageId = ref<string>("");
 const participantsDialogRef = ref<{ openDialog: () => void } | null>(null);
+const mediaViewerRef = ref<{ open: (attachments: Attachment[], index: number) => void } | null>(null);
 const isEditing = ref(false);
 const editingMessageId = ref<string | null>(null);
 const editContent = ref("");
@@ -298,6 +301,10 @@ function openParticipantsDialog() {
   participantsDialogRef.value?.openDialog();
 }
 
+function handleOpenMedia(index: number, attachments: Attachment[]) {
+  mediaViewerRef.value?.open(attachments, index);
+}
+
 function handleSocketError(data: { message: string }) {
   const msg = data.message.toLowerCase();
   console.error('Socket error received:', data.message);
@@ -428,6 +435,7 @@ watch(
       :conversationId="conversationId"
       :conversationType="(chat?.conversationType as 'direct' | 'group') ?? 'direct'"
     />
+    <MediaViewer ref="mediaViewerRef" />
 
     <!-- BLOCKED NOTICE -->
     <div v-if="isOtherUserBlocked" class="blocked-notice q-pa-sm text-center bg-grey-2">
@@ -467,6 +475,7 @@ watch(
           @delete="deleteMessage"
           @save="saveMessageAction"
           @forward="handleForwardMessage"
+          @open-media="handleOpenMedia"
         />
         <div id="typing-indicator" style="height: 20px;"></div>
       </div>
