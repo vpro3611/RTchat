@@ -6,6 +6,8 @@ import AppAvatar from "./AppAvatar.vue";
 import AttachmentGallery from "./AttachmentGallery.vue";
 import FileAttachment from "./FileAttachment.vue";
 
+import type {Attachment} from "src/api/types/attachment";
+
 const props = defineProps<{
   message: Message;
   isOwn: boolean;
@@ -47,7 +49,7 @@ const emit = defineEmits<{
   (e: 'delete', messageId: string): void;
   (e: 'save', messageId: string): void;
   (e: 'forward', messageId: string): void;
-  (e: 'open-media', index: number, attachments: any[]): void;
+  (e: 'open-media', index: number, attachments: Attachment[]): void;
 }>();
 
 function formatTime(dateString: string) {
