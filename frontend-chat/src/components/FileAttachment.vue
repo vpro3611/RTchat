@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Attachment } from 'src/api/types/attachment';
+import type { Attachment } from 'src/api/types/attachment';
 import { BaseUrl } from 'src/base_url/base_url';
 import { useQuasar } from 'quasar';
 

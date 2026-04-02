@@ -247,11 +247,12 @@ async function sendMessage() {
     message.value = "";
     scrollToBottom(true);
     focusInput();
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to send message:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
     $q.notify({
       type: 'negative',
-      message: error.message || 'Failed to send message'
+      message: errorMessage
     });
   }
 }
