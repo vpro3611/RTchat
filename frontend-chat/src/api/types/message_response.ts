@@ -1,3 +1,5 @@
+import { Attachment } from "./attachment";
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -12,6 +14,7 @@ export interface Message {
   isResent: boolean;
   originalSenderId?: string;
   isRead: boolean;
+  attachments: Attachment[];
 }
 
 export interface MessagesResponse {
