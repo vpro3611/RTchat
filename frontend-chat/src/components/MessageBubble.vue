@@ -3,12 +3,22 @@ import { computed, onMounted } from "vue";
 import type {Message} from "src/api/types/message_response";
 import { UserCacheStore } from "stores/user_cache_store";
 import AppAvatar from "./AppAvatar.vue";
+import AttachmentGallery from "./AttachmentGallery.vue";
+import FileAttachment from "./FileAttachment.vue";
 
 const props = defineProps<{
   message: Message;
   isOwn: boolean;
   isSaved?: boolean;
 }>();
+
+const mediaAttachments = computed(() => 
+  props.message.attachments?.filter(a => a.type === 'image' || a.type === 'video') || []
+);
+
+const fileAttachments = computed(() => 
+  props.message.attachments?.filter(a => a.type === 'file') || []
+);
 
 // FIX : FIXED - вычисляем senderUsername из кэша
 const senderUsername = computed(() => {
@@ -37,6 +47,7 @@ const emit = defineEmits<{
   (e: 'delete', messageId: string): void;
   (e: 'save', messageId: string): void;
   (e: 'forward', messageId: string): void;
+  (e: 'open-media', index: number, attachments: any[]): void;
 }>();
 
 function formatTime(dateString: string) {
@@ -96,6 +107,7 @@ function handleForward() {
         Forwarded from {{ originalSenderUsername }}
       </div>
 
+      <!-- Sender -->
       <div
         v-if="!isOwn && senderUsername"
         class="text-caption q-px-sm q-pt-xs row items-center q-gutter-x-xs text-primary text-weight-bold"
@@ -108,8 +120,25 @@ function handleForward() {
         <span>{{ senderUsername }}</span>
       </div>
 
+      <!-- Media Attachments -->
+      <AttachmentGallery
+        v-if="mediaAttachments.length > 0"
+        :attachments="mediaAttachments"
+        @open-viewer="(index) => emit('open-media', index, mediaAttachments)"
+      />
+
+      <!-- File Attachments -->
+      <div v-if="fileAttachments.length > 0" class="q-px-sm q-pt-xs">
+        <FileAttachment
+          v-for="file in fileAttachments"
+          :key="file.id"
+          :attachment="file"
+          :is-own="isOwn"
+        />
+      </div>
+
       <!-- Content -->
-      <q-card-section class="q-py-xs q-px-sm">
+      <q-card-section v-if="message.content" class="q-py-xs q-px-sm">
         <div class="message-content">
           {{ message.content }}
         </div>
