@@ -11,6 +11,10 @@ describe("SendMessageUseCase", () => {
     let participantRepo: any;
     let userToUserBansRepo: any;
     let conversationBansRepo: any;
+    let virusScanner: any;
+    let videoProcessor: any;
+    let imageProcessor: any;
+    let blobRepo: any;
 
     let useCase: SendMessageUseCase;
 
@@ -26,7 +30,8 @@ describe("SendMessageUseCase", () => {
 
         conversationRepo = {
             findById: jest.fn(),
-            updateLastMessage: jest.fn()
+            updateLastMessage: jest.fn(),
+            getMaxReadAtForOthers: jest.fn()
         };
 
         mapper = {
@@ -54,6 +59,22 @@ describe("SendMessageUseCase", () => {
             isBanned: jest.fn()
         };
 
+        virusScanner = {
+            scanBuffer: jest.fn().mockResolvedValue(true)
+        };
+
+        videoProcessor = {
+            stripMetadata: jest.fn().mockImplementation(b => Promise.resolve(b))
+        };
+
+        imageProcessor = {
+            processImage: jest.fn().mockImplementation(b => Promise.resolve({ data: b, mimeType: 'image/webp' }))
+        };
+
+        blobRepo = {
+            save: jest.fn().mockResolvedValue("blob-1")
+        };
+
         useCase = new SendMessageUseCase(
             messageRepo,
             conversationRepo,
@@ -62,7 +83,11 @@ describe("SendMessageUseCase", () => {
             cacheService,
             participantRepo,
             userToUserBansRepo,
-            conversationBansRepo
+            conversationBansRepo,
+            virusScanner,
+            videoProcessor,
+            imageProcessor,
+            blobRepo
         );
 
     });
@@ -112,6 +137,8 @@ describe("SendMessageUseCase", () => {
 
         userToUserBansRepo.ensureAnyBlocksExists.mockResolvedValue(false);
 
+        conversationRepo.getMaxReadAtForOthers.mockResolvedValue(new Date());
+
         mapper.mapToMessage.mockReturnValue({ id: "msg-1" });
 
         const result = await useCase.sendMessageUseCase(
@@ -136,6 +163,56 @@ describe("SendMessageUseCase", () => {
 
         expect(cacheService.delByPattern)
             .toHaveBeenCalledWith(`conv:user:${USER_B}:*`);
+
+        expect(result).toEqual({ id: "msg-1" });
+
+    });
+
+    it("should send message with attachments successfully", async () => {
+
+        const participant = {
+            getCanSendMessages: () => true
+        };
+
+        checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
+
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "group"
+        });
+
+        participantRepo.getParticipants.mockResolvedValue({
+            items: [
+                { userId: USER_ID }
+            ]
+        });
+
+        conversationRepo.getMaxReadAtForOthers.mockResolvedValue(new Date());
+
+        mapper.mapToMessage.mockReturnValue({ id: "msg-1" });
+
+        const files = [
+            { buffer: Buffer.from("test"), originalname: "test.png", mimetype: "image/png", size: 4 },
+            { buffer: Buffer.from("test2"), originalname: "test.mp4", mimetype: "video/mp4", size: 5 }
+        ];
+
+        const result = await useCase.sendMessageUseCase(
+            USER_ID,
+            CONVERSATION_ID,
+            "hello with files",
+            files
+        );
+
+        expect(virusScanner.scanBuffer).toHaveBeenCalledTimes(2);
+        expect(imageProcessor.processImage).toHaveBeenCalledTimes(1);
+        expect(videoProcessor.stripMetadata).toHaveBeenCalledTimes(1);
+        expect(blobRepo.save).toHaveBeenCalledTimes(2);
+        
+        expect(messageRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+            attachments: expect.arrayContaining([
+                expect.objectContaining({ name: "test.png", type: "image" }),
+                expect.objectContaining({ name: "test.mp4", type: "video" })
+            ])
+        }));
 
         expect(result).toEqual({ id: "msg-1" });
 
