@@ -1,6 +1,7 @@
 import { Message } from "../../../../src/modules/chat/domain/message/message";
 import { Content } from "../../../../src/modules/chat/domain/message/content";
 import { CannotEditMessageError } from "../../../../src/modules/chat/errors/message_errors/message_errors";
+import { Attachment } from "../../../../src/modules/chat/domain/message/attachment";
 
 describe("Message Domain", () => {
 
@@ -38,6 +39,21 @@ describe("Message Domain", () => {
 
         expect(message.getCreatedAt())
             .toBeInstanceOf(Date);
+    });
+
+    it("should create message with attachments", () => {
+        const content = Content.create("Hello with files");
+        const attachment = Attachment.create("blob-1", "image", "test.png", "image/png", 1024);
+
+        const message = Message.create(
+            CONVERSATION_ID,
+            USER_ID,
+            content,
+            [attachment]
+        );
+
+        expect(message.getAttachments()).toHaveLength(1);
+        expect(message.getAttachments()[0]).toBe(attachment);
     });
 
     // =========================
