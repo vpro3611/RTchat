@@ -10,4 +10,13 @@ export class ImageProcessor implements ImageProcessorInterface {
         
         return { data: processed, mimeType: "image/webp" };
     }
+
+    async processImage(buffer: Buffer): Promise<{ data: Buffer; mimeType: string }> {
+        const processed = await sharp(buffer)
+            .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+            .webp({ quality: 80 })
+            .toBuffer();
+        
+        return { data: processed, mimeType: "image/webp" };
+    }
 }
