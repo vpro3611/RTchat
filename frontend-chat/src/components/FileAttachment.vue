@@ -2,6 +2,7 @@
 import type { Attachment } from 'src/api/types/attachment';
 import { BaseUrl } from 'src/base_url/base_url';
 import { useQuasar } from 'quasar';
+import { AuthStore } from 'src/stores/auth_store';
 
 const props = defineProps<{
   attachment: Attachment;
@@ -31,18 +32,39 @@ function getFileIcon(mimeType: string, name: string): string {
 
 const downloadUrl = `${BaseUrl.apiBaseUrl}/private/attachment/${props.attachment.blobId}`;
 
-function downloadFile() {
-  window.open(downloadUrl, '_blank');
+async function downloadFile() {
+  try {
+    const response = await fetch(downloadUrl, {
+      headers: {
+        'Authorization': `Bearer ${AuthStore.accessToken}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Download failed');
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = props.attachment.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Download failed:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to download file'
+    });
+  }
 }
 </script>
 
 <template>
   <div 
     class="file-attachment q-pa-sm q-mb-xs cursor-pointer rounded-borders row items-center no-wrap"
-    :class="[
-      $q.dark.isActive ? 'bg-dark' : 'bg-grey-2',
-      isOwn ? 'own-file' : 'incoming-file'
-    ]"
+    :class="{ 'is-own': isOwn }"
     @click="downloadFile"
   >
     <div class="icon-container flex flex-center q-mr-sm">
@@ -50,17 +72,17 @@ function downloadFile() {
     </div>
     
     <div class="file-info column justify-center overflow-hidden">
-      <div class="file-name text-weight-medium ellipsis" :class="isOwn ? 'text-white' : 'text-primary'">
+      <div class="file-name text-weight-medium ellipsis">
         {{ attachment.name }}
       </div>
-      <div class="file-meta text-caption" :class="isOwn ? 'text-white-70' : 'text-grey-7'">
+      <div class="file-meta text-caption">
         {{ formatFileSize(attachment.size) }}
       </div>
     </div>
 
     <q-space />
     
-    <q-btn flat round dense icon="download" size="sm" :color="isOwn ? 'white' : 'primary'">
+    <q-btn flat round dense icon="download" size="sm" class="download-btn">
       <q-tooltip>Download</q-tooltip>
     </q-btn>
   </div>
@@ -69,44 +91,70 @@ function downloadFile() {
 <style scoped>
 .file-attachment {
   max-width: 300px;
-  min-width: 200px;
-  transition: background 0.2s ease;
+  min-width: 220px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.body--dark .file-attachment {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Sender's bubble is primary, so we make the attachment stand out as a clean card */
+.is-own {
+  background: white !important;
+  border: none;
+}
+
+.body--dark .is-own {
+  background: #1e1e1e !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .file-attachment:hover {
-  filter: brightness(0.95);
-}
-
-.own-file {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.incoming-file {
-  background: rgba(0, 0, 0, 0.05);
+  filter: brightness(0.98);
 }
 
 .icon-container {
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  flex-shrink: 0;
 }
 
-.incoming-file .icon-container {
-  background: white;
+.body--dark .icon-container {
+  background: #2a2a2a;
+}
+
+.is-own .icon-container {
+  background: #f5f5f5;
 }
 
 .file-name {
+  color: var(--q-primary);
   font-size: 0.9rem;
   line-height: 1.2;
 }
 
 .file-meta {
-  font-size: 0.75rem;
+  color: #666;
 }
 
-.text-white-70 {
-  color: rgba(255, 255, 255, 0.7);
+.body--dark .file-meta {
+  color: #aaa;
+}
+
+.download-btn {
+  color: var(--q-primary);
+}
+
+.is-own .download-btn {
+  color: var(--q-primary);
 }
 
 .ellipsis {
