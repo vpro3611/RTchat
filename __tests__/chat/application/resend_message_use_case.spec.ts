@@ -26,7 +26,11 @@ describe("ResendMessageUseCase", () => {
 
     beforeEach(() => {
         messageRepo = { create: jest.fn() };
-        conversationRepo = { findById: jest.fn(), updateLastMessage: jest.fn() };
+        conversationRepo = { 
+            findById: jest.fn(), 
+            updateLastMessage: jest.fn(),
+            getMaxReadAtForOthers: jest.fn()
+        };
         messageMapper = { mapToMessage: jest.fn(m => m) };
         checkIsParticipant = { checkIsParticipant: jest.fn() };
         findMessageById = { findMessageById: jest.fn() };
@@ -69,6 +73,7 @@ describe("ResendMessageUseCase", () => {
         participantRepo.getParticipants.mockResolvedValue({ 
             items: [{ userId: "user-1" }, { userId: "user-2" }] 
         });
+        conversationRepo.getMaxReadAtForOthers.mockResolvedValue(new Date());
 
         const result = await useCase.resendMessageUseCase(actorId, messageId, sourceConvId, targetConvId);
 
@@ -169,6 +174,7 @@ describe("ResendMessageUseCase", () => {
         conversationRepo.findById.mockResolvedValue({ getConversationType: () => "group" });
         conversationBansRepo.isBanned.mockResolvedValue(null);
         participantRepo.getParticipants.mockResolvedValue({ items: [] });
+        conversationRepo.getMaxReadAtForOthers.mockResolvedValue(new Date());
 
         await useCase.resendMessageUseCase(actorId, messageId, sourceConvId, targetConvId);
 
