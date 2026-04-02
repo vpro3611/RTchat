@@ -112,7 +112,7 @@ import {
 export const createApp = (dependencies: AppContainer): Express => {
     const app = express();
 
-    const upload = multer({ limits: { fileSize: 2 * 1024 * 1024 } });
+    const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } });
 
     // TODO : loger middleware here.
     app.use(pinoHttp({
