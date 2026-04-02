@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { BaseUrl } from 'src/base_url/base_url';
 import type { Attachment } from 'src/api/types/attachment';
+import AuthenticatedMedia from './AuthenticatedMedia.vue';
+import { fetchAuthenticatedMedia } from 'src/services/media_service';
 
 const isOpen = ref(false);
 const attachments = ref<Attachment[]>([]);
@@ -24,26 +26,15 @@ async function download() {
   if (!currentAttachment.value) return;
   
   try {
-    const response = await fetch(mediaUrl.value);
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
+    const objectUrl = await fetchAuthenticatedMedia(mediaUrl.value);
     const link = document.createElement('a');
-    link.href = url;
+    link.href = objectUrl;
     link.download = currentAttachment.value.name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Download failed:', error);
-    // Fallback to direct link if fetch fails
-    const link = document.createElement('a');
-    link.href = mediaUrl.value;
-    link.download = currentAttachment.value.name;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
 }
 
@@ -118,23 +109,14 @@ defineExpose({ open });
           :name="index"
           class="flex flex-center q-pa-none no-scroll"
         >
-          <div v-if="item.type === 'image'" class="full-width full-height flex flex-center">
-             <img 
-              :src="`${BaseUrl.apiBaseUrl}/private/attachment/${item.blobId}`" 
-              class="responsive-media"
-            />
-          </div>
-          <div v-else-if="item.type === 'video'" class="full-width full-height flex flex-center">
-            <video
-              controls
-              autoplay
-              class="responsive-media"
-              style="max-width: 100%; max-height: 100%;"
-            >
-              <source :src="`${BaseUrl.apiBaseUrl}/private/attachment/${item.blobId}`" :type="item.mimeType">
-              Your browser does not support the video tag.
-            </video>
-          </div>
+          <AuthenticatedMedia
+            :src="`${BaseUrl.apiBaseUrl}/private/attachment/${item.blobId}`"
+            :type="item.type === 'image' ? 'image' : 'video'"
+            fit="contain"
+            :controls="true"
+            :autoplay="true"
+            class-name="responsive-media"
+          />
         </q-carousel-slide>
       </q-carousel>
     </q-card>
@@ -156,7 +138,6 @@ defineExpose({ open });
   max-height: 100%;
   object-fit: contain;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .z-max {
