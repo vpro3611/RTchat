@@ -175,6 +175,9 @@ describe("GetSpecificMessageUseCase", () => {
             id: MESSAGE_ID
         };
 
+        const maxReadAt = new Date();
+        conversationRepo.getMaxReadAtForOthers.mockResolvedValue(maxReadAt);
+
         findMessageById.findMessageById.mockResolvedValue(message);
         messageMapper.mapToMessage.mockReturnValue(mappedMessage);
 
@@ -189,7 +192,7 @@ describe("GetSpecificMessageUseCase", () => {
         );
 
         expect(messageMapper.mapToMessage)
-            .toHaveBeenCalledWith(message);
+            .toHaveBeenCalledWith(message, maxReadAt);
 
         expect(result).toEqual(mappedMessage);
 
