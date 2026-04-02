@@ -2,12 +2,16 @@ import {MessageRepoInterface} from "../domain/ports/message_repo_interface";
 import {Pool, PoolClient} from "pg";
 import {Message} from "../domain/message/message";
 import {mapPgError} from "../../error_mapper/pg_error_mapper";
+import {AttachmentRepositoryPg} from "./attachment_repository_pg";
 
 
 export class MessageRepositoryPg implements MessageRepoInterface {
-    constructor(private readonly pg: Pool | PoolClient) {}
+    private readonly attachmentRepo: AttachmentRepositoryPg;
+    constructor(private readonly pg: Pool | PoolClient) {
+        this.attachmentRepo = new AttachmentRepositoryPg(pg);
+    }
 
-    private mapToMessage(row: any): Message {
+    private mapToMessage(row: any, attachments: any[] = []): Message {
         return Message.restore(
             row.id,
             row.conversation_id,
@@ -19,6 +23,7 @@ export class MessageRepositoryPg implements MessageRepoInterface {
             row.updated_at,
             row.original_sender_id,
             row.is_resent,
+            attachments,
         );
     }
 
@@ -43,6 +48,10 @@ export class MessageRepositoryPg implements MessageRepoInterface {
                     message.getIsResent(),
                 ]
             );
+
+            for (const attachment of message.getAttachments()) {
+                await this.attachmentRepo.save(message.id, attachment);
+            }
         } catch (error) {
             throw mapPgError(error);
         }
@@ -60,8 +69,9 @@ export class MessageRepositoryPg implements MessageRepoInterface {
             }
 
             const row = result.rows[0];
+            const attachments = await this.attachmentRepo.findByMessageId(id);
 
-            return this.mapToMessage(row);
+            return this.mapToMessage(row, attachments);
         } catch (error) {
             throw mapPgError(error);
         }
@@ -73,8 +83,6 @@ export class MessageRepositoryPg implements MessageRepoInterface {
             let cursorCondition = "";
             let orderBy = "ORDER BY created_at ASC";
 
-            // При первом запросе (без курсора) - получаем последние сообщения (новые)
-            // При пагинации (с курсором) - получаем более старые сообщения
             if (cursor) {
                 params.push(cursor);
                 cursorCondition = `AND created_at < $${params.length}`;
@@ -106,9 +114,11 @@ export class MessageRepositoryPg implements MessageRepoInterface {
                 nextCursor = nextItem?.created_at.toISOString();
             }
 
-            const items = rows.map(row => this.mapToMessage(row));
+            const items = await Promise.all(rows.map(async row => {
+                const attachments = await this.attachmentRepo.findByMessageId(row.id);
+                return this.mapToMessage(row, attachments);
+            }));
 
-            // При первом запросе переворачиваем, чтобы старые были сверху
             if (!cursor) {
                 items.reverse();
             }
