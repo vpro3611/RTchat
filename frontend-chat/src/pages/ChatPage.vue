@@ -20,6 +20,8 @@ import MessageBubble from "components/MessageBubble.vue";
 import ResendMessageDialog from "components/ResendMessageDialog.vue";
 import AppAvatar from "components/AppAvatar.vue";
 import MediaViewer from "components/MediaViewer.vue";
+import DragAndDropOverlay from "components/DragAndDropOverlay.vue";
+import UploadPreviewBar from "components/UploadPreviewBar.vue";
 import type { Attachment } from "src/api/types/attachment";
 
 const $q = useQuasar()
@@ -40,6 +42,10 @@ const isOtherUserBlocked = ref(false);
 const isCurrentUserCanSendMessages = ref(true);
 const sendRestrictionMessage = ref<string | null>(null);
 const isUserScrollingUp = ref(false);
+
+const pendingFiles = ref<File[]>([]);
+const isDragging = ref(false);
+const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const chat = computed(() => {
   return ChatStore.findById(route.params.id as string);
@@ -221,15 +227,101 @@ async function loadMoreMessages() {
   }
 }
 
-// Отправка сообщения через WebSocket
-function sendMessage() {
-  if (!message.value.trim() || !conversationId.value || !isCurrentUserCanSendMessages.value) return;
+// Отправка сообщения
+async function sendMessage() {
+  const content = message.value.trim();
+  const hasFiles = pendingFiles.value.length > 0;
+
+  if ((!content && !hasFiles) || !conversationId.value || !isCurrentUserCanSendMessages.value) return;
 
   sendRestrictionMessage.value = null;
-  chatSocket.sendMessage(conversationId.value, message.value.trim());
-  message.value = "";
-  scrollToBottom(true);
-  focusInput();
+
+  try {
+    if (hasFiles) {
+      await MessageApi.sendMessageWithFiles(conversationId.value, content, pendingFiles.value);
+      pendingFiles.value = [];
+    } else {
+      chatSocket.sendMessage(conversationId.value, content);
+    }
+
+    message.value = "";
+    scrollToBottom(true);
+    focusInput();
+  } catch (error: any) {
+    console.error('Failed to send message:', error);
+    $q.notify({
+      type: 'negative',
+      message: error.message || 'Failed to send message'
+    });
+  }
+}
+
+// Drag and drop handlers
+function onDragEnter(e: DragEvent) {
+  e.preventDefault();
+  if (isCurrentUserCanSendMessages.value) {
+    isDragging.value = true;
+  }
+}
+
+function onDragOver(e: DragEvent) {
+  e.preventDefault();
+  if (isCurrentUserCanSendMessages.value) {
+    isDragging.value = true;
+  }
+}
+
+function onDragLeave(e: DragEvent) {
+  e.preventDefault();
+  // Only hide if we're leaving the container
+  if (e.currentTarget === e.target) {
+    isDragging.value = false;
+  }
+}
+
+function onDrop(e: DragEvent) {
+  e.preventDefault();
+  isDragging.value = false;
+
+  if (!isCurrentUserCanSendMessages.value) return;
+
+  if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
+  }
+}
+
+function triggerFileInput() {
+  fileInputRef.value?.click();
+}
+
+function handleFileInput(e: Event) {
+  const target = e.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    addFiles(Array.from(target.files));
+    target.value = ''; // Reset input
+  }
+}
+
+function addFiles(files: File[]) {
+  // 10MB limit check
+  const MAX_SIZE = 10 * 1024 * 1024;
+  const oversizedFiles = files.filter(f => f.size > MAX_SIZE);
+
+  if (oversizedFiles.length > 0) {
+    $q.notify({
+      type: 'negative',
+      message: `Some files exceed 10MB limit: ${oversizedFiles.map(f => f.name).join(', ')}`,
+      timeout: 5000
+    });
+  }
+
+  const validFiles = files.filter(f => f.size <= MAX_SIZE);
+  pendingFiles.value.push(...validFiles);
+}
+
+function removeFile(index: number) {
+  pendingFiles.value.splice(index, 1);
 }
 
 // Начало редактирования
@@ -393,7 +485,14 @@ watch(
 </script>
 
 <template>
-  <div class="chat-page-container column no-wrap">
+  <div
+    class="chat-page-container column no-wrap"
+    @dragenter="onDragEnter"
+    @dragover="onDragOver"
+    @dragleave="onDragLeave"
+    @drop="onDrop"
+  >
+    <DragAndDropOverlay :show="isDragging" />
 
     <!-- HEADER -->
     <header class="chat-header q-pa-md border-bottom row items-center justify-between">
@@ -499,6 +598,14 @@ watch(
 
     <!-- INPUT AREA (STICKY) -->
     <footer class="input-area border-top q-pa-md">
+      <!-- Upload Previews -->
+      <UploadPreviewBar
+        v-if="pendingFiles.length > 0"
+        :pending-files="pendingFiles"
+        @remove="removeFile"
+        class="q-mb-sm rounded-borders"
+      />
+
       <!-- Edit Mode -->
       <div v-if="isEditing" class="row items-center q-gutter-sm q-mb-sm bg-grey-2 q-pa-sm rounded-borders">
         <q-icon name="edit" color="primary" />
@@ -507,6 +614,24 @@ watch(
       </div>
 
       <div class="row items-end q-gutter-x-sm">
+        <input
+          ref="fileInputRef"
+          type="file"
+          multiple
+          class="hidden"
+          @change="handleFileInput"
+        />
+        <q-btn
+          v-if="!isEditing"
+          flat round dense
+          icon="attach_file"
+          color="grey-7"
+          @click="triggerFileInput"
+          :disable="!isCurrentUserCanSendMessages"
+        >
+          <q-tooltip>Attach files</q-tooltip>
+        </q-btn>
+
         <q-input
           ref="messageInputRef"
           v-model="inputModel"
@@ -526,7 +651,7 @@ watch(
               :icon="isEditing ? 'check' : 'send'"
               :color="isEditing ? 'positive' : 'primary'"
               @click="isEditing ? saveEdit() : sendMessage()"
-              :disable="isEditing ? !editContent.trim() : !message.trim() || !isCurrentUserCanSendMessages"
+              :disable="isEditing ? !editContent.trim() : (!message.trim() && pendingFiles.length === 0) || !isCurrentUserCanSendMessages"
             />
           </template>
         </q-input>
