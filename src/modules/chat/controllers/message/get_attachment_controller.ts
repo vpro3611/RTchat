@@ -8,7 +8,7 @@ export class GetAttachmentController {
         private readonly attachmentRepo: AttachmentRepositoryPg
     ) {}
 
-    async getAttachment(req: Request, res: Response) {
+    getAttachment = async (req: Request, res: Response) => {
         try {
             const blobId = req.params.blobId as string;
             
@@ -26,6 +26,7 @@ export class GetAttachmentController {
             const contentType = attachment ? attachment.mimeType : "application/octet-stream";
 
             res.setHeader("Content-Type", contentType);
+            res.setHeader("Cache-Control", "private, max-age=31536000"); // Cache for 1 year since blobId is unique
             // Optionally set Content-Disposition if we have the name
             if (attachment) {
                 res.setHeader("Content-Disposition", `inline; filename="${attachment.name}"`);
