@@ -1,5 +1,6 @@
 import {Content} from "./content";
 import {CannotEditMessageError} from "../../errors/message_errors/message_errors";
+import {Attachment} from "./attachment";
 
 
 export class Message {
@@ -15,6 +16,7 @@ export class Message {
         private updatedAt: Date,
         private readonly originalSenderId?: string,
         private readonly isResent: boolean = false,
+        private readonly attachments: Attachment[] = []
     ) {}
 
     static restore(
@@ -28,6 +30,7 @@ export class Message {
         updatedAt: Date,
         originalSenderId?: string,
         isResent: boolean = false,
+        attachments: Attachment[] = []
     ) {
         return new Message(
             id,
@@ -40,6 +43,7 @@ export class Message {
             updatedAt,
             originalSenderId,
             isResent,
+            attachments
         );
     }
 
@@ -47,6 +51,7 @@ export class Message {
         conversationId: string,
         senderId: string,
         content: Content,
+        attachments: Attachment[] = []
     ) {
         return new Message(
             crypto.randomUUID(),
@@ -57,6 +62,9 @@ export class Message {
             false,
             new Date(),
             new Date(),
+            undefined,
+            false,
+            attachments
         );
     }
 
@@ -64,7 +72,8 @@ export class Message {
         targetConversationId: string,
         actorId: string,
         content: Content,
-        originalSenderId: string
+        originalSenderId: string,
+        attachments: Attachment[] = []
     ) {
         return new Message(
             crypto.randomUUID(),
@@ -76,7 +85,8 @@ export class Message {
             new Date(),
             new Date(),
             originalSenderId,
-            true
+            true,
+            attachments
         );
     }
 
@@ -113,6 +123,7 @@ export class Message {
     getConversationId = () => this.conversationId;
     getSenderId = () => this.senderId;
     getContent = () => this.content;
+    getAttachments = () => this.attachments;
     getIsEdited = () => this.isEdited;
     getIsDeleted = () => this.isDeleted;
     getCreatedAt = () => this.createdAt;
