@@ -15,4 +15,16 @@ export class BlobRepositoryPg {
             throw mapPgError(error);
         }
     }
+
+    async getById(id: string): Promise<Buffer | null> {
+        try {
+            const result = await this.pool.query(
+                "SELECT data FROM attachment_blobs WHERE id = $1",
+                [id]
+            );
+            return result.rows.length > 0 ? result.rows[0].data : null;
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
 }
