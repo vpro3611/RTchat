@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Attachment } from 'src/api/types/attachment';
+import type { Attachment } from 'src/api/types/attachment';
 import { BaseUrl } from 'src/base_url/base_url';
 import { useQuasar } from 'quasar';
 
@@ -24,22 +24,6 @@ const displayAttachments = computed(() => {
   }
   return mediaAttachments.value.slice(0, 4);
 });
-
-const remainingCount = computed(() => {
-  if (mediaAttachments.value.length <= 4) return 0;
-  return mediaAttachments.value.length - 3; // We show 3 and the 4th is the overlay
-  // Wait, if we show 4 slots, the 4th slot shows "+(Total - 3)"? 
-  // If total is 5, we show 1, 2, 3, and 4th is +2.
-  // Actually usually it's "show 4, 4th has +1".
-});
-
-// Let's re-evaluate "5+ items: grid with +N overlay"
-// If 5 items, we show 4 slots. 4th slot has "+2"? 
-// If we show 4 images, and there are 5, the 4th image should say "+2" to indicate there are 2 more including this one?
-// Or "+1" to indicate 1 more besides the 4 shown?
-// Common pattern: 4th image has overlay "+2" if there are 5 total? No, "+1".
-// Let's do: show max 4. If more than 4, 4th one has overlay with count of (Total - 3).
-// If Total = 5, overlay = "+2". (This item + 1 more).
 
 const getAttachmentUrl = (blobId: string) => `${BaseUrl.apiBaseUrl}/private/attachment/${blobId}`;
 
