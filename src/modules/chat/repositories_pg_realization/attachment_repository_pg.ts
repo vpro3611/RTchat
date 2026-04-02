@@ -27,4 +27,18 @@ export class AttachmentRepositoryPg {
             throw mapPgError(error);
         }
     }
+
+    async findByBlobId(blobId: string): Promise<Attachment | null> {
+        try {
+            const result = await this.pool.query(
+                "SELECT * FROM message_attachments WHERE blob_id = $1 LIMIT 1",
+                [blobId]
+            );
+            if (result.rows.length === 0) return null;
+            const row = result.rows[0];
+            return Attachment.restore(row.id, row.blob_id, row.type as AttachmentType, row.name, row.mime_type, row.size, row.created_at);
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
 }
