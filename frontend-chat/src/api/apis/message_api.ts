@@ -50,6 +50,25 @@ export const MessageApi = {
     );
   },
 
+  sendMessageWithFiles(conversationId: string, content: string, files: File[]) {
+    const formData = new FormData();
+    formData.append('content', content);
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+
+    return fetchJson<SendMessageResponse>(
+      `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+        body: formData,
+      }
+    );
+  },
+
   editMessage(conversationId: string, messageId: string, content: string) {
     return fetchJson<EditMessageResponse>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/${messageId}`,
