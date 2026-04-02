@@ -15,6 +15,13 @@ import {ParticipantListDTO} from "../../DTO/participant_list_dto";
 import {CannotCreateConversationError} from "../../errors/conversation_errors/conversation_errors";
 import {UserToUserBlocksInterface} from "../../../users/ports/user_to_user_blocks_interface";
 import {ConversationBansInterface} from "../../domain/ports/conversation_bans_interface";
+import {Attachment, AttachmentType} from "../../domain/message/attachment";
+import {FileDTO} from "../../DTO/file_dto";
+import {VirusScannerInterface} from "../../domain/ports/virus_scanner_interface";
+import {VideoProcessorInterface} from "../../domain/ports/video_processor_interface";
+import {ImageProcessorInterface} from "../../domain/ports/image_processor_interface";
+import {BlobRepositoryPg} from "../../repositories_pg_realization/blob_repository_pg";
+import {InsecureAttachmentError} from "../../errors/message_errors/message_errors";
 
 
 export class SendMessageUseCase {
@@ -26,6 +33,10 @@ export class SendMessageUseCase {
                 private readonly participantRepo: ParticipantRepoInterface,
                 private readonly userToUserBansRepo: UserToUserBlocksInterface,
                 private readonly conversationBansRepo: ConversationBansInterface,
+                private readonly virusScanner: VirusScannerInterface,
+                private readonly videoProcessor: VideoProcessorInterface,
+                private readonly imageProcessor: ImageProcessorInterface,
+                private readonly blobRepo: BlobRepositoryPg,
     ) {}
 
     private async checkIfUserIsBannedFromGroup(actorId: string, conversationId: string) {
@@ -56,7 +67,43 @@ export class SendMessageUseCase {
         return conversation;
     }
 
-    async sendMessageUseCase(actorId: string, conversationId: string, content: string): Promise<MessageDTO> {
+    private async processAttachments(files: FileDTO[]): Promise<Attachment[]> {
+        const attachments: Attachment[] = [];
+
+        for (const file of files) {
+            const isClean = await this.virusScanner.scanBuffer(file.buffer);
+            if (!isClean) {
+                throw new InsecureAttachmentError(`File ${file.originalname} is infected`);
+            }
+
+            let processedBuffer = file.buffer;
+            let mimeType = file.mimetype;
+            let type: AttachmentType = 'file';
+
+            if (file.mimetype.startsWith('image/')) {
+                const processed = await this.imageProcessor.processImage(file.buffer);
+                processedBuffer = processed.data;
+                mimeType = processed.mimeType;
+                type = 'image';
+            } else if (file.mimetype.startsWith('video/')) {
+                processedBuffer = await this.videoProcessor.stripMetadata(file.buffer);
+                type = 'video';
+            }
+
+            const blobId = await this.blobRepo.save(processedBuffer);
+            attachments.push(Attachment.create(
+                blobId,
+                type,
+                file.originalname,
+                mimeType,
+                processedBuffer.length
+            ));
+        }
+
+        return attachments;
+    }
+
+    async sendMessageUseCase(actorId: string, conversationId: string, content: string, files: FileDTO[] = []): Promise<MessageDTO> {
         const validatedContent = Content.create(content);
         const participant = await this.checkIsParticipant.checkIsParticipant(actorId, conversationId);
 
@@ -80,10 +127,13 @@ export class SendMessageUseCase {
             await this.checkIfUserIsBannedFromGroup(actorId, conversationId);
         }
 
+        const attachments = await this.processAttachments(files);
+
         const message = Message.create(
             conversationId,
             actorId,
             validatedContent,
+            attachments
         );
 
         await this.messageRepo.create(message);
@@ -98,6 +148,8 @@ export class SendMessageUseCase {
         // invalidate user conversation list
         await this.invalidateCache(participants.items);
 
-        return this.messageMapper.mapToMessage(message, null);
-    }
-}
+        const maxReadAt = await this.conversationRepo.getMaxReadAtForOthers(conversationId, actorId);
+
+        return this.messageMapper.mapToMessage(message, maxReadAt);
+        }
+        }

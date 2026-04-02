@@ -298,6 +298,12 @@ import {RemoveSavedMessageController} from "./modules/chat/controllers/saved_mes
 import {SaveMessageController} from "./modules/chat/controllers/saved_messages/save_message_controller";
 import {AvatarRepositoryPg} from "./modules/chat/repositories_pg_realization/avatar_repository_pg";
 import {GetAvatarUseCase} from "./modules/chat/application/avatar/get_avatar_use_case";
+import {ClamAVScanner} from "./modules/chat/infrasctructure/virus_scanner/clamav_scanner";
+import {VideoProcessor} from "./modules/chat/infrasctructure/video_processor/ffmpeg_processor";
+import {ImageProcessor} from "./modules/chat/infrasctructure/image_processor/sharp_image_processor";
+import {BlobRepositoryPg} from "./modules/chat/repositories_pg_realization/blob_repository_pg";
+import {AttachmentRepositoryPg} from "./modules/chat/repositories_pg_realization/attachment_repository_pg";
+import {GetAttachmentController} from "./modules/chat/controllers/message/get_attachment_controller";
 import {GetAvatarController} from "./modules/chat/controllers/avatar/get_avatar_controller";
 import {SetUserAvatarTxService} from "./modules/chat/transactional_services/avatar/set_user_avatar_tx_service";
 import {DeleteUserAvatarTxService} from "./modules/chat/transactional_services/avatar/delete_user_avatar_tx_service";
@@ -328,6 +334,8 @@ import {
 } from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/confirm_reset_activity_use_case";
 import {ConfirmResetActivityController} from "./modules/users/controllers/confirm_reset_activity_controller";
 import {ResendUserStatusToTrueController} from "./modules/users/controllers/resend_user_status_to_true_controller";
+
+import {SendMessageRestController} from "./modules/chat/controllers/message/send_message_rest_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -461,6 +469,8 @@ export function assembleContainer(io: Server)
     const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool);
     const savedMessageRepo = new SavedMessagesRepoPg(pool);
     const avatarRepo = new AvatarRepositoryPg(pool);
+    const attachmentRepo = new AttachmentRepositoryPg(pool);
+    const blobRepo = new BlobRepositoryPg(pool);
 
     // TODO : SHARED FOR CHAT
     const conversationMapper = new MapToConversationDto();
@@ -542,6 +552,10 @@ export function assembleContainer(io: Server)
         participantRepo,
         userToUserBlocksPG,
         conversationBansRepo,
+        new ClamAVScanner(),
+        new VideoProcessor(),
+        new ImageProcessor(),
+        blobRepo,
     );
     const getSpecificMessageUseCase = new GetSpecificMessageUseCase(
         messageMapper,
@@ -812,6 +826,11 @@ export function assembleContainer(io: Server)
         extractActorId,
         io
     );
+    const sendMessageRestController = new SendMessageRestController(
+        sendMessageService,
+        extractActorId,
+        io
+    );
 
     const changeParticipantRoleController = new ChangeParticipantRoleController(
         changeParticipantRoleService,
@@ -926,6 +945,7 @@ export function assembleContainer(io: Server)
     )
 
     const getAvatarController = new GetAvatarController(getAvatarUseCase);
+    const getAttachmentController = new GetAttachmentController(blobRepo, attachmentRepo);
 
     const setUserAvatarController = new SetUserAvatarController(setUserAvatarService, extractActorId);
     const deleteUserAvatarController = new DeleteUserAvatarController(deleteUserAvatarService, extractActorId);
@@ -991,6 +1011,7 @@ export function assembleContainer(io: Server)
         searchConversationsController,
 
         resendMessageController,
+        sendMessageRestController,
 
         getMessagesController,
         getSpecificMessageController,
@@ -1023,6 +1044,7 @@ export function assembleContainer(io: Server)
         saveMessageController,
 
         getAvatarController,
+        getAttachmentController,
         setUserAvatarController,
         deleteUserAvatarController,
         setConversationAvatarController,

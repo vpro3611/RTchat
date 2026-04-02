@@ -283,6 +283,11 @@ export const createApp = (dependencies: AppContainer): Express => {
         dependencies.getMessagesController.getMessagesCont
     ); //
 
+    privateRouter.post("/conversation/:conversationId/messages",
+        upload.array('files', 10),
+        dependencies.sendMessageRestController.sendMessage
+    );
+
     privateRouter.get("/conversation/:conversationId/:messageId/view",
         validateParams(GetSpecificMessageParamsSchema),
         dependencies.getSpecificMessageController.getSpecificMessageCont
@@ -292,6 +297,10 @@ export const createApp = (dependencies: AppContainer): Express => {
         validateParams(ResendMessageParamsSchema),
         validateBody(ResendMessageBodySchema),
         dependencies.resendMessageController.resendMessageCont
+    );
+
+    privateRouter.get("/attachment/:blobId",
+        dependencies.getAttachmentController.getAttachment
     );
 
     privateRouter.patch("/conversation/:conversationId/:targetId/role",
