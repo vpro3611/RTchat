@@ -1,5 +1,7 @@
 
 
+import {AttachmentDTO} from "./attachment_dto";
+
 export type MessageDTO = {
     id: string,
     conversationId: string,
@@ -14,4 +16,5 @@ export type MessageDTO = {
     originalSenderId?: string,
     isResent: boolean,
     isRead: boolean,
+    attachments: AttachmentDTO[],
 }
