@@ -5,10 +5,14 @@ import {ParticipantRepositoryPg} from "../../repositories_pg_realization/partici
 import {ConversationBansRepositoryPg} from "../../repositories_pg_realization/conversation_bans_repository_pg";
 import {GetBannedUsersUseCase} from "../../application/participant/get_banned_users_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class GetBannedUsersService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
 
     async getBannedUsersService(actorId: string, conversationId: string) {
