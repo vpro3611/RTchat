@@ -7,10 +7,14 @@ import {MessageRepositoryPg} from "../../repositories_pg_realization/message_rep
 import {MapToSavedMessageDto} from "../../shared/map_to_saved_message_dto";
 import {SaveMessageUseCase} from "../../application/saved_messages/save_message_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class SaveMessageService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
 
     async saveMessageService(actorId: string, messageId: string, conversationId: string) {
@@ -24,8 +28,8 @@ export class SaveMessageService {
 
         return await this.txManager.runInTransaction(async (client) => {
             const participantRepo = new ParticipantRepositoryPg(client);
-            const savedMessageRepo = new SavedMessagesRepoPg(client);
-            const messageRepo = new MessageRepositoryPg(client);
+            const savedMessageRepo = new SavedMessagesRepoPg(client, this.encryptionService);
+            const messageRepo = new MessageRepositoryPg(client, this.encryptionService);
             const mapToSavedMessageDto = new MapToSavedMessageDto();
 
 
