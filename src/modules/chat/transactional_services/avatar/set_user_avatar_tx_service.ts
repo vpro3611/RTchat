@@ -5,9 +5,13 @@ import { UserRepoWriterPg } from "../../../users/repositories/user_repo_writer_p
 import { ImageProcessor } from "../../infrasctructure/image_processor/sharp_image_processor";
 import { SetUserAvatarUseCase } from "../../application/avatar/set_user_avatar_use_case";
 import { RedisCacheService } from "../../../../container";
+import { EncryptionPort } from "../../../infrasctructure/ports/encryption/encryption_port";
 
 export class SetUserAvatarTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async setUserAvatar(userId: string, fileBuffer: Buffer): Promise<string> {
         return this.txManager.runInTransaction(async (client) => {
