@@ -6,10 +6,14 @@ import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {MuteParticipantUseCase} from "../../application/participant/mute_participant_use_case";
 import {MuteDuration} from "../../domain/participant/mute_duration";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class MuteParticipantTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async muteParticipantTxService(actorId: string, targetId: string, conversationId: string, duration: MuteDuration) {
         return await this.txManager.runInTransaction(async (client) => {
