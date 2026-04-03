@@ -18,8 +18,8 @@ const tab = ref('login')
     </div>
 
     <q-card
-      class="q-pa-none shadow-3"
-      style="max-width: 480px; width:100%; border: 2px solid var(--q-primary); border-radius: 12px; overflow: hidden;"
+      class="q-pa-none shadow-3 auth-card"
+      style="max-width: 480px; width:100%; border-radius: 12px; overflow: hidden;"
     >
       
       <!-- Normal Login/Register Tabs -->
@@ -67,3 +67,13 @@ const tab = ref('login')
 
   </q-page>
 </template>
+
+<style scoped>
+.auth-card {
+  border: 1px solid var(--q-border-color);
+}
+
+.body--dark .auth-card {
+  border: 2px solid var(--q-primary);
+}
+</style>

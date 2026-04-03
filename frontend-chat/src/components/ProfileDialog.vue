@@ -107,7 +107,7 @@ function formatDate(dateStr: string) {
           {{ AuthStore.user?.username }}
         </div>
 
-        <div class="text-subtitle1 text-grey-8 row items-center justify-center q-gutter-x-xs">
+        <div class="text-subtitle1 text-grey row items-center justify-center q-gutter-x-xs">
           <q-icon name="email" size="18px" />
           <span>{{ AuthStore.user?.email }}</span>
         </div>
@@ -222,22 +222,22 @@ function formatDate(dateStr: string) {
 }
 
 .header-section {
-  background: #f5f5f5;
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .body--dark .header-section {
-  background: #2a2a2a !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .avatar-container {
   width: fit-content;
-  border: 4px solid white;
+  border: 4px solid var(--q-bg-surface);
   border-radius: 50%;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .body--dark .avatar-container {
-  border-color: #333 !important;
+  border-color: #121212 !important;
 }
 
 .info-list .q-item {
@@ -247,6 +247,10 @@ function formatDate(dateStr: string) {
 
 .info-list .q-item:hover {
   background: rgba(0,0,0,0.03);
+}
+
+.body--dark .info-list .q-item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .text-mono {

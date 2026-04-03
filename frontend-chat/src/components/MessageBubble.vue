@@ -102,7 +102,7 @@ function handleForward() {
       <div
         v-if="message.isResent"
         class="text-caption q-px-sm q-pt-xs italic flex items-center"
-        :class="isOwn ? 'text-white-70' : 'text-grey-7'"
+        :class="isOwn ? 'text-white-70' : 'text-grey'"
         style="opacity: 0.8; font-size: 11px;"
       >
         <q-icon name="forward" size="14px" class="q-mr-xs" />
