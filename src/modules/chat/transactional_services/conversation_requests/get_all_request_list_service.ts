@@ -7,14 +7,15 @@ import {GetAllRequestListUseCase} from "../../application/conversation_requests/
 import {MapToRequestDto} from "../../shared/map_to_request_dto";
 import {ConversationReqStatus} from "../../domain/conversation_requests/conversation_requests";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class GetAllRequestListService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(private readonly txManager: TransactionManagerInterface, private readonly encryptionService: EncryptionPort) {}
 
     async getAllRequestListService(actorId: string, conversationId: string, status?: ConversationReqStatus) {
         return await this.txManager.runInTransaction(async (client) => {
-            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client);
+            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client, this.encryptionService);
             const participantRepo = new ParticipantRepositoryPg(client);
             const requestMapper = new MapToRequestDto();
 

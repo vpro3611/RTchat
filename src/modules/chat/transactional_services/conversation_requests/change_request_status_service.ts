@@ -7,10 +7,11 @@ import {MapToRequestDto} from "../../shared/map_to_request_dto";
 import {ChangeRequestStatusUseCase} from "../../application/conversation_requests/change_request_status_use_case";
 import {ConversationReqStatus} from "../../domain/conversation_requests/conversation_requests";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class ChangeRequestStatusService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(private readonly txManager: TransactionManagerInterface, private readonly encryptionService: EncryptionPort) {}
 
 
     async changeRequestStatusService(
@@ -22,7 +23,7 @@ export class ChangeRequestStatusService {
     ) {
         return await this.txManager.runInTransaction(async (client) => {
             const participantRepo = new ParticipantRepositoryPg(client);
-            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client);
+            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client, this.encryptionService);
             const requestMapper = new MapToRequestDto();
 
             const changeRequestStatusUseCase = new ChangeRequestStatusUseCase(
