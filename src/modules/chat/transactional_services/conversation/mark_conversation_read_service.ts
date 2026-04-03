@@ -4,15 +4,19 @@ import {
 import {ConversationRepositoryPg} from "../../repositories_pg_realization/conversation_repository_pg";
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {MarkConversationReadUseCase} from "../../application/conversation/mark_conversation_read_use_case";
+import { EncryptionPort } from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class MarkConversationReadTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
 
     async markConversationReadTxService(actorId: string, conversationId: string, messageId: string) {
         return await this.txManager.runInTransaction(async (client) => {
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const participantRepo = new ParticipantRepositoryPg(client);
 
             const markConversationReadUseCase = new MarkConversationReadUseCase(conversationRepo, participantRepo);
