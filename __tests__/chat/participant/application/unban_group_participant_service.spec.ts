@@ -10,6 +10,13 @@ describe("UnbanGroupParticipantService (transaction)", () => {
     const CONVERSATION_ID = "33333333-3333-3333-3333-333333333333";
 
     beforeEach(() => {
+        const encryptionService = {
+            encrypt: jest.fn(),
+            decrypt: jest.fn(),
+            decryptBuffer: jest.fn(),
+            encryptToBuffer: jest.fn(),
+            decryptFromBuffer: jest.fn()
+        };
         txManager = {
             runInTransaction: jest.fn(async (callback) => {
                 const mockClient = {
@@ -24,7 +31,7 @@ describe("UnbanGroupParticipantService (transaction)", () => {
             })
         };
 
-        service = new UnbanGroupParticipantService(txManager);
+        service = new UnbanGroupParticipantService(txManager, encryptionService as any);
     });
 
     // =========================
