@@ -2,18 +2,20 @@ import {SavedMessagesRepoInterface} from "../domain/ports/saved_messages_repo_in
 import {Pool, PoolClient} from "pg";
 import {SavedMessages} from "../domain/saved_messages/saved_messages";
 import {mapPgError} from "../../error_mapper/pg_error_mapper";
+import {EncryptionPort} from "../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class SavedMessagesRepoPg implements SavedMessagesRepoInterface {
-    constructor(private readonly pool: Pool | PoolClient) {}
+    constructor(private readonly pool: Pool | PoolClient, private readonly encryptionService: EncryptionPort) {}
 
     private mapToSavedMessages(row: any): SavedMessages {
+        const decryptedContent = this.encryptionService.decrypt(row.content);
         return SavedMessages.restore(
             row.saved_by_user,
             row.message_id,
             row.conversation_id,
             row.sender_id,
-            row.content,
+            decryptedContent,
             row.created_at,
             row.updated_at,
         )
@@ -21,6 +23,7 @@ export class SavedMessagesRepoPg implements SavedMessagesRepoInterface {
 
     async saveMessage(savedMessage: SavedMessages): Promise<void> {
         try {
+            const encryptedContent = this.encryptionService.encrypt(savedMessage.getContent());
             const query =
                 `INSERT INTO saved_messages
                  (saved_by_user, message_id, conversation_id, sender_id, content, created_at, updated_at)
@@ -31,7 +34,7 @@ export class SavedMessagesRepoPg implements SavedMessagesRepoInterface {
                 savedMessage.getMessageId(),
                 savedMessage.getConversationId(),
                 savedMessage.getSenderId(),
-                savedMessage.getContent(),
+                encryptedContent,
                 savedMessage.getCreatedAt(),
                 savedMessage.getUpdatedAt(),
             ]);
