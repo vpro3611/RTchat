@@ -6,10 +6,14 @@ import {ConversationBansRepositoryPg} from "../../repositories_pg_realization/co
 import {BanGroupParticipantUseCase} from "../../application/participant/ban_group_participant_use_case";
 import {RedisCacheService} from "../../../../container";
 import {ConversationBansDTO} from "../../DTO/bans_dto";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class BanGroupParticipantService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
 
     async banGroupParticipantService(

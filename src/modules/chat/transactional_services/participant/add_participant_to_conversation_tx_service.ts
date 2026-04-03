@@ -11,10 +11,14 @@ import {
 } from "../../application/participant/add_participant_to_conversation_use_case";
 import {RedisCacheService} from "../../../../container";
 import {UserRepoReaderPg} from "../../../users/repositories/user_repo_reader_pg";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class AddParticipantToConversationTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async addParticipantToConversationTxService(actorId: string, targetId: string, conversationId: string) {
         return await this.txManager.runInTransaction(async (client) => {
@@ -32,7 +36,7 @@ export class AddParticipantToConversationTxService {
             const participantRepo = new ParticipantRepositoryPg(client);
             const conversationBansRepo = new ConversationBansRepositoryPg(client);
             const participantMapper = new MapToParticipantDto();
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const userToUserBansRepo = new UserToUserBlocksPg(client);
 
             const addParticipantToConversationUseCase = new AddParticipantToConversationUseCase(
