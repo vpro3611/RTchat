@@ -4,13 +4,17 @@ import { ParticipantRepositoryPg } from "../../repositories_pg_realization/parti
 import { MapToConversationDto } from "../../shared/map_to_conversation_dto";
 import { GetSpecificConversationUseCase } from "../../application/conversation/get_specific_conversation_use_case";
 import { ConversationDTO } from "../../DTO/conversation_dto";
+import { EncryptionPort } from "../../../infrasctructure/ports/encryption/encryption_port";
 
 export class GetSpecificConversationTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async execute(actorId: string, conversationId: string): Promise<ConversationDTO> {
         return await this.txManager.runInTransaction(async (client) => {
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const participantRepo = new ParticipantRepositoryPg(client);
             const mapper = new MapToConversationDto();
 
