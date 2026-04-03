@@ -11,18 +11,19 @@ import {
     CreateConversationRequestUseCase
 } from "../../application/conversation_requests/create_conversation_request_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class CreateConversationRequestService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(private readonly txManager: TransactionManagerInterface, private readonly encryptionService: EncryptionPort) {}
 
     async createConversationRequestService(actorId: string, conversationId: string, requestMessage: string) {
         return await this.txManager.runInTransaction(async (client) => {
             const userRepoReader = new UserRepoReaderPg(client);
             const participantRepo = new ParticipantRepositoryPg(client);
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const conversationRepoBans = new ConversationBansRepositoryPg(client);
-            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client);
+            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client, this.encryptionService);
             const conversationRequestMapper = new MapToRequestDto();
 
 
