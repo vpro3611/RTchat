@@ -5,10 +5,14 @@ import {ParticipantRepositoryPg} from "../../repositories_pg_realization/partici
 import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {ChangeParticipantRoleUseCase} from "../../application/participant/change_participant_role_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class ChangeParticipantRoleTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async changeParticipantRoleTxService(actorId: string, conversationId: string, targetId: string) {
         return await this.txManager.runInTransaction(async (client) => {
