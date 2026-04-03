@@ -4,10 +4,14 @@ import {
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {GetSpecificParticipantUseCase} from "../../application/participant/get_specific_participant_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class GetSpecificParticipantService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
 
     async getSpecificParticipantService(actorId: string, conversationId: string, targetId: string) {
