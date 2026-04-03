@@ -7,15 +7,19 @@ import {ParticipantRepositoryPg} from "../../repositories_pg_realization/partici
 import {MapToConversationDto} from "../../shared/map_to_conversation_dto";
 import {UpdateConversationTitleUseCase} from "../../application/conversation/update_conversation_title_use_case";
 import {RedisCacheService} from "../../../../container";
+import { EncryptionPort } from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class UpdateConversationTitleTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
 
     async updateConversationTitleTxService(actorId: string, conversationId: string, newTitle: string) {
         return await this.txManager.runInTransaction(async (client) => {
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const participantRepo = new ParticipantRepositoryPg(client);
             const checkIsParticipant = new CheckIsParticipant(participantRepo);
             const conversationMapper = new MapToConversationDto();
