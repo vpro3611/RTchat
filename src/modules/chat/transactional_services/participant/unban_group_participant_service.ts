@@ -5,10 +5,14 @@ import {ParticipantRepositoryPg} from "../../repositories_pg_realization/partici
 import {ConversationBansRepositoryPg} from "../../repositories_pg_realization/conversation_bans_repository_pg";
 import {UnbanGroupParticipantUseCase} from "../../application/participant/unban_group_participant_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class UnbanGroupParticipantService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
 
     async unbanGroupParticipantService(actorId: string, conversationId: string, targetId: string) {

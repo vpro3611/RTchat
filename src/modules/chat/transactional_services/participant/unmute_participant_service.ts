@@ -5,10 +5,14 @@ import {ParticipantRepositoryPg} from "../../repositories_pg_realization/partici
 import {UnmuteParticipantUseCase} from "../../application/participant/unmute_participant_use_case";
 import {MapToParticipantDto} from "../../shared/map_to_participant_dto";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class UnmuteParticipantTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async unmuteParticipantTxService(actorId: string, targetId: string, conversationId: string) {
         return await this.txManager.runInTransaction(async (client) => {
