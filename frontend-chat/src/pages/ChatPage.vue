@@ -538,9 +538,9 @@ watch(
     <MediaViewer ref="mediaViewerRef" />
 
     <!-- BLOCKED NOTICE -->
-    <div v-if="isOtherUserBlocked" class="blocked-notice q-pa-sm text-center bg-grey-2">
+    <div v-if="isOtherUserBlocked" class="blocked-notice q-pa-sm text-center">
       <q-icon name="block" size="20px" class="q-mr-sm" color="negative" />
-      <span class="text-grey-8">You have blocked this user.</span>
+      <span class="text-grey">You have blocked this user.</span>
       <q-btn flat dense color="primary" label="Unblock" @click="unblockOtherUser" class="q-ml-sm" />
     </div>
 
@@ -608,7 +608,7 @@ watch(
       />
 
       <!-- Edit Mode -->
-      <div v-if="isEditing" class="row items-center q-gutter-sm q-mb-sm bg-grey-2 q-pa-sm rounded-borders">
+      <div v-if="isEditing" class="row items-center q-gutter-sm q-mb-sm edit-mode-indicator q-pa-sm rounded-borders">
         <q-icon name="edit" color="primary" />
         <div class="col ellipsis text-caption">Editing message...</div>
         <q-btn flat round dense icon="close" size="sm" @click="cancelEdit" />
@@ -736,10 +736,19 @@ watch(
 .blocked-notice {
   font-size: 0.85rem;
   border-bottom: 1px solid rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .body--dark .blocked-notice {
   background: #2a2a2a;
   border-color: rgba(255,255,255,0.05);
+}
+
+.edit-mode-indicator {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.body--dark .edit-mode-indicator {
+  background: rgba(255, 255, 255, 0.05);
 }
 </style>
