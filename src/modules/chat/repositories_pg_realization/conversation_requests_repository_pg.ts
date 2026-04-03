@@ -2,44 +2,55 @@ import {Pool, PoolClient} from "pg";
 import {ConversationRequestsInterface} from "../domain/ports/conversation_requests_interface";
 import {ConversationReqStatus, ConversationRequests} from "../domain/conversation_requests/conversation_requests";
 import {mapPgError} from "../../error_mapper/pg_error_mapper";
+import {EncryptionPort} from "../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class ConversationRequestsRepositoryPg implements ConversationRequestsInterface {
-    constructor(private readonly pool: Pool | PoolClient) {}
+    constructor(private readonly pool: Pool | PoolClient, private readonly encryptionService: EncryptionPort) {}
 
     private mapToDomain(row: any): ConversationRequests {
+        const decryptedRequestMessage = this.encryptionService.decrypt(row.request_message);
+        let decryptedReviewMessage = row.review_message;
+        if (decryptedReviewMessage) {
+            try {
+                decryptedReviewMessage = this.encryptionService.decrypt(decryptedReviewMessage);
+            } catch (e) {
+                // Fallback
+            }
+        }
         return ConversationRequests.restore(
             row.id,
             row.conversation_id,
             row.user_id,
             row.status,
-            row.request_message,
+            decryptedRequestMessage,
             row.submitted_at,
             row.reviewed_at,
             row.reviewed_by,
-            row.review_message,
+            decryptedReviewMessage,
             row.is_deleted,
         )
     }
 
     async create(convReq: ConversationRequests): Promise<void> {
         try {
+            const encryptedRequestMessage = this.encryptionService.encrypt(convReq.getRequestMessage());
             const query =
                 `INSERT INTO conversation_join_requests
                 (id, conversation_id, user_id, status, request_message, submitted_at, reviewed_at, reviewed_by, review_message, is_deleted)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                 `;
 
-            const result = await this.pool.query(query, [
+            await this.pool.query(query, [
                 convReq.id,
                 convReq.getConversationId(),
                 convReq.getUserId(),
                 convReq.getStatus(),
-                convReq.getRequestMessage(),
+                encryptedRequestMessage,
                 convReq.getSubmittedAt(),
                 convReq.getReviewedAt(),
                 convReq.getReviewedBy(),
-                convReq.getReviewedMessage(),
+                null, // review_message is null on create
                 convReq.getIsDeleted(),
             ])
         } catch (error) {
@@ -122,6 +133,7 @@ export class ConversationRequestsRepositoryPg implements ConversationRequestsInt
 
     async updateRequest(requestId: string, conversationId: string, status: string, reviewMessage: string): Promise<ConversationRequests> {
         try {
+            const encryptedReviewMessage = this.encryptionService.encrypt(reviewMessage);
             const query =
                 `UPDATE 
                 conversation_join_requests SET status = $1, reviewed_at = NOW(), review_message = $2 
@@ -131,7 +143,7 @@ export class ConversationRequestsRepositoryPg implements ConversationRequestsInt
 
             const result = await this.pool.query(query, [
                 status,
-                reviewMessage,
+                encryptedReviewMessage,
                 requestId,
                 conversationId,
             ])
