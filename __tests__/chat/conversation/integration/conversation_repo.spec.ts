@@ -2,20 +2,26 @@ import { Pool, PoolClient } from "pg";
 import { ConversationRepositoryPg } from "../../../../src/modules/chat/repositories_pg_realization/conversation_repository_pg";
 import { Conversation } from "../../../../src/modules/chat/domain/conversation/conversation";
 import { ConversationType } from "../../../../src/modules/chat/domain/conversation/conversation_type";
+import { CryptoEncryptionService } from "../../../../src/modules/infrasctructure/crypto_encryption_service";
+import * as crypto from "crypto";
 
 describe("ConversationRepositoryPg (integration)", () => {
 
     let pool: Pool;
     let client: PoolClient;
     let repo: ConversationRepositoryPg;
+    let encryptionService: CryptoEncryptionService;
 
     const USER_A = "11111111-1111-1111-1111-111111111111";
     const USER_B = "22222222-2222-2222-2222-222222222222";
+    const TEST_KEY = crypto.randomBytes(32).toString('hex');
+
 
     beforeAll(async () => {
         pool = new Pool({
             connectionString: process.env.TEST_DATABASE_URL
         });
+        encryptionService = new CryptoEncryptionService(TEST_KEY);
     });
 
     beforeEach(async () => {
@@ -23,11 +29,13 @@ describe("ConversationRepositoryPg (integration)", () => {
         await client.query("BEGIN");
 
         // Clean up before test
-        await client.query(`DELETE FROM conversation_participants WHERE user_id IN ($1, $2)`, [USER_A, USER_B]);
-        await client.query(`DELETE FROM conversations WHERE user_low IN ($1, $2) OR user_high IN ($1, $2) OR created_by IN ($1, $2)`, [USER_A, USER_B]);
-        await client.query(`DELETE FROM users WHERE id IN ($1, $2)`, [USER_A, USER_B]);
+        await client.query(`DELETE FROM conversation_reads`);
+        await client.query(`DELETE FROM messages`); // Clean messages as well for last_message tests
+        await client.query(`DELETE FROM conversation_participants`);
+        await client.query(`DELETE FROM conversations`);
+        await client.query(`DELETE FROM users`);
 
-        repo = new ConversationRepositoryPg(client);
+        repo = new ConversationRepositoryPg(client, encryptionService);
 
         // создаём пользователей для FK
         await client.query(`
@@ -176,6 +184,24 @@ describe("ConversationRepositoryPg (integration)", () => {
 
         expect(new Date(result.rows[0].last_message_at).getTime())
             .toBeCloseTo(now.getTime(), -2);
+    });
+
+    it("should decrypt last_message_content when finding conversation", async () => {
+
+        const conversation = createDirectConversation();
+        await repo.create(conversation);
+
+        const encryptedContent = encryptionService.encrypt("secret message");
+
+        // Manually insert an encrypted message
+        await client.query(`
+            INSERT INTO messages (id, conversation_id, sender_id, content, created_at)
+            VALUES ($1, $2, $3, $4, NOW())
+        `, [crypto.randomUUID(), conversation.id, USER_A, encryptedContent]);
+
+        const found = await repo.findById(conversation.id);
+
+        expect(found?.getLastMessageContent()).toBe("secret message");
     });
 
 });

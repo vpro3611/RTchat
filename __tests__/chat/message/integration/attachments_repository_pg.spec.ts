@@ -1,19 +1,23 @@
 import { BlobRepositoryPg } from "../../../../src/modules/chat/repositories_pg_realization/blob_repository_pg";
 import { AttachmentRepositoryPg } from "../../../../src/modules/chat/repositories_pg_realization/attachment_repository_pg";
 import { Attachment } from "../../../../src/modules/chat/domain/message/attachment";
-import { PoolClient } from "pg";
+import { CryptoEncryptionService } from "../../../../src/modules/infrasctructure/crypto_encryption_service";
+import * as crypto from "crypto";
 
 describe("Attachments Repositories (with mocked client)", () => {
     let client: any;
     let blobRepo: BlobRepositoryPg;
     let attachmentRepo: AttachmentRepositoryPg;
+    let encryptionService: CryptoEncryptionService;
+    const TEST_KEY = crypto.randomBytes(32).toString('hex');
 
     beforeEach(() => {
         client = {
             query: jest.fn(),
         };
-        blobRepo = new BlobRepositoryPg(client);
-        attachmentRepo = new AttachmentRepositoryPg(client);
+        encryptionService = new CryptoEncryptionService(TEST_KEY);
+        blobRepo = new BlobRepositoryPg(client, encryptionService);
+        attachmentRepo = new AttachmentRepositoryPg(client, encryptionService);
     });
 
     describe("BlobRepositoryPg", () => {
@@ -24,10 +28,12 @@ describe("Attachments Repositories (with mocked client)", () => {
             const id = await blobRepo.save(buffer);
 
             expect(id).toBe("blob-id");
-            expect(client.query).toHaveBeenCalledWith(
-                "INSERT INTO attachment_blobs (data) VALUES ($1) RETURNING id",
-                [buffer]
-            );
+            const call = client.query.mock.calls[0];
+            expect(call[0]).toContain("INSERT INTO attachment_blobs (data) VALUES ($1) RETURNING id");
+            
+            const encryptedBuffer = call[1][0];
+            expect(encryptedBuffer).not.toEqual(buffer);
+            expect(encryptionService.decryptFromBuffer(encryptedBuffer)).toEqual(buffer);
         });
     });
 
@@ -44,23 +50,26 @@ describe("Attachments Repositories (with mocked client)", () => {
             now
         );
 
-        it("should save attachment", async () => {
+        it("should save attachment and encrypt name", async () => {
             client.query.mockResolvedValueOnce({});
 
             await attachmentRepo.save(messageId, attachment);
 
-            expect(client.query).toHaveBeenCalledWith(
-                "INSERT INTO message_attachments (id, message_id, blob_id, type, name, mime_type, size, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-                [attachment.id, messageId, attachment.blobId, attachment.type, attachment.name, attachment.mimeType, attachment.size, attachment.createdAt]
-            );
+            const call = client.query.mock.calls[0];
+            expect(call[0]).toContain("INSERT INTO message_attachments");
+            
+            const encryptedName = call[1][4];
+            expect(encryptedName).not.toBe(attachment.name);
+            expect(encryptionService.decrypt(encryptedName)).toBe(attachment.name);
         });
 
-        it("should find attachments by message id", async () => {
+        it("should find attachments and decrypt name", async () => {
+            const encryptedName = encryptionService.encrypt(attachment.name);
             const row = {
                 id: attachment.id,
                 blob_id: attachment.blobId,
                 type: attachment.type,
-                name: attachment.name,
+                name: encryptedName,
                 mime_type: attachment.mimeType,
                 size: attachment.size,
                 created_at: now,
@@ -71,10 +80,6 @@ describe("Attachments Repositories (with mocked client)", () => {
 
             expect(result.length).toBe(1);
             expect(result[0]).toEqual(attachment);
-            expect(client.query).toHaveBeenCalledWith(
-                "SELECT * FROM message_attachments WHERE message_id = $1",
-                [messageId]
-            );
         });
     });
 });

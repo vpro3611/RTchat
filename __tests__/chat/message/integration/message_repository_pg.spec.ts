@@ -2,20 +2,25 @@ import { Pool, PoolClient } from "pg";
 import { MessageRepositoryPg } from "../../../../src/modules/chat/repositories_pg_realization/message_repository_pg";
 import { Message } from "../../../../src/modules/chat/domain/message/message";
 import { Content } from "../../../../src/modules/chat/domain/message/content";
+import { CryptoEncryptionService } from "../../../../src/modules/infrasctructure/crypto_encryption_service";
+import * as crypto from "crypto";
 
 describe("MessageRepositoryPg (integration)", () => {
 
     let pool: Pool;
     let client: PoolClient;
     let repo: MessageRepositoryPg;
+    let encryptionService: CryptoEncryptionService;
 
     const USER_ID = "11111111-1111-1111-1111-111111111111";
     const CONVERSATION_ID = "22222222-2222-2222-2222-222222222222";
+    const TEST_KEY = crypto.randomBytes(32).toString('hex');
 
     beforeAll(async () => {
         pool = new Pool({
             connectionString: process.env.TEST_DATABASE_URL
         });
+        encryptionService = new CryptoEncryptionService(TEST_KEY);
     });
 
     beforeEach(async () => {
@@ -29,7 +34,7 @@ describe("MessageRepositoryPg (integration)", () => {
         await client.query(`DELETE FROM conversations WHERE id = $1`, [CONVERSATION_ID]);
         await client.query(`DELETE FROM users WHERE id = $1`, [USER_ID]);
 
-        repo = new MessageRepositoryPg(client);
+        repo = new MessageRepositoryPg(client, encryptionService);
 
         // user
         await client.query(`
@@ -67,7 +72,7 @@ describe("MessageRepositoryPg (integration)", () => {
     // create
     // =========================
 
-    it("should create message", async () => {
+    it("should create message and store it encrypted", async () => {
 
         const message = createMessage("hello");
 
@@ -79,14 +84,18 @@ describe("MessageRepositoryPg (integration)", () => {
         );
 
         expect(result.rows.length).toBe(1);
-        expect(result.rows[0].content).toBe("hello");
+        expect(result.rows[0].content).not.toBe("hello");
+        expect(result.rows[0].content).toContain(":");
+        
+        const decrypted = encryptionService.decrypt(result.rows[0].content);
+        expect(decrypted).toBe("hello");
     });
 
     // =========================
     // findById
     // =========================
 
-    it("should find message by id", async () => {
+    it("should find message by id and decrypt it", async () => {
 
         const message = createMessage("hello");
 
@@ -109,7 +118,7 @@ describe("MessageRepositoryPg (integration)", () => {
     // update
     // =========================
 
-    it("should update message", async () => {
+    it("should update message and store it encrypted", async () => {
 
         const message = createMessage("hello");
 
@@ -124,7 +133,8 @@ describe("MessageRepositoryPg (integration)", () => {
             [message.id]
         );
 
-        expect(result.rows[0].content).toBe("updated");
+        expect(result.rows[0].content).not.toBe("updated");
+        expect(encryptionService.decrypt(result.rows[0].content)).toBe("updated");
         expect(result.rows[0].is_edited).toBe(true);
     });
 
