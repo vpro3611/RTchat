@@ -7,14 +7,18 @@ import {MapToConversationDto} from "../../shared/map_to_conversation_dto";
 import {CreateDirectConversationUseCase} from "../../application/conversation/create_direct_conversation_use_case";
 import {RedisCacheService} from "../../../../container";
 import {UserToUserBlocksPg} from "../../../users/repositories/user_to_user_blocks_pg";
+import { EncryptionPort } from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class CreateDirectConversationTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async createDirectConversationTxService(actorId: string, targetId: string) {
         return this.txManager.runInTransaction(async (client) => {
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const participantRepo = new ParticipantRepositoryPg(client);
             const conversationMapper = new MapToConversationDto();
             const userToUserBansRepo = new UserToUserBlocksPg(client);
