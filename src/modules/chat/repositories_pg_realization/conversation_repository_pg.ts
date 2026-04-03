@@ -2,12 +2,22 @@ import {Pool, PoolClient} from "pg";
 import {ConversationRepoInterface} from "../domain/ports/conversation_repo_interface";
 import {Conversation} from "../domain/conversation/conversation";
 import {mapPgError} from "../../error_mapper/pg_error_mapper";
+import {EncryptionPort} from "../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class ConversationRepositoryPg implements ConversationRepoInterface {
-    constructor(private readonly pool: Pool | PoolClient) {}
+    constructor(private readonly pool: Pool | PoolClient, private readonly encryptionService: EncryptionPort) {}
 
     private mapToConversation(row: any): Conversation {
+        let lastMessageContent = row.last_message_content;
+        if (lastMessageContent) {
+            try {
+                lastMessageContent = this.encryptionService.decrypt(lastMessageContent);
+            } catch (e) {
+                // Fallback for non-encrypted or corrupted data
+                lastMessageContent = "[Encrypted Message]";
+            }
+        }
         return Conversation.restore(
             row.id,
             row.conversation_type,
@@ -18,7 +28,7 @@ export class ConversationRepositoryPg implements ConversationRepoInterface {
             row.user_low,
             row.user_high,
             row.avatar_id,
-            row.last_message_content,
+            lastMessageContent,
             row.last_message_sender_id,
             parseInt(row.unread_count || "0")
         );
