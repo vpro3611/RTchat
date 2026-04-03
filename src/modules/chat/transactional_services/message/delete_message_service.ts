@@ -1,6 +1,7 @@
 import {
     TransactionManagerInterface
 } from "../../../infrasctructure/ports/transaction_manager/transaction_manager_interface";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 import {MessageRepositoryPg} from "../../repositories_pg_realization/message_repository_pg";
 import {MapToMessage} from "../../shared/map_to_message";
 import {CheckIsParticipant} from "../../shared/is_participant";
@@ -12,14 +13,17 @@ import {ConversationRepositoryPg} from "../../repositories_pg_realization/conver
 
 
 export class DeleteMessageTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async deleteMessageTxService(actorId: string, conversationId: string, messageId: string) {
         return await this.txManager.runInTransaction(async (client) => {
-            const messageRepo = new MessageRepositoryPg(client);
+            const messageRepo = new MessageRepositoryPg(client, this.encryptionService);
             const messageMapper = new MapToMessage();
             const participantRepo = new ParticipantRepositoryPg(client);
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const checkIsParticipant = new CheckIsParticipant(participantRepo);
             const findMessageById = new FindMessageById(messageRepo);
 
