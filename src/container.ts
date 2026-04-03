@@ -336,6 +336,8 @@ import {ConfirmResetActivityController} from "./modules/users/controllers/confir
 import {ResendUserStatusToTrueController} from "./modules/users/controllers/resend_user_status_to_true_controller";
 
 import {SendMessageRestController} from "./modules/chat/controllers/message/send_message_rest_controller";
+import {EncryptionPort} from "./modules/infrasctructure/ports/encryption/encryption_port";
+import {CryptoEncryptionService} from "./modules/infrasctructure/crypto_encryption_service";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -461,16 +463,19 @@ export function assembleContainer(io: Server)
     const resendUserStatusToTrueController = new ResendUserStatusToTrueController(resendVerificationService);
 
 
+    // TODO : INFRA
+    const encryptionService: EncryptionPort = new CryptoEncryptionService();
+
     // TODO : CHAT
-    const conversationRepo = new ConversationRepositoryPg(pool);
-    const messageRepo = new MessageRepositoryPg(pool);
+    const conversationRepo = new ConversationRepositoryPg(pool, encryptionService);
+    const messageRepo = new MessageRepositoryPg(pool, encryptionService);
     const participantRepo = new ParticipantRepositoryPg(pool);
     const conversationBansRepo = new ConversationBansRepositoryPg(pool);
-    const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool);
-    const savedMessageRepo = new SavedMessagesRepoPg(pool);
+    const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool, encryptionService);
+    const savedMessageRepo = new SavedMessagesRepoPg(pool, encryptionService);
     const avatarRepo = new AvatarRepositoryPg(pool);
-    const attachmentRepo = new AttachmentRepositoryPg(pool);
-    const blobRepo = new BlobRepositoryPg(pool);
+    const attachmentRepo = new AttachmentRepositoryPg(pool, encryptionService);
+    const blobRepo = new BlobRepositoryPg(pool, encryptionService);
 
     // TODO : SHARED FOR CHAT
     const conversationMapper = new MapToConversationDto();
@@ -716,60 +721,61 @@ export function assembleContainer(io: Server)
     const getAvatarUseCase = new GetAvatarUseCase(avatarRepo);
 
     // TODO : CHAT (SERVICES)
-    const createDirectConversationService = new CreateDirectConversationTxService(txManager);
-    const createGroupConversationService = new CreateGroupConversationTxService(txManager);
-    const getUserConversationsService = new GetUserConversationsTxService(txManager);
-    const getSpecificConversationService = new GetSpecificConversationTxService(txManager);
-    const markConversationReadService = new MarkConversationReadTxService(txManager);
-    const updateConversationTitleService = new UpdateConversationTitleTxService(txManager);
-    const searchConversationsService = new SearchConversationsService(txManager);
+    const createDirectConversationService = new CreateDirectConversationTxService(txManager, encryptionService);
+    const createGroupConversationService = new CreateGroupConversationTxService(txManager, encryptionService);
+    const getUserConversationsService = new GetUserConversationsTxService(txManager, encryptionService);
+    const getSpecificConversationService = new GetSpecificConversationTxService(txManager, encryptionService);
+    const markConversationReadService = new MarkConversationReadTxService(txManager, encryptionService);
+    const updateConversationTitleService = new UpdateConversationTitleTxService(txManager, encryptionService);
+    const searchConversationsService = new SearchConversationsService(txManager, encryptionService);
 
     // ____ //
 
-    const deleteMessageService = new DeleteMessageTxService(txManager);
-    const editMessageService = new EditMessageTxService(txManager);
-    const getMessagesService = new GetMessageTxService(txManager);
-    const sendMessageService = new SendMessageTxService(txManager);
-    const resendMessageService = new ResendMessageTxService(txManager, RedisCacheService);
-    const getSpecificMessageService = new GetSpecificMessageService(txManager);
+    const deleteMessageService = new DeleteMessageTxService(txManager, encryptionService);
+    const editMessageService = new EditMessageTxService(txManager, encryptionService);
+    const getMessagesService = new GetMessageTxService(txManager, encryptionService);
+    const sendMessageService = new SendMessageTxService(txManager, encryptionService);
+    const resendMessageService = new ResendMessageTxService(txManager, encryptionService, RedisCacheService);
+    const getSpecificMessageService = new GetSpecificMessageService(txManager, encryptionService);
 
     // ____ //
 
-    const changeParticipantRoleService = new ChangeParticipantRoleTxService(txManager);
-    const getParticipantsService = new GetParticipantsTxService(txManager);
-    const getSpecificParticipantService = new GetSpecificParticipantService(txManager);
-    const joinConversationService = new JoinConversationTxService(txManager);
-    const leaveConversationService = new LeaveConversationTxService(txManager);
-    const muteParticipantService = new MuteParticipantTxService(txManager);
-    const removeParticipantService = new RemoveParticipantTxService(txManager);
-    const unmuteParticipantService = new UnmuteParticipantTxService(txManager);
-    const banParticipantService = new BanGroupParticipantService(txManager);
-    const unbanParticipantService = new UnbanGroupParticipantService(txManager);
-    const getBannedUsersService = new GetBannedUsersService(txManager);
-    const addParticipantToConversationService = new AddParticipantToConversationTxService(txManager);
+    const changeParticipantRoleService = new ChangeParticipantRoleTxService(txManager, encryptionService);
+    const getParticipantsService = new GetParticipantsTxService(txManager, encryptionService);
+    const getSpecificParticipantService = new GetSpecificParticipantService(txManager, encryptionService);
+    const joinConversationService = new JoinConversationTxService(txManager, encryptionService);
+    const leaveConversationService = new LeaveConversationTxService(txManager, encryptionService);
+    const muteParticipantService = new MuteParticipantTxService(txManager, encryptionService);
+    const removeParticipantService = new RemoveParticipantTxService(txManager, encryptionService);
+    const unmuteParticipantService = new UnmuteParticipantTxService(txManager, encryptionService);
+    const banParticipantService = new BanGroupParticipantService(txManager, encryptionService);
+
+    const unbanParticipantService = new UnbanGroupParticipantService(txManager, encryptionService);
+    const getBannedUsersService = new GetBannedUsersService(txManager, encryptionService);
+    const addParticipantToConversationService = new AddParticipantToConversationTxService(txManager, encryptionService);
 
     // ____ //
 
-    const changeRequestStatusService = new ChangeRequestStatusService(txManager);
-    const withdrawRequestService = new WithdrawRequestService(txManager);
-    const createConversationRequestService = new CreateConversationRequestService(txManager);
-    const getAllRequestsService = new GetAllRequestListService(txManager);
-    const getAllUsersRequestService = new GetUsersRequestsService(txManager);
-    const removeSpecificRequestService = new RemoveRequestService(txManager);
-    const getSpecificRequestUserService = new GetSpecificRequestUserService(txManager);
-    const getSpecificRequestConversationService = new GetSpecificRequestGroupService(txManager);
+    const changeRequestStatusService = new ChangeRequestStatusService(txManager, encryptionService);
+    const withdrawRequestService = new WithdrawRequestService(txManager, encryptionService);
+    const createConversationRequestService = new CreateConversationRequestService(txManager, encryptionService);
+    const getAllRequestsService = new GetAllRequestListService(txManager, encryptionService);
+    const getAllUsersRequestService = new GetUsersRequestsService(txManager, encryptionService);
+    const removeSpecificRequestService = new RemoveRequestService(txManager, encryptionService);
+    const getSpecificRequestUserService = new GetSpecificRequestUserService(txManager, encryptionService);
+    const getSpecificRequestConversationService = new GetSpecificRequestGroupService(txManager, encryptionService);
 
     // ____ //
 
-    const getSavedMessagesListService = new GetSavedMessagesListService(txManager);
-    const getSpecificSavedMessageService = new GetSpecificSavedMessageService(txManager);
-    const removeSavedMessageService = new RemoveSavedMessageService(txManager);
-    const saveMessageService = new SaveMessageService(txManager);
+    const getSavedMessagesListService = new GetSavedMessagesListService(txManager, encryptionService);
+    const getSpecificSavedMessageService = new GetSpecificSavedMessageService(txManager, encryptionService);
+    const removeSavedMessageService = new RemoveSavedMessageService(txManager, encryptionService);
+    const saveMessageService = new SaveMessageService(txManager, encryptionService);
 
-    const setUserAvatarService = new SetUserAvatarTxService(txManager);
-    const deleteUserAvatarService = new DeleteUserAvatarTxService(txManager);
-    const setConversationAvatarService = new SetConversationAvatarTxService(txManager);
-    const deleteConversationAvatarService = new DeleteConversationAvatarTxService(txManager);
+    const setUserAvatarService = new SetUserAvatarTxService(txManager, encryptionService);
+    const deleteUserAvatarService = new DeleteUserAvatarTxService(txManager, encryptionService);
+    const setConversationAvatarService = new SetConversationAvatarTxService(txManager, encryptionService);
+    const deleteConversationAvatarService = new DeleteConversationAvatarTxService(txManager, encryptionService);
 
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
