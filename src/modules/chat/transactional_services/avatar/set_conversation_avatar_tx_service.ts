@@ -5,13 +5,17 @@ import { ParticipantRepositoryPg } from "../../repositories_pg_realization/parti
 import { ImageProcessor } from "../../infrasctructure/image_processor/sharp_image_processor";
 import { SetConversationAvatarUseCase } from "../../application/avatar/set_conversation_avatar_use_case";
 import { RedisCacheService } from "../../../../container";
+import { EncryptionPort } from "../../../infrasctructure/ports/encryption/encryption_port";
 
 export class SetConversationAvatarTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async setConversationAvatar(conversationId: string, userId: string, fileBuffer: Buffer): Promise<string> {
         return this.txManager.runInTransaction(async (client) => {
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const participantRepo = new ParticipantRepositoryPg(client);
             const avatarRepo = new AvatarRepositoryPg(client);
             const imageProcessor = new ImageProcessor();
