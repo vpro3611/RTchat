@@ -7,16 +7,20 @@ import {MapToSavedMessageDto} from "../../shared/map_to_saved_message_dto";
 import {GetSpecificMessageUseCase} from "../../application/message/get_specific_message_use_case";
 import {GetSpecificSavedMessageUseCase} from "../../application/saved_messages/get_specific_saved_message_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class GetSpecificSavedMessageService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
 
     async getSpecificSavedMessageService(actorId: string, messageId: string) {
         return await this.txManager.runInTransaction(async (client) => {
             const userRepoReader = new UserRepoReaderPg(client);
-            const savedMessageRepo = new SavedMessagesRepoPg(client);
+            const savedMessageRepo = new SavedMessagesRepoPg(client, this.encryptionService);
             const mapToSavedMessageDto = new MapToSavedMessageDto();
 
 
