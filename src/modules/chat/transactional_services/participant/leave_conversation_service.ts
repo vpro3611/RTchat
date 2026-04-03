@@ -4,10 +4,14 @@ import {
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {LeaveConversationUseCase} from "../../application/participant/leave_conversation_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class LeaveConversationTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
 
     async leaveConversationTxService(actorId: string, conversationId: string): Promise<string | null> {
