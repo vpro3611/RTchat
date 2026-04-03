@@ -6,16 +6,17 @@ import {ConversationRequestsRepositoryPg} from "../../repositories_pg_realizatio
 import {MapToRequestDto} from "../../shared/map_to_request_dto";
 import {WithdrawRequestUseCase} from "../../application/conversation_requests/withdraw_request_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class WithdrawRequestService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(private readonly txManager: TransactionManagerInterface, private readonly encryptionService: EncryptionPort) {}
 
 
     async withdrawRequestService(actorId: string, requestId: string) {
         return await this.txManager.runInTransaction(async (client) => {
             const userRepoReader = new UserRepoReaderPg(client);
-            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client);
+            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client, this.encryptionService);
             const mapToRequestDto = new MapToRequestDto();
 
             const withdrawRequestUseCase = new WithdrawRequestUseCase(
