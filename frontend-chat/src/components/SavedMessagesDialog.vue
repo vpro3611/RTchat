@@ -160,8 +160,12 @@ function formatDate(dateStr: string) {
 .block-card {
   border-radius: 12px;
   border-left: 4px solid var(--q-primary);
-  background: white;
+  background: var(--q-bg-surface);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.body--dark .block-card {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .block-card:hover {
@@ -173,6 +177,6 @@ function formatDate(dateStr: string) {
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.4;
-  color: #1E293B;
+  color: inherit;
 }
 </style>

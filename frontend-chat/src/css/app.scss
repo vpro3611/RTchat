@@ -1,34 +1,19 @@
 // app global css in SCSS form
 
-.message-bubble-incoming {
-  background: white !important;
-  color: #333 !important;
-}
-
-// Default (Light Mode) Autofill fix
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px #fff inset !important;
-    -webkit-text-fill-color: #333 !important;
-    transition: background-color 5000s ease-in-out 0s;
+:root {
+  --q-bg-message-incoming: #f0f0f0;
+  --q-text-message-incoming: #333;
+  --q-bg-input: #fff;
+  --q-bg-surface: #fff;
+  --q-border-color: rgba(0, 0, 0, 0.08);
 }
 
 .body--dark {
-  // Dark Mode Autofill fix
-  input:-webkit-autofill,
-  input:-webkit-autofill:hover, 
-  input:-webkit-autofill:focus, 
-  input:-webkit-autofill:active {
-      -webkit-box-shadow: 0 0 0 30px #2a2a2a inset !important;
-      -webkit-text-fill-color: #e0e0e0 !important;
-  }
-
-  .message-bubble-incoming {
-    background: #2a2a2a !important;
-    color: #e0e0e0 !important;
-  }
+  --q-bg-message-incoming: #2a2a2a;
+  --q-text-message-incoming: #e0e0e0;
+  --q-bg-input: #2a2a2a;
+  --q-bg-surface: #1e1e1e;
+  --q-border-color: rgba(255, 255, 255, 0.1);
   
   background: #121212 !important;
   color: #e0e0e0;
@@ -38,13 +23,13 @@ input:-webkit-autofill:active {
   }
 
   .q-card, .q-dialog-plugin {
-    background: #1e1e1e !important;
+    background: var(--q-bg-surface) !important;
     color: #e0e0e0 !important;
   }
 
   // Inputs and textareas
   .q-field--outlined .q-field__control {
-    background: #2a2a2a !important;
+    background: var(--q-bg-input) !important;
     color: #e0e0e0 !important;
   }
 
@@ -53,7 +38,7 @@ input:-webkit-autofill:active {
   }
 
   .q-field--outlined .q-field__control:before {
-    border-color: rgba(255, 255, 255, 0.2) !important;
+    border-color: var(--q-border-color) !important;
   }
 
   // Adjust primary for dark mode
@@ -69,7 +54,7 @@ input:-webkit-autofill:active {
   }
 
   .q-separator {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: var(--q-border-color) !important;
   }
 
   // Fix low contrast buttons
@@ -79,8 +64,23 @@ input:-webkit-autofill:active {
 
   // Soft borders for buttons
   .q-btn--outline:before {
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--q-border-color);
   }
+}
+
+.message-bubble-incoming {
+  background: var(--q-bg-message-incoming) !important;
+  color: var(--q-text-message-incoming) !important;
+}
+
+// Default (Light Mode) Autofill fix
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--q-bg-input) inset !important;
+    -webkit-text-fill-color: var(--q-text-message-incoming) !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 // Global transitions for theme switching

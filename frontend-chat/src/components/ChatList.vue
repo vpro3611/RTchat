@@ -116,7 +116,7 @@ watch(
       clickable
       @click="openChat(chat.id)"
       :active="route.params.id === chat.id"
-      active-class="bg-grey-9"
+      active-class="chat-item-active"
     >
       <q-item-section avatar>
         <AppAvatar
@@ -129,10 +129,10 @@ watch(
       <q-item-section>
         <div class="row no-wrap items-center justify-between">
           <div class="text-subtitle1 text-weight-bold ellipsis col">{{ getChatTitle(chat) }}</div>
-          <div class="text-caption text-grey-5 q-ml-sm">{{ formatLastMessageTime(chat.lastMessageAt ?? chat.createdAt) }}</div>
+          <div class="text-caption text-grey q-ml-sm">{{ formatLastMessageTime(chat.lastMessageAt ?? chat.createdAt) }}</div>
         </div>
         <div class="row no-wrap items-center justify-between">
-          <q-item-label caption lines="1" class="text-grey-4 col">
+          <q-item-label caption lines="1" class="text-grey col">
             {{ getLastMessageDisplay(chat) }}
           </q-item-label>
           <q-badge
@@ -160,3 +160,13 @@ watch(
     />
   </div>
 </template>
+
+<style scoped>
+.chat-item-active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.body--dark .chat-item-active {
+  background: rgba(255, 255, 255, 0.1);
+}
+</style>
