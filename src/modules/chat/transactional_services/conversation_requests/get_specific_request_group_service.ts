@@ -8,15 +8,16 @@ import {
 import {ParticipantRepositoryPg} from "../../repositories_pg_realization/participant_repository_pg";
 import {MapToRequestDto} from "../../shared/map_to_request_dto";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class GetSpecificRequestGroupService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(private readonly txManager: TransactionManagerInterface, private readonly encryptionService: EncryptionPort) {}
 
 
     async getSpecificRequestGroupService(actorId: string, conversationId: string, requestId: string) {
         return await this.txManager.runInTransaction(async (client) => {
-            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client);
+            const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client, this.encryptionService);
             const participantRepo = new ParticipantRepositoryPg(client);
             const requestMapper = new MapToRequestDto();
 

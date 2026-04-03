@@ -8,16 +8,17 @@ import {
     GetSpecificRequestUserUseCase
 } from "../../application/conversation_requests/get_specific_request_user_use_case";
 import {RedisCacheService} from "../../../../container";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class GetSpecificRequestUserService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(private readonly txManager: TransactionManagerInterface, private readonly encryptionService: EncryptionPort) {}
 
 
     async getSpecificRequestUserService(actorId: string, requestId: string) {
        return await this.txManager.runInTransaction(async (client) => {
            const userRepoReader = new UserRepoReaderPg(client);
-           const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client);
+           const conversationRequestsRepo = new ConversationRequestsRepositoryPg(client, this.encryptionService);
            const requestMapper = new MapToRequestDto();
 
            const getSpecificRequestUserUseCase = new GetSpecificRequestUserUseCase(
