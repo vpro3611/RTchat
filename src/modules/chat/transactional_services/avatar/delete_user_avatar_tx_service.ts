@@ -4,9 +4,13 @@ import { UserRepoReaderPg } from "../../../users/repositories/user_repo_reader_p
 import { UserRepoWriterPg } from "../../../users/repositories/user_repo_writer_pg";
 import { DeleteUserAvatarUseCase } from "../../application/avatar/delete_user_avatar_use_case";
 import { RedisCacheService } from "../../../../container";
+import { EncryptionPort } from "../../../infrasctructure/ports/encryption/encryption_port";
 
 export class DeleteUserAvatarTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async deleteUserAvatar(userId: string): Promise<void> {
         return this.txManager.runInTransaction(async (client) => {

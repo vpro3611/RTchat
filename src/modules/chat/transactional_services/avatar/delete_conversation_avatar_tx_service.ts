@@ -4,13 +4,17 @@ import { ConversationRepositoryPg } from "../../repositories_pg_realization/conv
 import { ParticipantRepositoryPg } from "../../repositories_pg_realization/participant_repository_pg";
 import { DeleteConversationAvatarUseCase } from "../../application/avatar/delete_conversation_avatar_use_case";
 import { RedisCacheService } from "../../../../container";
+import { EncryptionPort } from "../../../infrasctructure/ports/encryption/encryption_port";
 
 export class DeleteConversationAvatarTxService {
-    constructor(private readonly txManager: TransactionManagerInterface) {}
+    constructor(
+        private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort
+    ) {}
 
     async deleteConversationAvatar(conversationId: string, userId: string): Promise<void> {
         return this.txManager.runInTransaction(async (client) => {
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const participantRepo = new ParticipantRepositoryPg(client);
             const avatarRepo = new AvatarRepositoryPg(client);
 
