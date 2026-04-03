@@ -1,4 +1,5 @@
 import {TransactionManagerInterface} from "../../../infrasctructure/ports/transaction_manager/transaction_manager_interface";
+import {EncryptionPort} from "../../../infrasctructure/ports/encryption/encryption_port";
 import {MessageRepositoryPg} from "../../repositories_pg_realization/message_repository_pg";
 import {ConversationRepositoryPg} from "../../repositories_pg_realization/conversation_repository_pg";
 import {MapToMessage} from "../../shared/map_to_message";
@@ -15,6 +16,7 @@ import {MessageDTO} from "../../DTO/message_dto";
 export class ResendMessageTxService {
     constructor(
         private readonly txManager: TransactionManagerInterface,
+        private readonly encryptionService: EncryptionPort,
         private readonly cacheService: CacheServiceInterface
     ) {}
 
@@ -25,8 +27,8 @@ export class ResendMessageTxService {
         targetConversationId: string
     ): Promise<MessageDTO> {
         return await this.txManager.runInTransaction(async (client) => {
-            const messageRepo = new MessageRepositoryPg(client);
-            const conversationRepo = new ConversationRepositoryPg(client);
+            const messageRepo = new MessageRepositoryPg(client, this.encryptionService);
+            const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
             const participantRepo = new ParticipantRepositoryPg(client);
             const userToUserBansRepo = new UserToUserBlocksPg(client);
             const conversationBansRepo = new ConversationBansRepositoryPg(client);
