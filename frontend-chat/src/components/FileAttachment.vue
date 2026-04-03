@@ -92,47 +92,49 @@ async function downloadFile() {
 .file-attachment {
   max-width: 300px;
   min-width: 220px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--q-bg-message-incoming);
   border-radius: 12px;
   transition: all 0.2s ease;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--q-border-color);
 }
 
 .body--dark .file-attachment {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Sender's bubble is primary, so we make the attachment stand out as a clean card */
 .is-own {
-  background: white !important;
-  border: none;
+  background: var(--q-bg-surface) !important;
+  border: 1px solid var(--q-border-color);
 }
 
 .body--dark .is-own {
-  background: #1e1e1e !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .file-attachment:hover {
-  filter: brightness(0.98);
+  filter: brightness(0.95);
 }
 
 .icon-container {
   width: 40px;
   height: 40px;
-  background: white;
+  background: var(--q-bg-surface);
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   flex-shrink: 0;
 }
 
 .body--dark .icon-container {
-  background: #2a2a2a;
+  background: var(--q-bg-input);
 }
 
 .is-own .icon-container {
-  background: #f5f5f5;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.body--dark .is-own .icon-container {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .file-name {

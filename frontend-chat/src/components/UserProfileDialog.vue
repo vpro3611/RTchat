@@ -313,23 +313,23 @@ watch(
 }
 
 .header-section {
-  background: #f5f5f5;
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .body--dark .header-section {
-  background: #2a2a2a !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .avatar-wrapper {
   position: relative;
   width: fit-content;
-  border: 4px solid white;
+  border: 4px solid var(--q-bg-surface);
   border-radius: 50%;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .body--dark .avatar-wrapper {
-  border-color: #333 !important;
+  border-color: #121212 !important;
 }
 
 .blocked-badge {
@@ -343,7 +343,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid white;
+  border: 2px solid var(--q-bg-surface);
 }
 
 .details-list .q-item {

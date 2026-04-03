@@ -56,7 +56,7 @@ const fontSize = computed(() => {
 
 <style scoped>
 .app-avatar {
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--q-border-color);
   transition: transform 0.2s ease;
 }
 

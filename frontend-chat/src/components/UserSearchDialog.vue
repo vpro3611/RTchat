@@ -265,14 +265,18 @@ function isAlreadyInGroup(userId: string) {
 
 .user-result-card {
   border-radius: 12px;
-  border: 1px solid transparent;
-  background: white;
+  border: 1px solid var(--q-border-color);
+  background: var(--q-bg-surface);
 }
 
 .user-result-card:hover {
   border-color: var(--q-primary);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.body--dark .user-result-card:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
 }
 
 .hover-scale:hover {
@@ -288,6 +292,6 @@ function isAlreadyInGroup(userId: string) {
 }
 
 .border-top {
-  border-top: 1px solid #edf2f7;
+  border-top: 1px solid var(--q-border-color);
 }
 </style>

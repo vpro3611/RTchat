@@ -252,12 +252,13 @@ onMounted(() => {
 
 .discovery-result-card {
   border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--q-border-color);
+  background: var(--q-bg-surface);
   cursor: default;
 }
 
 .body--dark .discovery-result-card {
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .member-card {
@@ -268,6 +269,10 @@ onMounted(() => {
   border-color: var(--q-primary);
   transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.body--dark .discovery-result-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
 .truncate-title {
