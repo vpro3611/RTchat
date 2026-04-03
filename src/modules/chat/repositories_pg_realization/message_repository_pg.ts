@@ -3,20 +3,22 @@ import {Pool, PoolClient} from "pg";
 import {Message} from "../domain/message/message";
 import {mapPgError} from "../../error_mapper/pg_error_mapper";
 import {AttachmentRepositoryPg} from "./attachment_repository_pg";
+import {EncryptionPort} from "../../infrasctructure/ports/encryption/encryption_port";
 
 
 export class MessageRepositoryPg implements MessageRepoInterface {
     private readonly attachmentRepo: AttachmentRepositoryPg;
-    constructor(private readonly pg: Pool | PoolClient) {
-        this.attachmentRepo = new AttachmentRepositoryPg(pg);
+    constructor(private readonly pg: Pool | PoolClient, private readonly encryptionService: EncryptionPort) {
+        this.attachmentRepo = new AttachmentRepositoryPg(pg, encryptionService);
     }
 
     private mapToMessage(row: any, attachments: any[] = []): Message {
+        const decryptedContent = this.encryptionService.decrypt(row.content);
         return Message.restore(
             row.id,
             row.conversation_id,
             row.sender_id,
-            row.content,
+            decryptedContent,
             row.is_edited,
             row.is_deleted,
             row.created_at,
@@ -29,6 +31,7 @@ export class MessageRepositoryPg implements MessageRepoInterface {
 
     async create(message: Message): Promise<void> {
         try {
+            const encryptedContent = this.encryptionService.encrypt(message.getContent().getContentValue());
             await this.pg.query(
                 `
                     INSERT INTO messages
@@ -39,7 +42,7 @@ export class MessageRepositoryPg implements MessageRepoInterface {
                     message.id,
                     message.getConversationId(),
                     message.getSenderId(),
-                    message.getContent().getContentValue(),
+                    encryptedContent,
                     message.getIsEdited(),
                     message.getIsDeleted(),
                     message.getCreatedAt(),
@@ -131,6 +134,7 @@ export class MessageRepositoryPg implements MessageRepoInterface {
 
     async update(message: Message): Promise<void> {
         try {
+            const encryptedContent = this.encryptionService.encrypt(message.getContent().getContentValue());
             await this.pg.query(`UPDATE messages
                                  SET content = $1,
                                      is_edited = $2,
@@ -138,7 +142,7 @@ export class MessageRepositoryPg implements MessageRepoInterface {
                                      updated_at = $4
                                  WHERE id = $5`,
                 [
-                    message.getContent().getContentValue(),
+                    encryptedContent,
                     message.getIsEdited(),
                     message.getIsDeleted(),
                     message.getUpdatedAt(),
