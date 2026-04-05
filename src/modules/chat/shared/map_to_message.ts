@@ -5,6 +5,7 @@ import {MessageDTO} from "../DTO/message_dto";
 export class MapToMessage {
     mapToMessage(message: Message, maxReadAt: Date | null = null): MessageDTO {
         const isRead = maxReadAt ? message.getCreatedAt() <= maxReadAt : false;
+        const replyMetadata = message.getReplyMetadata();
 
         return {
             id: message.id,
@@ -26,7 +27,12 @@ export class MapToMessage {
                 mimeType: a.mimeType,
                 size: a.size,
                 createdAt: a.createdAt.toISOString()
-            }))
+            })),
+            replyTo: replyMetadata ? {
+                id: replyMetadata.parentMessageId,
+                snippet: replyMetadata.parentContentSnippet,
+                senderId: replyMetadata.parentSenderId
+            } : undefined
         }
     }
 }

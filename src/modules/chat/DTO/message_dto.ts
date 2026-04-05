@@ -17,4 +17,9 @@ export type MessageDTO = {
     isResent: boolean,
     isRead: boolean,
     attachments: AttachmentDTO[],
+    replyTo?: {
+        id: string;
+        snippet: string;
+        senderId: string;
+    };
 }
