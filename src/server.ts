@@ -20,6 +20,7 @@ export async function startServer() {
         null as any,
         null as any,
         null as any,
+        null as any,
         null as any
     );
 
@@ -29,6 +30,7 @@ export async function startServer() {
     // 3. Обновляем контроллеры в гейтвее
     gateway.updateControllers(
         dependencies.sendMessageController,
+        dependencies.replyToMessageSocketController,
         dependencies.editMessageController,
         dependencies.deleteMessageController,
         dependencies.readMessageController,
