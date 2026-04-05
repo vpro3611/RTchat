@@ -120,5 +120,39 @@ export const MessageApi = {
         body: JSON.stringify({targetConversationId}),
       }
     );
+  },
+
+  replyToMessage(conversationId: string, content: string, parentMessageId: string) {
+    return fetchJson<SendMessageResponse>(
+      `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/replies`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+        body: JSON.stringify({content, parentMessageId}),
+      }
+    );
+  },
+
+  replyToMessageWithFiles(conversationId: string, content: string, files: File[], parentMessageId: string) {
+    const formData = new FormData();
+    formData.append('content', content);
+    formData.append('parentMessageId', parentMessageId);
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+
+    return fetchJson<SendMessageResponse>(
+      `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/replies`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${AuthStore.accessToken}`
+        },
+        body: formData,
+      }
+    );
   }
 };

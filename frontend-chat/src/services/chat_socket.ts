@@ -231,6 +231,11 @@ class ChatSocketService {
     this.socket.emit('message:send', { conversationId, content });
   }
 
+  replyToMessage(conversationId: string, parentMessageId: string, content: string) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('message:reply', { conversationId, parentMessageId, content });
+  }
+
   editMessage(conversationId: string, messageId: string, content: string) {
     if (!this.socket?.connected) return;
     this.socket.emit('message:edit', { conversationId, messageId, newContent: content });
