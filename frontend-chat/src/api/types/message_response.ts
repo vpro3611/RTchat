@@ -15,6 +15,11 @@ export interface Message {
   originalSenderId?: string;
   isRead: boolean;
   attachments: Attachment[];
+  replyTo?: {
+    id: string;
+    snippet: string;
+    senderId: string;
+  };
 }
 
 export interface MessagesResponse {

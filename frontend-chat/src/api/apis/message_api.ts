@@ -36,7 +36,7 @@ export const MessageApi = {
     );
   },
 
-  sendMessage(conversationId: string, content: string) {
+  sendMessage(conversationId: string, content: string, parentMessageId?: string) {
     return fetchJson<SendMessageResponse>(
       `${BaseUrl.apiBaseUrl}/private/conversation/${conversationId}/messages`,
       {
@@ -45,14 +45,17 @@ export const MessageApi = {
           "Content-Type": "application/json",
           Authorization: `Bearer ${AuthStore.accessToken}`
         },
-        body: JSON.stringify({content}),
+        body: JSON.stringify({content, parentMessageId}),
       }
     );
   },
 
-  sendMessageWithFiles(conversationId: string, content: string, files: File[]) {
+  sendMessageWithFiles(conversationId: string, content: string, files: File[], parentMessageId?: string) {
     const formData = new FormData();
     formData.append('content', content);
+    if (parentMessageId) {
+      formData.append('parentMessageId', parentMessageId);
+    }
     files.forEach(file => {
       formData.append('files', file);
     });

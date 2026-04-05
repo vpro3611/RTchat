@@ -226,9 +226,9 @@ class ChatSocketService {
     }
   }
 
-  sendMessage(conversationId: string, content: string) {
+  sendMessage(conversationId: string, content: string, parentMessageId?: string) {
     if (!this.socket?.connected) return;
-    this.socket.emit('message:send', { conversationId, content });
+    this.socket.emit('message:send', { conversationId, content, parentMessageId });
   }
 
   editMessage(conversationId: string, messageId: string, content: string) {
