@@ -336,6 +336,11 @@ import {ConfirmResetActivityController} from "./modules/users/controllers/confir
 import {ResendUserStatusToTrueController} from "./modules/users/controllers/resend_user_status_to_true_controller";
 
 import {SendMessageRestController} from "./modules/chat/controllers/message/send_message_rest_controller";
+import {ReplyToMessageRestController} from "./modules/chat/controllers/message/reply_to_message_rest_controller";
+import {ReplyToMessageSocketController} from "./modules/chat/web_socket_controllers/message_controllers/reply_to_message_controller";
+import {ReplyToMessageTxService} from "./modules/chat/transactional_services/message/reply_to_message_service";
+import {ReplyToMessageUseCase} from "./modules/chat/application/message/reply_to_message_use_case";
+import {MessageReplyRepositoryPg} from "./modules/chat/repositories_pg_realization/message_reply_repository_pg";
 import {EncryptionPort} from "./modules/infrasctructure/ports/encryption/encryption_port";
 import {CryptoEncryptionService} from "./modules/infrasctructure/crypto_encryption_service";
 
@@ -473,6 +478,7 @@ export function assembleContainer(io: Server)
     const conversationBansRepo = new ConversationBansRepositoryPg(pool);
     const conversationRequestsRepo = new ConversationRequestsRepositoryPg(pool, encryptionService);
     const savedMessageRepo = new SavedMessagesRepoPg(pool, encryptionService);
+    const messageReplyRepo = new MessageReplyRepositoryPg(pool);
     const avatarRepo = new AvatarRepositoryPg(pool);
     const attachmentRepo = new AttachmentRepositoryPg(pool, encryptionService);
     const blobRepo = new BlobRepositoryPg(pool, encryptionService);
@@ -568,6 +574,22 @@ export function assembleContainer(io: Server)
         participantRepo,
         RedisCacheService,
         conversationRepo
+    );
+
+    const replyToMessageUseCase = new ReplyToMessageUseCase(
+        messageRepo,
+        messageReplyRepo,
+        conversationRepo,
+        messageMapper,
+        checkIsParticipant,
+        RedisCacheService,
+        participantRepo,
+        userToUserBlocksPG,
+        conversationBansRepo,
+        new ClamAVScanner(),
+        new VideoProcessor(),
+        new ImageProcessor(),
+        blobRepo,
     );
 
     // ____ //
@@ -735,6 +757,7 @@ export function assembleContainer(io: Server)
     const editMessageService = new EditMessageTxService(txManager, encryptionService);
     const getMessagesService = new GetMessageTxService(txManager, encryptionService);
     const sendMessageService = new SendMessageTxService(txManager, encryptionService);
+    const replyToMessageService = new ReplyToMessageTxService(txManager, encryptionService);
     const resendMessageService = new ResendMessageTxService(txManager, encryptionService, RedisCacheService);
     const getSpecificMessageService = new GetSpecificMessageService(txManager, encryptionService);
 
@@ -782,6 +805,7 @@ export function assembleContainer(io: Server)
     const editMessageController = new EditMessageController(editMessageService);
     const readMessageController = new MarkConversationAsReadController(markConversationReadService);
     const sendMessageController = new SendMessageController(sendMessageService);
+    const replyToMessageSocketController = new ReplyToMessageSocketController(replyToMessageService);
 
     // TODO : CONTROLLERS (TYPING)
     const startTypingController = new StartTypingController();
@@ -834,6 +858,11 @@ export function assembleContainer(io: Server)
     );
     const sendMessageRestController = new SendMessageRestController(
         sendMessageService,
+        extractActorId,
+        io
+    );
+    const replyToMessageRestController = new ReplyToMessageRestController(
+        replyToMessageService,
         extractActorId,
         io
     );
@@ -994,6 +1023,7 @@ export function assembleContainer(io: Server)
 
         // services for web socket
         sendMessageService,
+        replyToMessageService,
         editMessageService,
         deleteMessageService,
         getUserConversationsService,
@@ -1001,6 +1031,7 @@ export function assembleContainer(io: Server)
 
         // controllers for web socket
         sendMessageController,
+        replyToMessageSocketController,
         editMessageController,
         deleteMessageController,
         readMessageController,
@@ -1018,6 +1049,7 @@ export function assembleContainer(io: Server)
 
         resendMessageController,
         sendMessageRestController,
+        replyToMessageRestController,
 
         getMessagesController,
         getSpecificMessageController,

@@ -9,6 +9,7 @@ import {SendMessageController, SendMessageSchema} from "../web_socket_controller
 import {EditMessageController, EditMessageSchema} from "../web_socket_controllers/message_controllers/edit_message_controller";
 import {DeleteMessageController, DeleteMessageSchema} from "../web_socket_controllers/message_controllers/delete_message_controller";
 import {MarkConversationAsReadController, ReadMessageSchema} from "../web_socket_controllers/message_controllers/read_message_controller";
+import {ReplyToMessageSocketController, ReplyToMessageSchema} from "../web_socket_controllers/message_controllers/reply_to_message_controller";
 import {StartTypingController, StartTypingSchema} from "../web_socket_controllers/typing_controllers/start_typing_controller";
 import {StopTypingController, StopTypingSchema} from "../web_socket_controllers/typing_controllers/stop_typing_controller";
 
@@ -21,6 +22,7 @@ export class ChatGateway {
         server: HTTPServer,
         private tokenServiceJWT: TokenServiceJWT,
         private sendMessageController: SendMessageController,
+        private replyToMessageController: ReplyToMessageSocketController,
         private editMessageController: EditMessageController,
         private deleteMessageController: DeleteMessageController,
         private markConversationAsReadController: MarkConversationAsReadController,
@@ -38,6 +40,7 @@ export class ChatGateway {
 
     public updateControllers(
         sendMessageController: SendMessageController,
+        replyToMessageController: ReplyToMessageSocketController,
         editMessageController: EditMessageController,
         deleteMessageController: DeleteMessageController,
         markConversationAsReadController: MarkConversationAsReadController,
@@ -46,6 +49,7 @@ export class ChatGateway {
         stopTypingController: StopTypingController,
     ) {
         this.sendMessageController = sendMessageController;
+        this.replyToMessageController = replyToMessageController;
         this.editMessageController = editMessageController;
         this.deleteMessageController = deleteMessageController;
         this.markConversationAsReadController = markConversationAsReadController;
@@ -173,6 +177,25 @@ export class ChatGateway {
                 );
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to send message");
+                socket.emit("error", {
+                    message: msg
+                });
+            }
+        })
+
+        socket.on("message:reply", async (payload) => {
+            try {
+                const parsed = ReplyToMessageSchema.parse(payload);
+
+                await this.replyToMessageController.replyToMessageController(
+                    socket,
+                    parsed.conversationId,
+                    parsed.parentMessageId,
+                    parsed.content,
+                    this.io
+                );
+            } catch (error) {
+                const msg = this.evaluateErrors(error, "Failed to reply to message");
                 socket.emit("error", {
                     message: msg
                 });

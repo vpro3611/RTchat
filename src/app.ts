@@ -288,6 +288,11 @@ export const createApp = (dependencies: AppContainer): Express => {
         dependencies.sendMessageRestController.sendMessage
     );
 
+    privateRouter.post("/conversation/:conversationId/replies",
+        upload.array('files', 10),
+        dependencies.replyToMessageRestController.replyToMessage
+    );
+
     privateRouter.get("/conversation/:conversationId/:messageId/view",
         validateParams(GetSpecificMessageParamsSchema),
         dependencies.getSpecificMessageController.getSpecificMessageCont
