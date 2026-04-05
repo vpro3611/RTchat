@@ -30,7 +30,7 @@ gemini --resume 85f34ad5-77dc-45ad-a2b3-3c029a620ab3
 - ~~Add a possibility to send photos and videos.~~
 - ~~Add a possibility to send files.~~
 - ~~Add a possibility to resend a message.~~
-- Add a possibility to reply to a specific message.
+- ~~Add a possibility to reply to a specific message.~~
 - Add a possibility to record and send a voice message.
 - Add google authentification.
 
