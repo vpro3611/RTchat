@@ -42,6 +42,9 @@ onMounted(() => {
   if (props.message.isResent && props.message.originalSenderId) {
     void UserCacheStore.ensureUser(props.message.originalSenderId);
   }
+  if (props.message.replyTo?.senderId) {
+    void UserCacheStore.ensureUser(props.message.replyTo.senderId);
+  }
 });
 
 const emit = defineEmits<{
@@ -49,6 +52,8 @@ const emit = defineEmits<{
   (e: 'delete', messageId: string): void;
   (e: 'save', messageId: string): void;
   (e: 'forward', messageId: string): void;
+  (e: 'reply', message: Message): void;
+  (e: 'scroll-to-parent', messageId: string): void;
   (e: 'open-media', index: number, attachments: Attachment[]): void;
 }>();
 
@@ -86,6 +91,10 @@ function handleSave() {
 function handleForward() {
   emit('forward', props.message.id);
 }
+
+function handleReply() {
+  emit('reply', props.message);
+}
 </script>
 
 <template>
@@ -97,6 +106,7 @@ function handleForward() {
       class="message-bubble shadow-2"
       :class="isOwn ? 'bg-primary text-white' : 'message-bubble-incoming'"
       :style="{ maxWidth: '75%', minWidth: '80px' }"
+      v-touch-swipe.right="handleReply"
     >
       <!-- Forwarded from -->
       <div
@@ -120,6 +130,26 @@ function handleForward() {
           size="20px"
         />
         <span>{{ senderUsername }}</span>
+      </div>
+
+      <!-- Reply context -->
+      <div v-if="message.replyTo" class="q-px-sm q-pt-xs">
+        <div 
+          class="reply-context q-mb-xs rounded-borders cursor-pointer"
+          @click="emit('scroll-to-parent', message.replyTo.id)"
+        >
+          <div class="row items-center no-wrap q-gutter-x-xs">
+            <div class="reply-accent-line bg-primary" />
+            <div class="col overflow-hidden">
+              <div class="text-weight-bold text-primary" style="font-size: 11px;">
+                {{ UserCacheStore.getUsername(message.replyTo.senderId) || 'User' }}
+              </div>
+              <div class="text-caption ellipsis" :class="isOwn ? 'text-white' : 'text-grey-7'" style="font-size: 11px; opacity: 0.9;">
+                {{ message.replyTo.snippet }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Media Attachments -->
@@ -195,6 +225,9 @@ function handleForward() {
         >
           <q-menu anchor="top right" self="top left">
             <q-list dense style="min-width: 100px">
+              <q-item clickable v-close-popup @click="handleReply">
+                <q-item-section class="text-primary">Reply</q-item-section>
+              </q-item>
               <q-item clickable v-close-popup @click="!isSaved && handleSave()" :disable="isSaved">
                 <q-item-section :class="isSaved ? 'text-grey' : 'text-primary'">
                   {{ isSaved ? 'Saved' : 'Save' }}
@@ -233,5 +266,23 @@ function handleForward() {
 .message-content {
   word-break: break-word;
   white-space: pre-wrap;
+}
+
+.reply-context {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 4px 8px 4px 0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.body--dark .reply-context {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.reply-accent-line {
+  width: 3px;
+  height: 100%;
+  min-height: 24px;
+  border-radius: 2px;
 }
 </style>
