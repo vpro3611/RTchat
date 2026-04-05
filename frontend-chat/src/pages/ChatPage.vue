@@ -644,6 +644,19 @@ watch(
         <q-btn flat round dense icon="close" size="sm" @click="cancelEdit" />
       </div>
 
+      <!-- Reply Preview -->
+      <div v-if="replyingToMessage" class="reply-preview-bar row items-center q-pa-sm q-mb-sm rounded-borders">
+        <div class="col overflow-hidden">
+          <div class="text-primary text-weight-bold" style="font-size: 11px;">
+            Replying to {{ UserCacheStore.getUsername(replyingToMessage.senderId) || 'User' }}
+          </div>
+          <div class="text-caption ellipsis text-grey-7" style="font-size: 11px;">
+            {{ replyingToMessage.content }}
+          </div>
+        </div>
+        <q-btn flat round dense icon="close" size="sm" @click="cancelReply" />
+      </div>
+
       <div class="row items-end q-gutter-x-sm">
         <input
           ref="fileInputRef"
@@ -780,5 +793,24 @@ watch(
 
 .body--dark .edit-mode-indicator {
   background: rgba(255, 255, 255, 0.05);
+}
+
+@keyframes highlight-flash {
+  0% { background-color: rgba(25, 118, 210, 0.2); } /* Using rgba version of primary */
+  100% { background-color: transparent; }
+}
+
+.highlight-message {
+  animation: highlight-flash 2s ease-out;
+  border-radius: 8px; /* Matching bubble radius */
+}
+
+.reply-preview-bar {
+  background: rgba(0, 0, 0, 0.05);
+  border-left: 3px solid var(--q-primary);
+}
+
+.body--dark .reply-preview-bar {
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>
