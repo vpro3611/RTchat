@@ -2,6 +2,12 @@
 
 import {AttachmentDTO} from "./attachment_dto";
 
+export type ReplyMetadataDTO = {
+    parentMessageId: string,
+    parentContentSnippet: string,
+    parentSenderId: string
+}
+
 export type MessageDTO = {
     id: string,
     conversationId: string,
@@ -17,4 +23,5 @@ export type MessageDTO = {
     isResent: boolean,
     isRead: boolean,
     attachments: AttachmentDTO[],
+    replyMetadata?: ReplyMetadataDTO
 }
