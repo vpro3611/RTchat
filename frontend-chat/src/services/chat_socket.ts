@@ -23,24 +23,46 @@ class ChatSocketService {
   private currentViewingChatId: string | null = null;
 
   connect() {
-    if (this.socket?.connected) return;
+    // console.log('chatSocket: connect() called. Current socket state:', {
+    //   exists: !!this.socket,
+    //   connected: this.socket?.connected,
+    //   active: this.socket?.active
+    // });
 
+    if (this.socket?.connected) {
+      // console.log('chatSocket: Already connected, skipping.');
+      return;
+    }
+
+    // If we have a socket that is not connected but is still "active" (trying to connect), 
+    // we should wait for it instead of creating a new one.
+    if (this.socket && this.socket.active) {
+      // console.log('chatSocket: Socket exists and active. Re-using existing instance.');
+      return;
+    }
+
+    // console.log('chatSocket: Creating new socket instance');
     this.socket = io(BaseUrl.apiBaseUrl, {
       auth: {
         token: AuthStore.accessToken
       },
-      transports: ['websocket'],
+      // Using both polling and websocket to ensure faster initial connection
+      transports: ['polling', 'websocket'],
       withCredentials: true,
       autoConnect: true,
+      // Increase timeout to handle slow handshakes
+      timeout: 20000,
     });
 
     this.setupEventListeners();
   }
 
   // Ждать подключения сокета
-  async waitForConnection(timeout = 5000): Promise<boolean> {
+  async waitForConnection(timeout = 10000): Promise<boolean> {
+    // console.log('chatSocket: waitForConnection() started');
     return new Promise((resolve) => {
       if (this.socket?.connected) {
+        // console.log('chatSocket: Already connected (waitForConnection)');
         resolve(true);
         return;
       }
@@ -48,18 +70,21 @@ class ChatSocketService {
       const startTime = Date.now();
       const checkConnection = () => {
         if (this.socket?.connected) {
+          // console.log('chatSocket: Connection established after', Date.now() - startTime, 'ms');
           resolve(true);
           return;
         }
         if (Date.now() - startTime > timeout) {
+          console.warn('chatSocket: Connection timeout after', timeout, 'ms');
           resolve(false);
           return;
         }
         setTimeout(checkConnection, 100);
       };
 
-      // Если сокет ещё не создан, создаём и ждём
-      if (!this.socket) {
+      // Если сокета нет или он не активен, пробуем подключиться
+      if (!this.socket || !this.socket.active) {
+        // console.log('chatSocket: No active socket in waitForConnection, calling connect()');
         this.connect();
       }
       checkConnection();

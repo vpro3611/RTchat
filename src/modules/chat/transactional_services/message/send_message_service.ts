@@ -25,7 +25,7 @@ export class SendMessageTxService {
     ) {}
 
 
-    async sendMessageTxService(actorId: string, conversationId: string, content: string, files: FileDTO[] = []) {
+    async sendMessageTxService(actorId: string, conversationId: string, content: string, files: FileDTO[] = [], parentMessageId?: string) {
         return await this.txManager.runInTransaction(async (client) => {
             const messageRepo = new MessageRepositoryPg(client, this.encryptionService);
             const conversationRepo = new ConversationRepositoryPg(client, this.encryptionService);
@@ -55,7 +55,7 @@ export class SendMessageTxService {
                 blobRepo,
             );
 
-            return await sendMessageUseCase.sendMessageUseCase(actorId, conversationId, content, files);
+            return await sendMessageUseCase.sendMessageUseCase(actorId, conversationId, content, files, parentMessageId);
         })
     }
 }

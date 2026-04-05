@@ -14,7 +14,7 @@ export class SendMessageRestController {
     sendMessage = async (req: Request, res: Response) => {
         const actorId = this.extractActorId.extractActorId(req);
         const conversationId = req.params.conversationId as string;
-        const {content} = req.body;
+        const {content, parentMessageId} = req.body;
         const files = req.files as Express.Multer.File[];
 
         const fileDTOs: FileDTO[] = files?.map(file => ({
@@ -28,7 +28,8 @@ export class SendMessageRestController {
             actorId.sub,
             conversationId,
             content,
-            fileDTOs
+            fileDTOs,
+            parentMessageId
         );
 
         this.io.to(conversationId).emit("message:new", message);

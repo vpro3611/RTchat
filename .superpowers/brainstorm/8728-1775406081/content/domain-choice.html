@@ -1,0 +1,52 @@
+<h2>Domain Model: Message as a Reply</h2>
+<p class="subtitle">How should the Message entity represent its parent?</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">A: Just the ID</div>
+    <div class="mockup-body">
+      <pre><code>
+class Message {
+  ...
+  private readonly parentId?: string;
+  ...
+}
+      </code></pre>
+      <p>Simple, but UI needs another query to show what you're replying to.</p>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">B: Parent Snippet</div>
+    <div class="mockup-body">
+      <pre><code>
+class Message {
+  ...
+  private readonly replyMetadata?: {
+    parentId: string;
+    parentSnippet: string;
+    parentSenderName: string;
+  };
+}
+      </code></pre>
+      <p>Self-contained. UI can render the reply context immediately.</p>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="id_only" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Just ID</h3>
+      <p>Domain only knows who the parent is.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="snippet" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Parent Snippet</h3>
+      <p>Domain includes brief context about the parent message.</p>
+    </div>
+  </div>
+</div>

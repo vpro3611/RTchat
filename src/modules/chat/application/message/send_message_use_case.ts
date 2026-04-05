@@ -21,7 +21,11 @@ import {VirusScannerInterface} from "../../domain/ports/virus_scanner_interface"
 import {VideoProcessorInterface} from "../../domain/ports/video_processor_interface";
 import {ImageProcessorInterface} from "../../domain/ports/image_processor_interface";
 import {BlobRepositoryPg} from "../../repositories_pg_realization/blob_repository_pg";
-import {InsecureAttachmentError} from "../../errors/message_errors/message_errors";
+import {
+    InsecureAttachmentError,
+    MessageNotAPartOfConversationError,
+    MessageNotFoundError
+} from "../../errors/message_errors/message_errors";
 
 
 export class SendMessageUseCase {
@@ -37,7 +41,8 @@ export class SendMessageUseCase {
                 private readonly videoProcessor: VideoProcessorInterface,
                 private readonly imageProcessor: ImageProcessorInterface,
                 private readonly blobRepo: BlobRepositoryPg,
-    ) {}
+    ) {
+    }
 
     private async checkIfUserIsBannedFromGroup(actorId: string, conversationId: string) {
         const relation = await this.conversationBansRepo.isBanned(conversationId, actorId);
@@ -103,7 +108,13 @@ export class SendMessageUseCase {
         return attachments;
     }
 
-    async sendMessageUseCase(actorId: string, conversationId: string, content: string, files: FileDTO[] = []): Promise<MessageDTO> {
+    async sendMessageUseCase(
+        actorId: string,
+        conversationId: string,
+        content: string,
+        files: FileDTO[] = [],
+        parentMessageId?: string
+    ): Promise<MessageDTO> {
         const validatedContent = Content.create(content);
         const participant = await this.checkIsParticipant.checkIsParticipant(actorId, conversationId);
 
@@ -129,11 +140,29 @@ export class SendMessageUseCase {
 
         const attachments = await this.processAttachments(files);
 
+        let replyMetadata;
+        if (parentMessageId) {
+            const parentMessage = await this.messageRepo.findById(parentMessageId);
+            if (!parentMessage) {
+                throw new MessageNotFoundError(`Parent message with id ${parentMessageId} not found`);
+            }
+            if (parentMessage.getConversationId() !== conversationId) {
+                throw new MessageNotAPartOfConversationError("Cannot reply to a message from a different conversation");
+            }
+
+            replyMetadata = {
+                parentMessageId: parentMessage.id,
+                parentContentSnippet: parentMessage.getContent().getContentValue().substring(0, 100),
+                parentSenderId: parentMessage.getSenderId()
+            };
+        }
+
         const message = Message.create(
             conversationId,
             actorId,
             validatedContent,
-            attachments
+            attachments,
+            replyMetadata
         );
 
         await this.messageRepo.create(message);
@@ -151,5 +180,5 @@ export class SendMessageUseCase {
         const maxReadAt = await this.conversationRepo.getMaxReadAtForOthers(conversationId, actorId);
 
         return this.messageMapper.mapToMessage(message, maxReadAt);
-        }
-        }
+    }
+}

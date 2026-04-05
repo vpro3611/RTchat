@@ -7,6 +7,7 @@ import {z} from "zod"
 export const SendMessageSchema = z.object({
     conversationId: z.string().uuid(),
     content: z.string(),
+    parentMessageId: z.string().uuid().optional(),
 })
 
 
@@ -17,7 +18,8 @@ export class SendMessageController {
         socket: AuthSocket,
         conversationId: string,
         content: string,
-        io: Server
+        io: Server,
+        parentMessageId?: string
     ) =>
     {
 
@@ -28,7 +30,8 @@ export class SendMessageController {
                 userId.sub,
                 conversationId,
                 content,
-                []
+                [],
+                parentMessageId
             );
 
         io.to(conversationId).emit("message:new", message);

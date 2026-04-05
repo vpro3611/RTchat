@@ -169,7 +169,8 @@ export class ChatGateway {
                     socket,
                     parsed.conversationId,
                     parsed.content,
-                    this.io
+                    this.io,
+                    parsed.parentMessageId
                 );
             } catch (error) {
                 const msg = this.evaluateErrors(error, "Failed to send message");

@@ -25,7 +25,8 @@ describe("SendMessageUseCase", () => {
     beforeEach(() => {
 
         messageRepo = {
-            create: jest.fn()
+            create: jest.fn(),
+            findById: jest.fn()
         };
 
         conversationRepo = {
@@ -319,6 +320,64 @@ describe("SendMessageUseCase", () => {
         expect(userToUserBansRepo.ensureAnyBlocksExists).not.toHaveBeenCalled();
 
         expect(result).toEqual({ id: "msg-1" });
+
+    });
+
+    // =========================
+    // replies
+    // =========================
+
+    it("should create a message as a reply when parentMessageId is provided", async () => {
+
+        const parentMessageId = "parent-msg-1";
+        const parentContent = "original message content";
+        const parentSenderId = "user-b";
+
+        const parentMessage = {
+            id: parentMessageId,
+            getConversationId: () => CONVERSATION_ID,
+            getContent: () => ({
+                getContentValue: () => parentContent
+            }),
+            getSenderId: () => parentSenderId
+        };
+
+        messageRepo.findById = jest.fn().mockResolvedValue(parentMessage);
+
+        const participant = {
+            getCanSendMessages: () => true
+        };
+
+        checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
+
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "group"
+        });
+
+        participantRepo.getParticipants.mockResolvedValue({
+            items: [{ userId: USER_ID }]
+        });
+
+        mapper.mapToMessage.mockReturnValue({ id: "reply-msg-1" });
+
+        const result = await (useCase as any).sendMessageUseCase(
+            USER_ID,
+            CONVERSATION_ID,
+            "this is a reply",
+            [],
+            parentMessageId
+        );
+
+        expect(messageRepo.findById).toHaveBeenCalledWith(parentMessageId);
+        expect(messageRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+            replyMetadata: {
+                parentMessageId: parentMessageId,
+                parentContentSnippet: parentContent.substring(0, 100),
+                parentSenderId: parentSenderId
+            }
+        }));
+
+        expect(result).toEqual({ id: "reply-msg-1" });
 
     });
 

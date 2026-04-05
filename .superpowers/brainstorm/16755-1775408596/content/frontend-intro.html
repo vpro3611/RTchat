@@ -1,0 +1,58 @@
+<h2>Frontend: Reply to Message</h2>
+<p class="subtitle">Designing the user experience for message replies</p>
+
+<div class="mockup">
+  <div class="mockup-header">1. Replying in the Input Bar</div>
+  <div class="mockup-body">
+    <div style="border: 1px solid #ccc; padding: 10px; border-radius: 8px; margin-bottom: 10px; background: #f9f9f9; display: flex; align-items: center; justify-content: space-between;">
+      <div style="border-left: 3px solid #1976d2; padding-left: 10px;">
+        <div class="label" style="color: #1976d2;">Replying to UserA</div>
+        <div style="font-size: 0.8rem; color: #666;">Original message content snippet...</div>
+      </div>
+      <q-icon name="close" style="cursor: pointer;" />
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <div class="mock-input" style="flex-grow: 1;">Type a reply...</div>
+      <div class="mock-button">Send</div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">2. Reply Bubble Rendering</div>
+  <div class="mockup-body">
+    <div class="message-bubble" style="background: #e3f2fd; border-radius: 12px; padding: 10px; max-width: 80%;">
+      <div style="background: rgba(0,0,0,0.05); border-left: 3px solid #1976d2; padding: 4px 8px; margin-bottom: 5px; border-radius: 4px; font-size: 0.8rem;">
+        <div class="label" style="color: #1976d2;">UserA</div>
+        <div class="ellipsis">The original message...</div>
+      </div>
+      <div>My reply to that message</div>
+      <div class="text-caption text-right">12:34</div>
+    </div>
+  </div>
+</div>
+
+<h3>UI Interaction Style</h3>
+<div class="options">
+  <div class="option" data-choice="swipe" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Swipe to Reply</h3>
+      <p>Modern mobile-first approach. Swipe a message to the left/right to trigger a reply.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="menu" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Context Menu / Button</h3>
+      <p>Traditional approach. Add a "Reply" button to the message action menu.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="both" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid (Both)</h3>
+      <p>Menu button for clarity, swipe for power users.</p>
+    </div>
+  </div>
+</div>

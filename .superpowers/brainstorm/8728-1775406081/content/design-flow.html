@@ -1,0 +1,35 @@
+<h2>Design: Reply Data Flow</h2>
+<p class="subtitle">How a message becomes a reply</p>
+
+<div class="mockup">
+  <div class="mockup-header">1. Sending a Reply</div>
+  <div class="mockup-body">
+    <ol>
+      <li><strong>Client</strong> sends <code>{ content: "My reply", parentMessageId: "UUID-A" }</code></li>
+      <li><strong>UseCase</strong> finds Message A, takes a snippet of its content.</li>
+      <li><strong>Repository</strong> saves "My reply" as a new message in <code>messages</code>.</li>
+      <li><strong>Repository</strong> saves link in <code>message_replies</code> with the snippet.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">2. Reading Messages</div>
+  <div class="mockup-body">
+    <pre><code>
+SELECT m.*, r.parent_message_id, r.parent_content_snippet
+FROM messages m
+LEFT JOIN message_replies r ON m.id = r.message_id
+WHERE m.conversation_id = ...
+    </code></pre>
+    <p>We get the reply context in a single query!</p>
+  </div>
+</div>
+
+<h3>Does this flow look right to you?</h3>
+<div class="section">
+  <ul>
+    <li>Storing a snippet in the link table avoids expensive recursive joins or fetching full parent messages every time.</li>
+    <li>It handles "deleted" parents gracefully (the snippet remains).</li>
+  </ul>
+</div>

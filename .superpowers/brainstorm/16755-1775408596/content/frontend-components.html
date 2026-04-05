@@ -1,0 +1,40 @@
+<h2>Frontend Design: Reply Components</h2>
+<p class="subtitle">Visualizing the reply interaction and rendering</p>
+
+<div class="mockup">
+  <div class="mockup-header">Message Input (Replying State)</div>
+  <div class="mockup-body">
+    <div style="background: rgba(25, 118, 210, 0.05); border-left: 4px solid #1976d2; padding: 8px 12px; margin-bottom: 8px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div class="label" style="color: #1976d2; margin-bottom: 2px;">Replying to UserA</div>
+        <div class="ellipsis" style="font-size: 0.85rem; color: #555;">This is the original message that I am replying to...</div>
+      </div>
+      <q-icon name="close" style="cursor: pointer; opacity: 0.6;" />
+    </div>
+    <div class="mock-input">Type your reply...</div>
+  </div>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">Message Bubble with Reply</div>
+  <div class="mockup-body">
+    <div class="message-bubble shadow-1" style="background: white; border: 1px solid #eee; border-radius: 12px; padding: 8px; max-width: 85%;">
+      <!-- Reply Context -->
+      <div style="background: #f5f5f5; border-left: 3px solid #1976d2; padding: 4px 8px; margin-bottom: 8px; border-radius: 4px; cursor: pointer;">
+        <div class="label" style="color: #1976d2; font-size: 0.75rem;">UserA</div>
+        <div class="ellipsis" style="font-size: 0.8rem; color: #666;">Original message snippet...</div>
+      </div>
+      <!-- Reply Content -->
+      <div style="font-size: 0.95rem;">This is my reply!</div>
+      <div class="text-caption text-right q-mt-xs" style="font-size: 0.7rem; color: #999;">10:45 AM</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Interaction Logic</h3>
+  <ul>
+    <li><strong>Scroll to Parent:</strong> Clicking the reply context in a bubble will automatically scroll to and highlight the original message.</li>
+    <li><strong>Hybrid Trigger:</strong> Users can click "Reply" in the message menu OR swipe right on any message to start replying.</li>
+  </ul>
+</div>
