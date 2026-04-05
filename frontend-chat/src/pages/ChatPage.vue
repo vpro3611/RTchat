@@ -12,6 +12,7 @@ import {MessageApi} from "src/api/apis/message_api";
 import {UserApi} from "src/api/apis/user_api";
 import {ParticipantApi} from "src/api/apis/participant_api";
 import type {User} from "src/api/types/register_response";
+import type {Message} from "src/api/types/message_response";
 import {chatSocket} from "src/services/chat_socket";
 import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
 import LeaveGroupButton from "components/LeaveGroupButton.vue";
@@ -42,6 +43,7 @@ const isOtherUserBlocked = ref(false);
 const isCurrentUserCanSendMessages = ref(true);
 const sendRestrictionMessage = ref<string | null>(null);
 const isUserScrollingUp = ref(false);
+const replyingToMessage = ref<Message | null>(null);
 
 const pendingFiles = ref<File[]>([]);
 const isDragging = ref(false);
@@ -235,16 +237,18 @@ async function sendMessage() {
   if ((!content && !hasFiles) || !conversationId.value || !isCurrentUserCanSendMessages.value) return;
 
   sendRestrictionMessage.value = null;
+  const parentId = replyingToMessage.value?.id;
 
   try {
     if (hasFiles) {
-      await MessageApi.sendMessageWithFiles(conversationId.value, content, pendingFiles.value);
+      await MessageApi.sendMessageWithFiles(conversationId.value, content, pendingFiles.value, parentId);
       pendingFiles.value = [];
     } else {
-      chatSocket.sendMessage(conversationId.value, content);
+      chatSocket.sendMessage(conversationId.value, content, parentId);
     }
 
     message.value = "";
+    cancelReply(); // Reset reply state after sending
     scrollToBottom(true);
     focusInput();
   } catch (error: unknown) {
@@ -323,6 +327,29 @@ function addFiles(files: File[]) {
 
 function removeFile(index: number) {
   pendingFiles.value.splice(index, 1);
+}
+
+function startReply(msg: Message) {
+  replyingToMessage.value = msg;
+  isEditing.value = false; // Cancel edit if replying
+  focusInput();
+}
+
+function cancelReply() {
+  replyingToMessage.value = null;
+}
+
+function scrollToMessage(messageId: string) {
+  const el = document.getElementById(`msg-${messageId}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('highlight-message');
+    setTimeout(() => el.classList.remove('highlight-message'), 2000);
+  } else {
+    // Optional: if message not in DOM, you might want to load more?
+    // For now, let's just log if it's not found
+    console.warn(`Message ${messageId} not found in DOM`);
+  }
 }
 
 // Начало редактирования
@@ -567,15 +594,18 @@ watch(
 
         <MessageBubble
           v-for="message in MessageStore.messages"
+          :id="'msg-' + message.id"
           :key="message.id"
           :message="message"
           :isOwn="message.senderId === AuthStore.user?.id"
           :isSaved="isMessageSaved(message.id)"
           @edit="startEdit"
+          @reply="startReply"
           @delete="deleteMessage"
           @save="saveMessageAction"
           @forward="handleForwardMessage"
           @open-media="handleOpenMedia"
+          @scroll-to-parent="scrollToMessage"
         />
         <div id="typing-indicator" style="height: 20px;"></div>
       </div>
