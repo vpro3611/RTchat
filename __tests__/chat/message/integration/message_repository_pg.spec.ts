@@ -211,4 +211,34 @@ describe("MessageRepositoryPg (integration)", () => {
         expect(found?.getOriginalSenderId()).toBe(originalSenderId);
     });
 
+    it("should create and retrieve a message reply with metadata", async () => {
+        const parentMessage = createMessage("parent message");
+        await repo.create(parentMessage);
+
+        const replyMetadata = {
+            parentMessageId: parentMessage.id,
+            parentContentSnippet: "parent message",
+            parentSenderId: USER_ID
+        };
+
+        const replyMessage = Message.create(
+            CONVERSATION_ID,
+            USER_ID,
+            Content.create("reply message"),
+            [],
+            replyMetadata
+        );
+
+        await repo.create(replyMessage);
+
+        const found = await repo.findById(replyMessage.id);
+
+        expect(found).not.toBeNull();
+        expect(found?.getReplyMetadata()).toEqual(replyMetadata);
+
+        const conversationMessages = await repo.findByConversationId(CONVERSATION_ID);
+        const foundInList = conversationMessages.items.find(m => m.id === replyMessage.id);
+        expect(foundInList?.getReplyMetadata()).toEqual(replyMetadata);
+    });
+
 });

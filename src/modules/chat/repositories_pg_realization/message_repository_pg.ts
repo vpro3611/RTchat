@@ -1,6 +1,6 @@
 import {MessageRepoInterface} from "../domain/ports/message_repo_interface";
 import {Pool, PoolClient} from "pg";
-import {Message} from "../domain/message/message";
+import {Message, ReplyMetadata} from "../domain/message/message";
 import {mapPgError} from "../../error_mapper/pg_error_mapper";
 import {AttachmentRepositoryPg} from "./attachment_repository_pg";
 import {EncryptionPort} from "../../infrasctructure/ports/encryption/encryption_port";
@@ -14,6 +14,16 @@ export class MessageRepositoryPg implements MessageRepoInterface {
 
     private mapToMessage(row: any, attachments: any[] = []): Message {
         const decryptedContent = this.encryptionService.decrypt(row.content);
+
+        let replyMetadata: ReplyMetadata | undefined;
+        if (row.parent_message_id) {
+            replyMetadata = {
+                parentMessageId: row.parent_message_id,
+                parentContentSnippet: row.parent_content_snippet,
+                parentSenderId: row.parent_sender_id
+            };
+        }
+
         return Message.restore(
             row.id,
             row.conversation_id,
@@ -26,6 +36,7 @@ export class MessageRepositoryPg implements MessageRepoInterface {
             row.original_sender_id,
             row.is_resent,
             attachments,
+            replyMetadata
         );
     }
 
@@ -52,6 +63,25 @@ export class MessageRepositoryPg implements MessageRepoInterface {
                 ]
             );
 
+            const replyMetadata = message.getReplyMetadata();
+            if (replyMetadata) {
+                await this.pg.query(
+                    `
+                    INSERT INTO message_replies
+                    (message_id, parent_message_id, parent_content_snippet, parent_sender_id, conversation_id, replied_by)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                    `,
+                    [
+                        message.id,
+                        replyMetadata.parentMessageId,
+                        replyMetadata.parentContentSnippet,
+                        replyMetadata.parentSenderId,
+                        message.getConversationId(),
+                        message.getSenderId()
+                    ]
+                );
+            }
+
             for (const attachment of message.getAttachments()) {
                 await this.attachmentRepo.save(message.id, attachment);
             }
@@ -62,9 +92,10 @@ export class MessageRepositoryPg implements MessageRepoInterface {
 
     async findById(id: string): Promise<Message | null> {
         try {
-            const result = await this.pg.query(`SELECT *
-                                                FROM messages
-                                                WHERE id = $1`,
+            const result = await this.pg.query(`SELECT m.*, r.parent_message_id, r.parent_content_snippet, r.parent_sender_id
+                                                FROM messages m
+                                                LEFT JOIN message_replies r ON m.id = r.message_id
+                                                WHERE m.id = $1`,
                 [id]);
 
             if (!result.rows.length) {
@@ -84,23 +115,24 @@ export class MessageRepositoryPg implements MessageRepoInterface {
         try {
             const params: any[] = [conversationId];
             let cursorCondition = "";
-            let orderBy = "ORDER BY created_at ASC";
+            let orderBy = "ORDER BY m.created_at ASC";
 
             if (cursor) {
                 params.push(cursor);
-                cursorCondition = `AND created_at < $${params.length}`;
-                orderBy = "ORDER BY created_at ASC";
+                cursorCondition = `AND m.created_at < $${params.length}`;
+                orderBy = "ORDER BY m.created_at ASC";
             } else {
-                orderBy = "ORDER BY created_at DESC";
+                orderBy = "ORDER BY m.created_at DESC";
             }
 
             params.push(limit + 1);
 
             const result = await this.pg.query(
                 `
-                    SELECT *
-                    FROM messages
-                    WHERE conversation_id = $1
+                    SELECT m.*, r.parent_message_id, r.parent_content_snippet, r.parent_sender_id
+                    FROM messages m
+                    LEFT JOIN message_replies r ON m.id = r.message_id
+                    WHERE m.conversation_id = $1
                         ${cursorCondition}
                     ${orderBy}
                         LIMIT $${params.length}
