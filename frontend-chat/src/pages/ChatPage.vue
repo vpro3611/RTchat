@@ -12,6 +12,7 @@ import {MessageApi} from "src/api/apis/message_api";
 import {UserApi} from "src/api/apis/user_api";
 import {ParticipantApi} from "src/api/apis/participant_api";
 import type {User} from "src/api/types/register_response";
+import type { Message } from "src/api/types/message_response";
 import {chatSocket} from "src/services/chat_socket";
 import EditGroupTitleDialog from "components/EditGroupTitleDialog.vue";
 import LeaveGroupButton from "components/LeaveGroupButton.vue";
@@ -237,11 +238,22 @@ async function sendMessage() {
   sendRestrictionMessage.value = null;
 
   try {
-    if (hasFiles) {
-      await MessageApi.sendMessageWithFiles(conversationId.value, content, pendingFiles.value);
-      pendingFiles.value = [];
+    if (replyingToMessage.value) {
+      const parentId = replyingToMessage.value.id;
+      if (hasFiles) {
+        await MessageApi.replyToMessageWithFiles(conversationId.value, content, pendingFiles.value, parentId);
+        pendingFiles.value = [];
+      } else {
+        chatSocket.replyToMessage(conversationId.value, parentId, content);
+      }
+      cancelReply();
     } else {
-      chatSocket.sendMessage(conversationId.value, content);
+      if (hasFiles) {
+        await MessageApi.sendMessageWithFiles(conversationId.value, content, pendingFiles.value);
+        pendingFiles.value = [];
+      } else {
+        chatSocket.sendMessage(conversationId.value, content);
+      }
     }
 
     message.value = "";
@@ -323,6 +335,31 @@ function addFiles(files: File[]) {
 
 function removeFile(index: number) {
   pendingFiles.value.splice(index, 1);
+}
+
+const replyingToMessage = ref<Message | null>(null);
+
+function startReply(msg: Message) {
+  replyingToMessage.value = msg;
+  isEditing.value = false; // Cancel edit if replying
+  focusInput();
+}
+
+function cancelReply() {
+  replyingToMessage.value = null;
+}
+
+function scrollToMessage(messageId: string) {
+  const el = document.getElementById(`msg-${messageId}`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('highlight-message');
+    setTimeout(() => el.classList.remove('highlight-message'), 2000);
+  } else {
+    // Optional: if message not in DOM, you might want to load more?
+    // For now, let's just log if it's not found
+    console.warn(`Message ${messageId} not found in DOM`);
+  }
 }
 
 // Начало редактирования
@@ -567,15 +604,18 @@ watch(
 
         <MessageBubble
           v-for="message in MessageStore.messages"
+          :id="'msg-' + message.id"
           :key="message.id"
           :message="message"
           :isOwn="message.senderId === AuthStore.user?.id"
           :isSaved="isMessageSaved(message.id)"
           @edit="startEdit"
+          @reply="startReply"
           @delete="deleteMessage"
           @save="saveMessageAction"
           @forward="handleForwardMessage"
           @open-media="handleOpenMedia"
+          @scroll-to-parent="scrollToMessage"
         />
         <div id="typing-indicator" style="height: 20px;"></div>
       </div>
@@ -612,6 +652,19 @@ watch(
         <q-icon name="edit" color="primary" />
         <div class="col ellipsis text-caption">Editing message...</div>
         <q-btn flat round dense icon="close" size="sm" @click="cancelEdit" />
+      </div>
+
+      <!-- Reply Preview -->
+      <div v-if="replyingToMessage" class="reply-preview-bar row items-center q-pa-sm q-mb-sm rounded-borders">
+        <div class="col overflow-hidden">
+          <div class="text-primary text-weight-bold" style="font-size: 11px;">
+            Replying to {{ UserCacheStore.getUsername(replyingToMessage.senderId) || 'User' }}
+          </div>
+          <div class="text-caption ellipsis text-grey-7" style="font-size: 11px;">
+            {{ replyingToMessage.content }}
+          </div>
+        </div>
+        <q-btn flat round dense icon="close" size="sm" @click="cancelReply" />
       </div>
 
       <div class="row items-end q-gutter-x-sm">
@@ -750,5 +803,24 @@ watch(
 
 .body--dark .edit-mode-indicator {
   background: rgba(255, 255, 255, 0.05);
+}
+
+@keyframes highlight-flash {
+  0% { background-color: rgba(25, 118, 210, 0.2); } /* Using rgba version of primary */
+  100% { background-color: transparent; }
+}
+
+.highlight-message {
+  animation: highlight-flash 2s ease-out;
+  border-radius: 8px; /* Matching bubble radius */
+}
+
+.reply-preview-bar {
+  background: rgba(0, 0, 0, 0.05);
+  border-left: 3px solid var(--q-primary);
+}
+
+.body--dark .reply-preview-bar {
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>
