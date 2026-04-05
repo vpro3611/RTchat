@@ -2,6 +2,11 @@ import {Content} from "./content";
 import {CannotEditMessageError} from "../../errors/message_errors/message_errors";
 import {Attachment} from "./attachment";
 
+export interface ReplyMetadata {
+    parentMessageId: string;
+    parentContentSnippet: string;
+    parentSenderId: string;
+}
 
 export class Message {
 
@@ -16,7 +21,8 @@ export class Message {
         private updatedAt: Date,
         private readonly originalSenderId?: string,
         private readonly isResent: boolean = false,
-        private readonly attachments: Attachment[] = []
+        private readonly attachments: Attachment[] = [],
+        private readonly replyMetadata?: ReplyMetadata
     ) {}
 
     static restore(
@@ -30,7 +36,8 @@ export class Message {
         updatedAt: Date,
         originalSenderId?: string,
         isResent: boolean = false,
-        attachments: Attachment[] = []
+        attachments: Attachment[] = [],
+        replyMetadata?: ReplyMetadata
     ) {
         return new Message(
             id,
@@ -43,7 +50,8 @@ export class Message {
             updatedAt,
             originalSenderId,
             isResent,
-            attachments
+            attachments,
+            replyMetadata
         );
     }
 
@@ -51,7 +59,8 @@ export class Message {
         conversationId: string,
         senderId: string,
         content: Content,
-        attachments: Attachment[] = []
+        attachments: Attachment[] = [],
+        replyMetadata?: ReplyMetadata
     ) {
         return new Message(
             crypto.randomUUID(),
@@ -64,7 +73,8 @@ export class Message {
             new Date(),
             undefined,
             false,
-            attachments
+            attachments,
+            replyMetadata
         );
     }
 
@@ -130,4 +140,5 @@ export class Message {
     getUpdatedAt = () => this.updatedAt;
     getOriginalSenderId = () => this.originalSenderId;
     getIsResent = () => this.isResent;
+    getReplyMetadata = () => this.replyMetadata;
 }
