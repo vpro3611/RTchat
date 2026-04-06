@@ -2,6 +2,7 @@ import {MessageRepoInterface} from "../../domain/ports/message_repo_interface";
 import {ConversationRepoInterface} from "../../domain/ports/conversation_repo_interface";
 import {MessageDTO} from "../../DTO/message_dto";
 import {Message} from "../../domain/message/message";
+import {Attachment} from "../../domain/message/attachment";
 import {MapToMessage} from "../../shared/map_to_message";
 import {CheckIsParticipant} from "../../shared/is_participant";
 import {FindMessageById} from "../../shared/find_message_by_id";
@@ -101,11 +102,23 @@ export class ResendMessageUseCase {
         // 3. Create Resent Message
         const trueOriginalSenderId = originalMessage.getOriginalSenderId() || originalMessage.getSenderId();
         
+        const newAttachments = originalMessage.getAttachments().map(att => 
+            Attachment.create(
+                att.blobId,
+                att.type,
+                att.name,
+                att.mimeType,
+                att.size,
+                att.duration
+            )
+        );
+
         const message = Message.createResent(
             targetConversationId,
             actorId,
             originalMessage.getContent(),
-            trueOriginalSenderId
+            trueOriginalSenderId,
+            newAttachments
         );
 
         await this.messageRepo.create(message);
