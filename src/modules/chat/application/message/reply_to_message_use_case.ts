@@ -24,6 +24,7 @@ import {AudioProcessorInterface} from "../../domain/ports/audio_processor_interf
 import {BlobRepositoryPg} from "../../repositories_pg_realization/blob_repository_pg";
 import {
     InsecureAttachmentError,
+    InvalidMessageError,
     MessageNotAPartOfConversationError,
     MessageNotFoundError
 } from "../../errors/message_errors/message_errors";

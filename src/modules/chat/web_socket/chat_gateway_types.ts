@@ -13,6 +13,12 @@ export interface ClientToServerEvents {
         content: string
     }) => void
 
+    "message:reply": (data: {
+        conversationId: string,
+        parentMessageId: string,
+        content: string
+    }) => void
+
     "message:edit": (data: {
         conversationId: string,
         messageId: string,

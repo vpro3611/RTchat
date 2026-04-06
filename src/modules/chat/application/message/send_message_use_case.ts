@@ -22,7 +22,7 @@ import {VideoProcessorInterface} from "../../domain/ports/video_processor_interf
 import {ImageProcessorInterface} from "../../domain/ports/image_processor_interface";
 import {AudioProcessorInterface} from "../../domain/ports/audio_processor_interface";
 import {BlobRepositoryPg} from "../../repositories_pg_realization/blob_repository_pg";
-import {InsecureAttachmentError} from "../../errors/message_errors/message_errors";
+import {InsecureAttachmentError, InvalidMessageError} from "../../errors/message_errors/message_errors";
 
 
 export class SendMessageUseCase {

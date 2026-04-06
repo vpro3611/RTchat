@@ -16,6 +16,7 @@ import {FileDTO} from "../../DTO/file_dto";
 import {ClamAVScanner} from "../../infrasctructure/virus_scanner/clamav_scanner";
 import {VideoProcessor} from "../../infrasctructure/video_processor/ffmpeg_processor";
 import {ImageProcessor} from "../../infrasctructure/image_processor/sharp_image_processor";
+import {FfmpegAudioProcessor} from "../../infrasctructure/audio_processor/ffmpeg_audio_processor";
 import {BlobRepositoryPg} from "../../repositories_pg_realization/blob_repository_pg";
 
 
@@ -40,6 +41,7 @@ export class ReplyToMessageTxService {
             const virusScanner = new ClamAVScanner();
             const videoProcessor = new VideoProcessor();
             const imageProcessor = new ImageProcessor();
+            const audioProcessor = new FfmpegAudioProcessor();
             const blobRepo = new BlobRepositoryPg(client, this.encryptionService);
 
             const replyToMessageUseCase = new ReplyToMessageUseCase(
@@ -55,6 +57,7 @@ export class ReplyToMessageTxService {
                 virusScanner,
                 videoProcessor,
                 imageProcessor,
+                audioProcessor,
                 blobRepo,
             );
 

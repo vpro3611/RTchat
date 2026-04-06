@@ -14,6 +14,7 @@ describe("SendMessageUseCase", () => {
     let virusScanner: any;
     let videoProcessor: any;
     let imageProcessor: any;
+    let audioProcessor: any;
     let blobRepo: any;
 
     let useCase: SendMessageUseCase;
@@ -71,6 +72,10 @@ describe("SendMessageUseCase", () => {
             processImage: jest.fn().mockImplementation(b => Promise.resolve({ data: b, mimeType: 'image/webp' }))
         };
 
+        audioProcessor = {
+            processAudio: jest.fn().mockImplementation(b => Promise.resolve({ data: b, duration: 10, mimeType: 'audio/mpeg' }))
+        };
+
         blobRepo = {
             save: jest.fn().mockResolvedValue("blob-1")
         };
@@ -87,6 +92,7 @@ describe("SendMessageUseCase", () => {
             virusScanner,
             videoProcessor,
             imageProcessor,
+            audioProcessor,
             blobRepo
         );
 
@@ -211,6 +217,117 @@ describe("SendMessageUseCase", () => {
             attachments: expect.arrayContaining([
                 expect.objectContaining({ name: "test.png", type: "image" }),
                 expect.objectContaining({ name: "test.mp4", type: "video" })
+            ])
+        }));
+
+        expect(result).toEqual({ id: "msg-1" });
+
+    });
+
+    it("should allow sending message with empty content but with attachments", async () => {
+
+        const participant = {
+            getCanSendMessages: () => true
+        };
+
+        checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
+
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "group"
+        });
+
+        participantRepo.getParticipants.mockResolvedValue({
+            items: [
+                { userId: USER_ID }
+            ]
+        });
+
+        conversationRepo.getMaxReadAtForOthers.mockResolvedValue(new Date());
+
+        mapper.mapToMessage.mockReturnValue({ id: "msg-1" });
+
+        const files = [
+            { buffer: Buffer.from("test"), originalname: "test.png", mimetype: "image/png", size: 4 }
+        ];
+
+        const result = await useCase.sendMessageUseCase(
+            USER_ID,
+            CONVERSATION_ID,
+            "",
+            files
+        );
+
+        expect(messageRepo.create).toHaveBeenCalled();
+        expect(result).toEqual({ id: "msg-1" });
+
+    });
+
+    it("should throw if sending message with empty content and no attachments", async () => {
+
+        const participant = {
+            getCanSendMessages: () => true
+        };
+
+        checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
+
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "group"
+        });
+
+        await expect(
+            useCase.sendMessageUseCase(
+                USER_ID,
+                CONVERSATION_ID,
+                ""
+            )
+        ).rejects.toThrow("Message must have content or attachments");
+
+    });
+
+    it("should send message with voice attachment successfully", async () => {
+
+        const participant = {
+            getCanSendMessages: () => true
+        };
+
+        checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
+
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "group"
+        });
+
+        participantRepo.getParticipants.mockResolvedValue({
+            items: [
+                { userId: USER_ID }
+            ]
+        });
+
+        conversationRepo.getMaxReadAtForOthers.mockResolvedValue(new Date());
+
+        mapper.mapToMessage.mockReturnValue({ id: "msg-1" });
+
+        const files = [
+            { buffer: Buffer.from("audio"), originalname: "voice.mp3", mimetype: "audio/mpeg", size: 5 }
+        ];
+
+        const result = await useCase.sendMessageUseCase(
+            USER_ID,
+            CONVERSATION_ID,
+            "",
+            files
+        );
+
+        expect(virusScanner.scanBuffer).toHaveBeenCalledTimes(1);
+        expect(audioProcessor.processAudio).toHaveBeenCalledTimes(1);
+        expect(blobRepo.save).toHaveBeenCalledTimes(1);
+
+        expect(messageRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+            attachments: expect.arrayContaining([
+                expect.objectContaining({
+                    name: "voice.mp3",
+                    type: "voice",
+                    duration: 10
+                })
             ])
         }));
 
