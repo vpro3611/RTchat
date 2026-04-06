@@ -473,7 +473,16 @@ function handleBlockChange() {
 onMounted(() => {
   chatSocket.onError(handleSocketError);
   window.addEventListener('block-status-changed', handleBlockChange);
-  void SavedMessagesStore.fetchMessages(50);
+  
+  if (!AuthStore.isBootstrapping) {
+    void SavedMessagesStore.fetchMessages(50);
+  }
+});
+
+watch(() => AuthStore.isBootstrapping, (isBootstrapping) => {
+  if (!isBootstrapping) {
+    void SavedMessagesStore.fetchMessages(50);
+  }
 });
 
 onUnmounted(() => {
@@ -500,6 +509,8 @@ const inputModel = computed({
 
 // Watch for chat changes
 watch(conversationId, (newId) => {
+  if (AuthStore.isBootstrapping) return;
+
   if (newId) {
     chatSocket.setCurrentChat(newId);
     void loadMessages();
@@ -510,6 +521,17 @@ watch(conversationId, (newId) => {
     chatSocket.setCurrentChat(null);
   }
 }, { immediate: true });
+
+// Also watch for bootstrapping finish to trigger load if we are already on a chat page
+watch(() => AuthStore.isBootstrapping, (isBootstrapping) => {
+  if (!isBootstrapping && conversationId.value) {
+    chatSocket.setCurrentChat(conversationId.value);
+    void loadMessages();
+    void checkOtherUserBlocked();
+    void checkCurrentUserCanSendMessages();
+    focusInput();
+  }
+});
 
 // FIX : FIXED статус блока не обновлялся, когда чат догружался в Store позже
 watch(

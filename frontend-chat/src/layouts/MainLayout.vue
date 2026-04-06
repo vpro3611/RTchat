@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue"
-
+import {computed, onMounted, ref, watch} from "vue"
+import {AuthStore} from "stores/auth_store";
 import { useQuasar } from "quasar"
 
 import { ChatStore } from "stores/chat_store"
@@ -67,7 +67,17 @@ async function loadChats() {
   }
 }
 
-onMounted(loadChats)
+onMounted(() => {
+  if (!AuthStore.isBootstrapping) {
+    void loadChats()
+  }
+})
+
+watch(() => AuthStore.isBootstrapping, (isBootstrapping) => {
+  if (!isBootstrapping) {
+    void loadChats()
+  }
+})
 </script>
 
 <template>
