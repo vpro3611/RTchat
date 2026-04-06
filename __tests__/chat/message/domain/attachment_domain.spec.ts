@@ -39,4 +39,35 @@ describe("Attachment Domain", () => {
         expect(attachment.size).toBe(2048);
         expect(attachment.createdAt).toBe(now);
     });
+
+    it("should create voice attachment with duration", () => {
+        const attachment = Attachment.create(
+            "blob-voice",
+            "voice",
+            "voice.mp3",
+            "audio/mp3",
+            500,
+            30
+        );
+
+        expect(attachment.type).toBe("voice");
+        expect(attachment.duration).toBe(30);
+    });
+
+    it("should restore voice attachment with duration", () => {
+        const now = new Date();
+        const attachment = Attachment.restore(
+            "att-voice",
+            "blob-voice",
+            "voice",
+            "voice.mp3",
+            "audio/mp3",
+            500,
+            now,
+            30
+        );
+
+        expect(attachment.type).toBe("voice");
+        expect(attachment.duration).toBe(30);
+    });
 });

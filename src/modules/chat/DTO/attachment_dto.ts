@@ -8,4 +8,5 @@ export type AttachmentDTO = {
     mimeType: string;
     size: number;
     createdAt: string;
+    duration?: number;
 }

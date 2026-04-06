@@ -1,4 +1,4 @@
-export type AttachmentType = 'image' | 'video' | 'file';
+export type AttachmentType = 'image' | 'video' | 'file' | 'voice';
 
 export class Attachment {
     constructor(
@@ -8,14 +8,15 @@ export class Attachment {
         public readonly name: string,
         public readonly mimeType: string,
         public readonly size: number,
-        public readonly createdAt: Date = new Date()
+        public readonly createdAt: Date = new Date(),
+        public readonly duration?: number
     ) {}
 
-    static restore(id: string, blobId: string, type: AttachmentType, name: string, mimeType: string, size: number, createdAt: Date) {
-        return new Attachment(id, blobId, type, name, mimeType, size, createdAt);
+    static restore(id: string, blobId: string, type: AttachmentType, name: string, mimeType: string, size: number, createdAt: Date, duration?: number) {
+        return new Attachment(id, blobId, type, name, mimeType, size, createdAt, duration);
     }
 
-    static create(blobId: string, type: AttachmentType, name: string, mimeType: string, size: number) {
-        return new Attachment(crypto.randomUUID(), blobId, type, name, mimeType, size);
+    static create(blobId: string, type: AttachmentType, name: string, mimeType: string, size: number, duration?: number) {
+        return new Attachment(crypto.randomUUID(), blobId, type, name, mimeType, size, undefined, duration);
     }
 }

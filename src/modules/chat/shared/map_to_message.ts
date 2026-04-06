@@ -26,7 +26,8 @@ export class MapToMessage {
                 name: a.name,
                 mimeType: a.mimeType,
                 size: a.size,
-                createdAt: a.createdAt.toISOString()
+                createdAt: a.createdAt.toISOString(),
+                duration: a.duration
             })),
             replyMetadata: replyMetadata ? {
                 parentMessageId: replyMetadata.parentMessageId,
