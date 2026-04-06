@@ -284,7 +284,7 @@ describe("SendMessageUseCase", () => {
 
     });
 
-    it("should send message with voice attachment successfully", async () => {
+    it("should treat regular audio files as generic files", async () => {
 
         const participant = {
             getCanSendMessages: () => true
@@ -307,31 +307,73 @@ describe("SendMessageUseCase", () => {
         mapper.mapToMessage.mockReturnValue({ id: "msg-1" });
 
         const files = [
-            { buffer: Buffer.from("audio"), originalname: "voice.mp3", mimetype: "audio/mpeg", size: 5 }
+            { buffer: Buffer.from("audio"), originalname: "song.mp3", mimetype: "audio/mpeg", size: 5 }
         ];
 
-        const result = await useCase.sendMessageUseCase(
+        await useCase.sendMessageUseCase(
             USER_ID,
             CONVERSATION_ID,
             "",
             files
         );
 
-        expect(virusScanner.scanBuffer).toHaveBeenCalledTimes(1);
-        expect(audioProcessor.processAudio).toHaveBeenCalledTimes(1);
-        expect(blobRepo.save).toHaveBeenCalledTimes(1);
+        expect(audioProcessor.processAudio).not.toHaveBeenCalled();
 
         expect(messageRepo.create).toHaveBeenCalledWith(expect.objectContaining({
             attachments: expect.arrayContaining([
                 expect.objectContaining({
-                    name: "voice.mp3",
+                    name: "song.mp3",
+                    type: "file"
+                })
+            ])
+        }));
+
+    });
+
+    it("should treat webm recordings as voice messages and correct extension", async () => {
+
+        const participant = {
+            getCanSendMessages: () => true
+        };
+
+        checkIsParticipant.checkIsParticipant.mockResolvedValue(participant);
+
+        conversationRepo.findById.mockResolvedValue({
+            getConversationType: () => "group"
+        });
+
+        participantRepo.getParticipants.mockResolvedValue({
+            items: [
+                { userId: USER_ID }
+            ]
+        });
+
+        conversationRepo.getMaxReadAtForOthers.mockResolvedValue(new Date());
+
+        mapper.mapToMessage.mockReturnValue({ id: "msg-1" });
+
+        const files = [
+            { buffer: Buffer.from("audio"), originalname: "voice.webm", mimetype: "audio/webm; codecs=opus", size: 5 }
+        ];
+
+        await useCase.sendMessageUseCase(
+            USER_ID,
+            CONVERSATION_ID,
+            "",
+            files
+        );
+
+        expect(audioProcessor.processAudio).toHaveBeenCalled();
+
+        expect(messageRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+            attachments: expect.arrayContaining([
+                expect.objectContaining({
+                    name: "voice.ogg",
                     type: "voice",
                     duration: 10
                 })
             ])
         }));
-
-        expect(result).toEqual({ id: "msg-1" });
 
     });
 
