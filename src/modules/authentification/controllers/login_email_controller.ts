@@ -22,6 +22,7 @@ export class LoginEmailController {
             secure: process.env.NODE_ENV! === "production",
             sameSite: process.env.NODE_ENV! === "production" ? "strict" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: "/",
         }).status(200).json({accessToken: result.accessToken, user: result.user});
     }
 }
