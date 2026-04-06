@@ -30,5 +30,8 @@ onMounted(async () => {
 
 
 <template>
-  <router-view />
+  <div v-if="AuthStore.isBootstrapping" class="flex flex-center" style="height: 100vh;">
+    <q-spinner-dots color="primary" size="40px" />
+  </div>
+  <router-view v-else />
 </template>

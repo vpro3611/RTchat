@@ -39,7 +39,9 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       return next()
     }
 
-    if (to.meta.requireAuth && (!AuthStore.accessToken || !AuthStore.user)) {
+    const requiresAuth = to.matched.some(record => record.meta.requireAuth)
+
+    if (requiresAuth && (!AuthStore.accessToken || !AuthStore.user)) {
       return next("/auth")
     } else {
       return next()
