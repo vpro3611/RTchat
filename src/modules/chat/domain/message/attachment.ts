@@ -1,3 +1,5 @@
+import * as crypto from "crypto";
+
 export type AttachmentType = 'image' | 'video' | 'file' | 'voice';
 
 export class Attachment {

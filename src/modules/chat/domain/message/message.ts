@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import {Content} from "./content";
 import {CannotEditMessageError} from "../../errors/message_errors/message_errors";
 import {Attachment} from "./attachment";
