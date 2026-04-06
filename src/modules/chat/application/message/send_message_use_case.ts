@@ -82,6 +82,7 @@ export class SendMessageUseCase {
             let mimeType = file.mimetype;
             let type: AttachmentType = 'file';
             let duration: number | undefined = undefined;
+            let originalName = file.originalname;
 
             if (file.mimetype.startsWith('image/')) {
                 const processed = await this.imageProcessor.processImage(file.buffer);
@@ -91,19 +92,29 @@ export class SendMessageUseCase {
             } else if (file.mimetype.startsWith('video/')) {
                 processedBuffer = await this.videoProcessor.stripMetadata(file.buffer);
                 type = 'video';
-            } else if (file.mimetype.startsWith('audio/')) {
+            } else if (
+                file.mimetype === 'audio/webm' || 
+                file.mimetype === 'audio/ogg' || 
+                file.mimetype === 'audio/webm; codecs=opus'
+            ) {
                 const processed = await this.audioProcessor.processAudio(file.buffer);
                 processedBuffer = processed.data;
                 mimeType = processed.mimeType;
                 type = 'voice';
                 duration = processed.duration;
+
+                // Correct extension if it was converted to ogg
+                if (!originalName.toLowerCase().endsWith('.ogg')) {
+                    const baseName = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+                    originalName = `${baseName}.ogg`;
+                }
             }
 
             const blobId = await this.blobRepo.save(processedBuffer);
             attachments.push(Attachment.create(
                 blobId,
                 type,
-                file.originalname,
+                originalName,
                 mimeType,
                 processedBuffer.length,
                 duration
