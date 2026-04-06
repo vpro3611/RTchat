@@ -20,6 +20,7 @@ import {FileDTO} from "../../DTO/file_dto";
 import {VirusScannerInterface} from "../../domain/ports/virus_scanner_interface";
 import {VideoProcessorInterface} from "../../domain/ports/video_processor_interface";
 import {ImageProcessorInterface} from "../../domain/ports/image_processor_interface";
+import {AudioProcessorInterface} from "../../domain/ports/audio_processor_interface";
 import {BlobRepositoryPg} from "../../repositories_pg_realization/blob_repository_pg";
 import {
     InsecureAttachmentError,
@@ -42,6 +43,7 @@ export class ReplyToMessageUseCase {
                 private readonly virusScanner: VirusScannerInterface,
                 private readonly videoProcessor: VideoProcessorInterface,
                 private readonly imageProcessor: ImageProcessorInterface,
+                private readonly audioProcessor: AudioProcessorInterface,
                 private readonly blobRepo: BlobRepositoryPg,
     ) {}
 
@@ -85,6 +87,7 @@ export class ReplyToMessageUseCase {
             let processedBuffer = file.buffer;
             let mimeType = file.mimetype;
             let type: AttachmentType = 'file';
+            let duration: number | undefined = undefined;
 
             if (file.mimetype.startsWith('image/')) {
                 const processed = await this.imageProcessor.processImage(file.buffer);
@@ -94,6 +97,12 @@ export class ReplyToMessageUseCase {
             } else if (file.mimetype.startsWith('video/')) {
                 processedBuffer = await this.videoProcessor.stripMetadata(file.buffer);
                 type = 'video';
+            } else if (file.mimetype.startsWith('audio/')) {
+                const processed = await this.audioProcessor.processAudio(file.buffer);
+                processedBuffer = processed.data;
+                mimeType = processed.mimeType;
+                type = 'voice';
+                duration = processed.duration;
             }
 
             const blobId = await this.blobRepo.save(processedBuffer);
@@ -102,7 +111,8 @@ export class ReplyToMessageUseCase {
                 type,
                 file.originalname,
                 mimeType,
-                processedBuffer.length
+                processedBuffer.length,
+                duration
             ));
         }
 
@@ -111,6 +121,13 @@ export class ReplyToMessageUseCase {
 
     async replyToMessageUseCase(actorId: string, conversationId: string, parentMessageId: string, content: string, files: FileDTO[] = []): Promise<MessageDTO> {
         const validatedContent = Content.create(content);
+
+        const attachments = await this.processAttachments(files);
+
+        if (validatedContent.getContentValue().length === 0 && attachments.length === 0) {
+            throw new InvalidMessageError("Message must have content or attachments");
+        }
+
         const participant = await this.checkIsParticipant.checkIsParticipant(actorId, conversationId);
 
         if (!participant.getCanSendMessages()) {
@@ -140,8 +157,6 @@ export class ReplyToMessageUseCase {
         if (parentMessage.getConversationId() !== conversationId) {
             throw new MessageNotAPartOfConversationError("Parent message does not belong to the conversation");
         }
-
-        const attachments = await this.processAttachments(files);
 
         const parentContentValue = parentMessage.getContent().getContentValue();
         const snippet = parentContentValue.substring(0, 100);

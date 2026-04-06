@@ -20,6 +20,7 @@ import {FileDTO} from "../../DTO/file_dto";
 import {VirusScannerInterface} from "../../domain/ports/virus_scanner_interface";
 import {VideoProcessorInterface} from "../../domain/ports/video_processor_interface";
 import {ImageProcessorInterface} from "../../domain/ports/image_processor_interface";
+import {AudioProcessorInterface} from "../../domain/ports/audio_processor_interface";
 import {BlobRepositoryPg} from "../../repositories_pg_realization/blob_repository_pg";
 import {InsecureAttachmentError} from "../../errors/message_errors/message_errors";
 
@@ -36,6 +37,7 @@ export class SendMessageUseCase {
                 private readonly virusScanner: VirusScannerInterface,
                 private readonly videoProcessor: VideoProcessorInterface,
                 private readonly imageProcessor: ImageProcessorInterface,
+                private readonly audioProcessor: AudioProcessorInterface,
                 private readonly blobRepo: BlobRepositoryPg,
     ) {}
 
@@ -79,6 +81,7 @@ export class SendMessageUseCase {
             let processedBuffer = file.buffer;
             let mimeType = file.mimetype;
             let type: AttachmentType = 'file';
+            let duration: number | undefined = undefined;
 
             if (file.mimetype.startsWith('image/')) {
                 const processed = await this.imageProcessor.processImage(file.buffer);
@@ -88,6 +91,12 @@ export class SendMessageUseCase {
             } else if (file.mimetype.startsWith('video/')) {
                 processedBuffer = await this.videoProcessor.stripMetadata(file.buffer);
                 type = 'video';
+            } else if (file.mimetype.startsWith('audio/')) {
+                const processed = await this.audioProcessor.processAudio(file.buffer);
+                processedBuffer = processed.data;
+                mimeType = processed.mimeType;
+                type = 'voice';
+                duration = processed.duration;
             }
 
             const blobId = await this.blobRepo.save(processedBuffer);
@@ -96,7 +105,8 @@ export class SendMessageUseCase {
                 type,
                 file.originalname,
                 mimeType,
-                processedBuffer.length
+                processedBuffer.length,
+                duration
             ));
         }
 
@@ -105,6 +115,13 @@ export class SendMessageUseCase {
 
     async sendMessageUseCase(actorId: string, conversationId: string, content: string, files: FileDTO[] = []): Promise<MessageDTO> {
         const validatedContent = Content.create(content);
+
+        const attachments = await this.processAttachments(files);
+
+        if (validatedContent.getContentValue().length === 0 && attachments.length === 0) {
+            throw new InvalidMessageError("Message must have content or attachments");
+        }
+
         const participant = await this.checkIsParticipant.checkIsParticipant(actorId, conversationId);
 
         if (!participant.getCanSendMessages()) {
@@ -126,8 +143,6 @@ export class SendMessageUseCase {
         if (conversation.getConversationType() === "group") {
             await this.checkIfUserIsBannedFromGroup(actorId, conversationId);
         }
-
-        const attachments = await this.processAttachments(files);
 
         const message = Message.create(
             conversationId,
