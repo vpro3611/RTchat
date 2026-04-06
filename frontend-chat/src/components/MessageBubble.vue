@@ -5,6 +5,7 @@ import { UserCacheStore } from "stores/user_cache_store";
 import AppAvatar from "./AppAvatar.vue";
 import AttachmentGallery from "./AttachmentGallery.vue";
 import FileAttachment from "./FileAttachment.vue";
+import VoiceAttachment from "./VoiceAttachment.vue";
 
 import type {Attachment} from "src/api/types/attachment";
 
@@ -20,6 +21,10 @@ const mediaAttachments = computed(() =>
 
 const fileAttachments = computed(() => 
   props.message.attachments?.filter(a => a.type === 'file') || []
+);
+
+const voiceAttachments = computed(() => 
+  props.message.attachments?.filter(a => a.type === 'voice') || []
 );
 
 // FIX : FIXED - вычисляем senderUsername из кэша
@@ -167,6 +172,16 @@ function handleForward() {
           v-for="file in fileAttachments"
           :key="file.id"
           :attachment="file"
+          :is-own="isOwn"
+        />
+      </div>
+
+      <!-- Voice Attachments -->
+      <div v-if="voiceAttachments.length > 0" class="q-px-sm q-pt-xs">
+        <VoiceAttachment
+          v-for="voice in voiceAttachments"
+          :key="voice.id"
+          :attachment="voice"
           :is-own="isOwn"
         />
       </div>

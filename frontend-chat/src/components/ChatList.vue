@@ -56,15 +56,16 @@ function formatLastMessageTime(dateString: string | null) {
 }
 
 function getLastMessageDisplay(chat: CreateGroupChatResponse) {
-  if (!chat.lastMessageContent) return "No messages"
+  if (!chat.lastMessageSenderId && !chat.lastMessageContent) return "No messages"
 
   const senderId = chat.lastMessageSenderId
-  if (!senderId) return chat.lastMessageContent
+  const content = chat.lastMessageContent || "Voice message"
+  if (!senderId) return content
 
   const isMe = senderId === AuthStore.user?.id
   const name = isMe ? "You" : UserCacheStore.getUsername(senderId) || "User"
 
-  return `${name}: ${chat.lastMessageContent}`
+  return `${name}: ${content}`
 }
 
 function openChat(chatId: string) {

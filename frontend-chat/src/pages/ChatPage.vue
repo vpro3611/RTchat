@@ -23,6 +23,7 @@ import AppAvatar from "components/AppAvatar.vue";
 import MediaViewer from "components/MediaViewer.vue";
 import DragAndDropOverlay from "components/DragAndDropOverlay.vue";
 import UploadPreviewBar from "components/UploadPreviewBar.vue";
+import VoiceRecorder from "components/VoiceRecorder.vue";
 import type { Attachment } from "src/api/types/attachment";
 
 const $q = useQuasar()
@@ -335,6 +336,25 @@ function addFiles(files: File[]) {
 
 function removeFile(index: number) {
   pendingFiles.value.splice(index, 1);
+}
+
+async function handleVoiceRecord(blob: Blob) {
+  if (!conversationId.value) return;
+
+  const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
+  const file = new File([blob], `voice-message.${ext}`, { type: blob.type });
+
+  try {
+    if (replyingToMessage.value) {
+      await MessageApi.replyToMessageWithFiles(conversationId.value, '', [file], replyingToMessage.value.id);
+      cancelReply();
+    } else {
+      await MessageApi.sendMessageWithFiles(conversationId.value, '', [file]);
+    }
+  } catch (e) {
+    console.error('Failed to send voice message:', e);
+    $q.notify({ type: 'negative', message: 'Failed to send voice message' });
+  }
 }
 
 const replyingToMessage = ref<Message | null>(null);
@@ -667,7 +687,7 @@ watch(
         <q-btn flat round dense icon="close" size="sm" @click="cancelReply" />
       </div>
 
-      <div class="row items-end q-gutter-x-sm">
+      <div id="chat-input-row" class="row items-end q-gutter-x-sm relative-position">
         <input
           ref="fileInputRef"
           type="file"
@@ -700,13 +720,23 @@ watch(
           bg-color="input-bg"
         >
           <template v-slot:append>
-            <q-btn
-              flat round dense
-              :icon="isEditing ? 'check' : 'send'"
-              :color="isEditing ? 'positive' : 'primary'"
-              @click="isEditing ? saveEdit() : sendMessage()"
-              :disable="isEditing ? !editContent.trim() : (!message.trim() && pendingFiles.length === 0) || !isCurrentUserCanSendMessages"
-            />
+            <transition mode="out-in" enter-active-class="animated zoomIn" leave-active-class="animated zoomOut">
+              <q-btn
+                v-if="isEditing || message.trim() || pendingFiles.length > 0"
+                key="send"
+                flat round dense
+                :icon="isEditing ? 'check' : 'send'"
+                :color="isEditing ? 'positive' : 'primary'"
+                @click="isEditing ? saveEdit() : sendMessage()"
+                :disable="isEditing ? !editContent.trim() : (!message.trim() && pendingFiles.length === 0) || !isCurrentUserCanSendMessages"
+              />
+              <VoiceRecorder
+                v-else
+                key="mic"
+                @record-complete="handleVoiceRecord"
+                :disabled="!isCurrentUserCanSendMessages"
+              />
+            </transition>
           </template>
         </q-input>
       </div>
