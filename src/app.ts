@@ -308,6 +308,10 @@ export const createApp = (dependencies: AppContainer): Express => {
         dependencies.getAttachmentController.getAttachment
     );
 
+    privateRouter.get("/attachments/blob/:blobId",
+        dependencies.getAttachmentController.getAttachment
+    );
+
     privateRouter.patch("/conversation/:conversationId/:targetId/role",
         validateParams(ChangeParticipantRoleParamsSchema),
         dependencies.changeParticipantRoleController.changeParticipantRoleCont

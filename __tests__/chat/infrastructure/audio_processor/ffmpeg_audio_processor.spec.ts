@@ -5,6 +5,7 @@ import { Writable } from "stream";
 jest.mock("fluent-ffmpeg", () => {
     const m = jest.fn().mockReturnValue({
         audioCodec: jest.fn().mockReturnThis(),
+        audioBitrate: jest.fn().mockReturnThis(),
         toFormat: jest.fn().mockReturnThis(),
         duration: jest.fn().mockReturnThis(),
         noVideo: jest.fn().mockReturnThis(),

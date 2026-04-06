@@ -9,7 +9,7 @@ const props = defineProps<{
   isOwn: boolean;
 }>();
 
-const audioUrl = computed(() => `${BaseUrl.apiBaseUrl}/private/attachments/blob/${props.attachment.blobId}`);
+const audioUrl = computed(() => `${BaseUrl.apiBaseUrl}/private/attachment/${props.attachment.blobId}`);
 const objectUrl = ref<string | null>(null);
 const audio = ref<HTMLAudioElement | null>(null);
 const isPlaying = ref(false);
