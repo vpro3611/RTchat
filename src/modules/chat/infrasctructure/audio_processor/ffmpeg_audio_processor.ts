@@ -8,11 +8,12 @@ import * as path from "path";
 
 export class FfmpegAudioProcessor implements AudioProcessorInterface {
     async processAudio(buffer: Buffer): Promise<{ data: Buffer; duration: number; mimeType: string }> {
-        const tmpFile = path.join(os.tmpdir(), `audio_${crypto.randomUUID()}.webm`);
+        const tmpFile = path.join(os.tmpdir(), `audio_${crypto.randomUUID()}.tmp`);
         await writeFile(tmpFile, buffer);
 
         try {
-            const duration = await this.getDuration(tmpFile);
+            const rawDuration = await this.getDuration(tmpFile);
+            const duration = Math.round(rawDuration);
             
             const outputStream = new PassThrough();
             const chunks: Buffer[] = [];
@@ -22,15 +23,13 @@ export class FfmpegAudioProcessor implements AudioProcessorInterface {
             return await new Promise((resolve, reject) => {
                 ffmpeg(tmpFile)
                     .audioCodec("libopus")
+                    .audioBitrate("32k")
                     .toFormat("ogg")
                     .duration(600) // Enforce 10 min limit
                     .noVideo()
                     .outputOptions("-map_metadata", "-1") // Strip metadata
                     .on("error", (err) => {
                         reject(err);
-                    })
-                    .on("stderr", (stdLine) => {
-                        console.log("FFMPEG STDERR:", stdLine);
                     })
                     .on("end", () => {
                         resolve({
