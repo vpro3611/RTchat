@@ -19,6 +19,7 @@ export class LogoutController {
             httpOnly: true,
             secure: process.env.NODE_ENV! === "production",
             sameSite: process.env.NODE_ENV! === "production" ? "strict" : "lax",
+            path: "/",
         });
 
         res.status(204).send();

@@ -3,7 +3,9 @@ import {createApp} from "./app";
 import {ChatGateway} from "./modules/chat/web_socket/chat_gateway";
 import * as http from "node:http";
 import {TokenServiceJWT} from "./modules/authentification/jwt_token_service/token_service";
+import dotenv from "dotenv";
 
+dotenv.config();
 
 export async function startServer() {
     const jwtService = new TokenServiceJWT();
