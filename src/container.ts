@@ -300,6 +300,7 @@ import {AvatarRepositoryPg} from "./modules/chat/repositories_pg_realization/ava
 import {GetAvatarUseCase} from "./modules/chat/application/avatar/get_avatar_use_case";
 import {ClamAVScanner} from "./modules/chat/infrasctructure/virus_scanner/clamav_scanner";
 import {VideoProcessor} from "./modules/chat/infrasctructure/video_processor/ffmpeg_processor";
+import {FfmpegAudioProcessor} from "./modules/chat/infrasctructure/audio_processor/ffmpeg_audio_processor";
 import {ImageProcessor} from "./modules/chat/infrasctructure/image_processor/sharp_image_processor";
 import {BlobRepositoryPg} from "./modules/chat/repositories_pg_realization/blob_repository_pg";
 import {AttachmentRepositoryPg} from "./modules/chat/repositories_pg_realization/attachment_repository_pg";
@@ -566,6 +567,7 @@ export function assembleContainer(io: Server)
         new ClamAVScanner(),
         new VideoProcessor(),
         new ImageProcessor(),
+        new FfmpegAudioProcessor(),
         blobRepo,
     );
     const getSpecificMessageUseCase = new GetSpecificMessageUseCase(
@@ -589,6 +591,7 @@ export function assembleContainer(io: Server)
         new ClamAVScanner(),
         new VideoProcessor(),
         new ImageProcessor(),
+        new FfmpegAudioProcessor(),
         blobRepo,
     );
 
