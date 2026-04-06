@@ -4,9 +4,6 @@ REDIS :
 ```
 docker run -d -p 6379:6379 redis
 ```
-gemini --resume c86d2c7d-5653-4677-a0c2-7322b62540e2
-gemini --resume ac0995b3-88f2-4872-bf21-b63aa3af13c5 
-gemini --resume 85f34ad5-77dc-45ad-a2b3-3c029a620ab3 
 
 
 - ~~Improve UX.~~
