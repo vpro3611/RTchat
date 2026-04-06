@@ -81,5 +81,41 @@ describe("Attachments Repositories (with mocked client)", () => {
             expect(result.length).toBe(1);
             expect(result[0]).toEqual(attachment);
         });
+
+        it("should save and retrieve attachment with duration", async () => {
+            const voiceAttachment = Attachment.restore(
+                "voice-id",
+                "blob-id",
+                "voice",
+                "voice.ogg",
+                "audio/ogg",
+                5000,
+                now,
+                120
+            );
+
+            // Test Save
+            client.query.mockResolvedValueOnce({});
+            await attachmentRepo.save(messageId, voiceAttachment);
+            const saveCall = client.query.mock.calls[0];
+            expect(saveCall[0]).toContain("duration");
+            expect(saveCall[1]).toContain(120);
+
+            // Test Find
+            const encryptedName = encryptionService.encrypt(voiceAttachment.name);
+            const row = {
+                id: voiceAttachment.id,
+                blob_id: voiceAttachment.blobId,
+                type: voiceAttachment.type,
+                name: encryptedName,
+                mime_type: voiceAttachment.mimeType,
+                size: voiceAttachment.size,
+                created_at: now,
+                duration: 120
+            };
+            client.query.mockResolvedValueOnce({ rows: [row] });
+            const result = await attachmentRepo.findByMessageId(messageId);
+            expect(result[0].duration).toBe(120);
+        });
     });
 });

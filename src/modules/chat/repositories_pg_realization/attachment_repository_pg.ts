@@ -10,8 +10,8 @@ export class AttachmentRepositoryPg {
         try {
             const encryptedName = this.encryptionService.encrypt(attachment.name);
             await this.pool.query(
-                "INSERT INTO message_attachments (id, message_id, blob_id, type, name, mime_type, size, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-                [attachment.id, messageId, attachment.blobId, attachment.type, encryptedName, attachment.mimeType, attachment.size, attachment.createdAt]
+                "INSERT INTO message_attachments (id, message_id, blob_id, type, name, mime_type, size, created_at, duration) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+                [attachment.id, messageId, attachment.blobId, attachment.type, encryptedName, attachment.mimeType, attachment.size, attachment.createdAt, attachment.duration]
             );
         } catch (error) {
             throw mapPgError(error);
@@ -26,7 +26,7 @@ export class AttachmentRepositoryPg {
             );
             return result.rows.map(row => {
                 const decryptedName = this.encryptionService.decrypt(row.name);
-                return Attachment.restore(row.id, row.blob_id, row.type as AttachmentType, decryptedName, row.mime_type, row.size, row.created_at);
+                return Attachment.restore(row.id, row.blob_id, row.type as AttachmentType, decryptedName, row.mime_type, row.size, row.created_at, row.duration);
             });
         } catch (error) {
             throw mapPgError(error);
@@ -42,7 +42,7 @@ export class AttachmentRepositoryPg {
             if (result.rows.length === 0) return null;
             const row = result.rows[0];
             const decryptedName = this.encryptionService.decrypt(row.name);
-            return Attachment.restore(row.id, row.blob_id, row.type as AttachmentType, decryptedName, row.mime_type, row.size, row.created_at);
+            return Attachment.restore(row.id, row.blob_id, row.type as AttachmentType, decryptedName, row.mime_type, row.size, row.created_at, row.duration);
         } catch (error) {
             throw mapPgError(error);
         }
