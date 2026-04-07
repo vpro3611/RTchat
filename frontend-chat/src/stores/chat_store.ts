@@ -9,6 +9,7 @@ export const ChatStore = reactive({
   isLoading: false,
   nextCursor: null as string | null,
   hasMore: true,
+  typingStatuses: {} as Record<string, Set<string>>,
 
   setChats(chats: CreateGroupChatResponse[], cursor: string | null) {
     this.chats = chats;
@@ -112,6 +113,23 @@ export const ChatStore = reactive({
 
   finishBootstrapping() {
     this.isBootstrapping = false;
-  }
+  },
 
+  setTyping(conversationId: string, userId: string) {
+    if (!this.typingStatuses[conversationId]) {
+      this.typingStatuses[conversationId] = new Set<string>();
+    }
+    this.typingStatuses[conversationId].add(userId);
+  },
+
+  stopTyping(conversationId: string, userId: string) {
+    if (this.typingStatuses[conversationId]) {
+      this.typingStatuses[conversationId].delete(userId);
+    }
+  },
+
+  getTypingUsers(conversationId: string): string[] {
+    const set = this.typingStatuses[conversationId];
+    return set ? Array.from(set) : [];
+  }
 })
