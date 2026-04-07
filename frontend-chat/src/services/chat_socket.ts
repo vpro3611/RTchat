@@ -106,22 +106,19 @@ class ChatSocketService {
       if (data.message) {
         MessageStore.removeMessage(data.message.id);
 
-        // Если это было последнее сообщение, нужно обновить превью в списке чатов
-        const chat = ChatStore.findById(data.message.conversationId);
-        if (chat && chat.lastMessageAt === data.message.createdAt) {
-          void (async () => {
-            try {
-              const updatedChat = await UserApi.getSpecificConversation(data.message.conversationId);
-              ChatStore.updateChatData(data.message.conversationId, {
-                lastMessageContent: updatedChat.lastMessageContent,
-                lastMessageSenderId: updatedChat.lastMessageSenderId,
-                lastMessageAt: updatedChat.lastMessageAt
-              });
-            } catch (e) {
-              console.error('Failed to update chat after message deletion:', e);
-            }
-          })();
-        }
+        // Всегда пробуем обновить данные чата, чтобы подтянуть новое "последнее сообщение"
+        void (async () => {
+          try {
+            const updatedChat = await UserApi.getSpecificConversation(data.message.conversationId);
+            ChatStore.updateChatData(data.message.conversationId, {
+              lastMessageContent: updatedChat.lastMessageContent,
+              lastMessageSenderId: updatedChat.lastMessageSenderId,
+              lastMessageAt: updatedChat.lastMessageAt
+            });
+          } catch (e) {
+            console.error('Failed to update chat after message deletion:', e);
+          }
+        })();
       }
     });
 
