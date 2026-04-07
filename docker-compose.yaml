@@ -1,0 +1,69 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rtchat-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-vpro3611}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-new_pass}
+      POSTGRES_DB: ${DB_NAME:-rtchat}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-vpro3611} -d ${DB_NAME:-rtchat}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: rtchat-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: rtchat-backend
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-vpro3611}:${DB_PASSWORD:-new_pass}@db:5432/${DB_NAME:-rtchat}
+      - REDIS_URL=redis://redis:6379
+      - PORT=${PORT:-3000}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - NODE_ENV=${NODE_ENV:-production}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - API_URL=${API_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:9000}
+      - CLAMAV_HOST=${CLAMAV_HOST:-localhost}
+      - CLAMAV_PORT=${CLAMAV_PORT:-3310}
+      - MESSAGE_ENCRYPTION_KEY=${MESSAGE_ENCRYPTION_KEY}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend-chat
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:9000}
+    container_name: rtchat-frontend
+    ports:
+      - "9000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
