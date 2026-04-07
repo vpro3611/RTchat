@@ -7,6 +7,15 @@ dotenv.config();
 export const redisClient = createClient(
     {
         url: process.env.REDIS_URL,
+        socket: {
+            connectTimeout: 10000,
+            reconnectStrategy: (retries) => {
+                if (retries > 10) {
+                    return new Error('Redis maximum retries reached');
+                }
+                return Math.min(retries * 100, 3000);
+            }
+        }
     }
 )
 
