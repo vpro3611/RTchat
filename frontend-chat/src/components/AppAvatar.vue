@@ -7,6 +7,7 @@ const props = defineProps<{
   name?: string | undefined;
   size?: string;
   square?: boolean;
+  isOnline?: boolean | undefined;
 }>();
 
 const avatarUrl = computed(() => {
@@ -51,11 +52,13 @@ const fontSize = computed(() => {
     <span v-else class="text-white text-weight-bold" :style="{ fontSize }">
       {{ initials }}
     </span>
+    <div v-if="isOnline" class="status-indicator"></div>
   </q-avatar>
 </template>
 
 <style scoped>
 .app-avatar {
+  position: relative;
   border: 1px solid var(--q-border-color);
   transition: transform 0.2s ease;
 }
@@ -66,5 +69,17 @@ const fontSize = computed(() => {
 
 .avatar-img {
   object-fit: cover;
+}
+
+.status-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 25%;
+  height: 25%;
+  background-color: #10B981;
+  border: 2px solid white;
+  border-radius: 50%;
+  z-index: 2;
 }
 </style>

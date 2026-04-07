@@ -80,6 +80,29 @@ const otherUserAvatarId = computed(() => {
   return UserCacheStore.getAvatarId(userId);
 });
 
+const otherUserIsOnline = computed(() => {
+  const userId = otherUserId.value;
+  return userId ? UserCacheStore.isOnline[userId] : false;
+});
+
+const otherUserLastSeen = computed(() => {
+  const userId = otherUserId.value;
+  if (!userId) return null;
+  const lastSeen = UserCacheStore.lastSeenAt[userId];
+  if (!lastSeen) return null;
+  
+  const date = new Date(lastSeen);
+  const now = new Date();
+  
+  if (now.getTime() - date.getTime() < 60000) return "just now";
+  
+  if (date.toDateString() === now.toDateString()) {
+    return "at " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  return "on " + date.toLocaleDateString([], { day: '2-digit', month: '2-digit' });
+});
+
 // Focus input
 function focusInput() {
   void nextTick(() => {
@@ -580,14 +603,22 @@ watch(
         <AppAvatar
           :avatar-id="chat?.conversationType === 'direct' ? otherUserAvatarId : chat?.avatarId"
           :name="chat?.conversationType === 'direct' ? (otherUserName || 'Direct Chat') : (chat?.title || 'Chat')"
+          :is-online="chat?.conversationType === 'direct' ? otherUserIsOnline : false"
           size="48px"
         />
         <div>
           <div class="text-h6 line-height-1">
             {{ chat?.conversationType === 'direct' ? (otherUserName || 'Direct Chat') : (chat?.title || 'Chat') }}
           </div>
-          <div class="text-caption text-grey">
-            {{ chat?.conversationType === 'group' ? 'Group' : 'Direct' }}
+          <div class="text-caption">
+            <template v-if="chat?.conversationType === 'direct'">
+              <span v-if="otherUserIsOnline" class="text-primary text-weight-bold">Online</span>
+              <span v-else-if="otherUserLastSeen" class="text-grey">Last seen {{ otherUserLastSeen }}</span>
+              <span v-else class="text-grey">Direct</span>
+            </template>
+            <template v-else>
+              <span class="text-grey">Group</span>
+            </template>
           </div>
         </div>
       </div>

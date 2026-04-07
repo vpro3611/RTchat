@@ -6,6 +6,8 @@ type UserById = Record<string, User>
 
 export const UserCacheStore = reactive({
   byId: {} as UserById,
+  isOnline: {} as Record<string, boolean>,
+  lastSeenAt: {} as Record<string, string>,
   loading: new Set<string>(),
 
   getUsername(userId: string | null | undefined) {
@@ -18,6 +20,26 @@ export const UserCacheStore = reactive({
     return this.byId[userId]?.avatarId ?? null
   },
 
+  setStatus(userId: string, isOnline: boolean, lastSeenAt?: string) {
+    this.isOnline[userId] = isOnline;
+    if (lastSeenAt) {
+      this.lastSeenAt[userId] = lastSeenAt;
+    } else if (!isOnline) {
+      this.lastSeenAt[userId] = new Date().toISOString();
+    }
+  },
+
+  setOnlineUsers(userIds: string[]) {
+    // Сначала сбрасываем всех (или можно только тех кто был онлайн)
+    Object.keys(this.isOnline).forEach(id => {
+      this.isOnline[id] = false;
+    });
+    // Устанавливаем статус для полученного списка
+    userIds.forEach(id => {
+      this.isOnline[id] = true;
+    });
+  },
+
   async ensureUser(userId: string | null | undefined) {
     if (!userId || typeof userId !== 'string' || userId === 'undefined') return
     if (this.byId[userId]) return
@@ -27,6 +49,7 @@ export const UserCacheStore = reactive({
     try {
       const user = await UserApi.getSpecificUser(userId)
       this.byId[userId] = user
+      this.lastSeenAt[userId] = user.lastSeenAt;
     } catch (e) {
       console.warn(`UserCacheStore: Failed to fetch user ${userId}. They might be deleted.`, e)
       // Кэшируем "пустого" пользователя, чтобы не пытаться снова (избегаем спама 404)

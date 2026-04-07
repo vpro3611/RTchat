@@ -229,6 +229,7 @@ defineExpose({ openDialog });
                 <AppAvatar
                   :avatar-id="UserCacheStore.getAvatarId(participant.userId) || participant.avatarId"
                   :name="participant.username"
+                  :is-online="UserCacheStore.isOnline[participant.userId]"
                   size="40px"
                 />
               </q-item-section>
