@@ -14,12 +14,10 @@ import {UserApi} from "src/api/apis/user_api";
 import type {CreateChatResponse} from "src/api/types/create_chat_response";
 import type {ConversationRequestsResponse} from "src/api/types/conversation_request_response";
 
-type TypingCallback = (data: { conversationId: string; userId: string; username: string }) => void;
 type ErrorCallback = (data: { message: string }) => void;
 
 class ChatSocketService {
   private socket: Socket | null = null;
-  private typingCallbacks: TypingCallback[] = [];
   private errorCallbacks: ErrorCallback[] = [];
   private currentViewingChatId: string | null = null;
 
@@ -140,12 +138,12 @@ class ChatSocketService {
 
     // Начало набора текста
     this.socket.on('typing:start', (data: { conversationId: string; userId: string; username: string }) => {
-      this.typingCallbacks.forEach(cb => cb(data));
+      ChatStore.setTyping(data.conversationId, data.userId);
     });
 
     // Конец набора текста
     this.socket.on('typing:stop', (data: { conversationId: string; userId: string; username: string }) => {
-      this.typingCallbacks.forEach(cb => cb(data));
+      ChatStore.stopTyping(data.conversationId, data.userId);
     });
 
     // Ошибка сокета
@@ -273,17 +271,6 @@ class ChatSocketService {
   stopTyping(conversationId: string) {
     if (!this.socket?.connected) return;
     this.socket.emit('typing:stop', { conversationId });
-  }
-
-  onTyping(callback: TypingCallback) {
-    this.typingCallbacks.push(callback);
-  }
-
-  offTyping(callback: TypingCallback) {
-    const index = this.typingCallbacks.indexOf(callback);
-    if (index !== -1) {
-      this.typingCallbacks.splice(index, 1);
-    }
   }
 
   onError(callback: ErrorCallback) {
