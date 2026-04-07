@@ -794,7 +794,7 @@ watch(
           ref="messageInputRef"
           v-model="inputModel"
           @keyup.enter="isEditing ? saveEdit() : sendMessage()"
-          @input="handleTyping"
+          @update:model-value="handleTyping"
           dense
           outlined
           autogrow

@@ -9,7 +9,7 @@ export const ChatStore = reactive({
   isLoading: false,
   nextCursor: null as string | null,
   hasMore: true,
-  typingStatuses: {} as Record<string, Set<string>>,
+  typingStatuses: {} as Record<string, string[]>,
   typingTimeouts: {} as Record<string, Record<string, NodeJS.Timeout>>,
 
   setChats(chats: CreateGroupChatResponse[], cursor: string | null) {
@@ -118,9 +118,12 @@ export const ChatStore = reactive({
 
   setTyping(conversationId: string, userId: string) {
     if (!this.typingStatuses[conversationId]) {
-      this.typingStatuses[conversationId] = new Set<string>();
+      this.typingStatuses[conversationId] = [];
     }
-    this.typingStatuses[conversationId].add(userId);
+    if (!this.typingStatuses[conversationId].includes(userId)) {
+      this.typingStatuses[conversationId].push(userId);
+      console.log(`ChatStore: User ${userId} started typing in ${conversationId}`);
+    }
 
     // Fallback timeout to prevent ghost typing indicators
     if (!this.typingTimeouts[conversationId]) {
@@ -136,7 +139,11 @@ export const ChatStore = reactive({
 
   stopTyping(conversationId: string, userId: string) {
     if (this.typingStatuses[conversationId]) {
-      this.typingStatuses[conversationId].delete(userId);
+      const index = this.typingStatuses[conversationId].indexOf(userId);
+      if (index !== -1) {
+        this.typingStatuses[conversationId].splice(index, 1);
+        console.log(`ChatStore: User ${userId} stopped typing in ${conversationId}`);
+      }
     }
     if (this.typingTimeouts[conversationId]?.[userId]) {
       clearTimeout(this.typingTimeouts[conversationId][userId]);
@@ -145,7 +152,6 @@ export const ChatStore = reactive({
   },
 
   getTypingUsers(conversationId: string): string[] {
-    const set = this.typingStatuses[conversationId];
-    return set ? Array.from(set) : [];
+    return this.typingStatuses[conversationId] || [];
   }
 })

@@ -138,11 +138,13 @@ class ChatSocketService {
 
     // Начало набора текста
     this.socket.on('typing:start', (data: { conversationId: string; userId: string; username: string }) => {
+      console.log('Socket: typing:start received', data);
       ChatStore.setTyping(data.conversationId, data.userId);
     });
 
     // Конец набора текста
     this.socket.on('typing:stop', (data: { conversationId: string; userId: string; username: string }) => {
+      console.log('Socket: typing:stop received', data);
       ChatStore.stopTyping(data.conversationId, data.userId);
     });
 
