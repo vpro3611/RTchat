@@ -5,6 +5,7 @@ import {AuthStore} from "stores/auth_store";
 import {MessageStore} from "stores/message_store";
 import {ChatStore} from "stores/chat_store";
 import {ParticipantStore} from "stores/participant_store";
+import {UserCacheStore} from "stores/user_cache_store";
 import type {Message} from "src/api/types/message_response";
 import type {Participant} from "src/api/types/participant_response";
 import type {CreateGroupChatResponse} from "src/api/types/create_group_chat_response";
@@ -151,6 +152,18 @@ class ChatSocketService {
     this.socket.on('error', (data: { message: string }) => {
       console.error('Socket error:', data.message);
       this.errorCallbacks.forEach(cb => cb(data));
+    });
+
+    this.socket.on('user:online', (data: { userId: string }) => {
+      UserCacheStore.setStatus(data.userId, true);
+    });
+
+    this.socket.on('user:offline', (data: { userId: string }) => {
+      UserCacheStore.setStatus(data.userId, false);
+    });
+
+    this.socket.on('user:online_list', (data: { userIds: string[] }) => {
+      UserCacheStore.setOnlineUsers(data.userIds);
     });
 
     // --- Sync Events ---

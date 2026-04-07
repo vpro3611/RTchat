@@ -37,6 +37,12 @@ function getAvatarId(chat: CreateGroupChatResponse) {
   return opponentId ? UserCacheStore.getAvatarId(opponentId) : null
 }
 
+function isOnline(chat: CreateGroupChatResponse) {
+  if (chat.conversationType === "group") return false
+  const opponentId = getOpponentId(chat)
+  return opponentId ? UserCacheStore.isOnline[opponentId] : false
+}
+
 function formatLastMessageTime(dateString: string | null) {
   if (!dateString) return ""
   const date = new Date(dateString)
@@ -123,6 +129,7 @@ watch(
         <AppAvatar
           :avatar-id="getAvatarId(chat)"
           :name="getChatTitle(chat)"
+          :is-online="isOnline(chat)"
           size="48px"
         />
       </q-item-section>
