@@ -51,6 +51,7 @@ export interface ServerToClientEvents {
 
     "user:online": (data: {userId: string}) => void
     "user:offline": (data: {userId: string}) => void
+    "user:online_list": (data: {userIds: string[]}) => void
 
     "typing:start": (data: {userId: string, conversationId: string}) => void
     "typing:stop": (data: {userId: string, conversationId: string}) => void
