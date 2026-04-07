@@ -79,7 +79,7 @@ export class UserRepoWriterPg implements UserRepoWriter {
                                        password_hash = EXCLUDED.password_hash,
                                        is_active = EXCLUDED.is_active,
                                        is_verified = EXCLUDED.is_verified, 
-                                       last_seen_at = EXCLUDED.last_seen_at,
+                                       last_seen_at = NOW(),
                                        updated_at = NOW(),
                                        avatar_id = EXCLUDED.avatar_id
                                        RETURNING *;
@@ -204,6 +204,19 @@ export class UserRepoWriterPg implements UserRepoWriter {
             const query = "UPDATE users SET avatar_id = $1 WHERE id = $2";
             await this.pool.query(query, [avatarId, userId]);
         } catch (error) {
+            this.mapSaveError(error);
+        }
+    }
+
+    async updateLastSeenAt(userId: string, lastSeenAt: Date): Promise<void> {
+        try {
+            const query = `
+                UPDATE users
+                SET last_seen_at = $1, updated_at = NOW()
+                WHERE id = $2
+            `;
+            await this.pool.query(query, [lastSeenAt, userId]);
+        } catch (error: any) {
             this.mapSaveError(error);
         }
     }
