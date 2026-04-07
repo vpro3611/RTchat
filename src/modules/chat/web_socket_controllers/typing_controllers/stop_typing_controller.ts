@@ -19,7 +19,7 @@ export class StopTypingController {
         {
             const userId = socket.data.userId;
 
-            io.to(conversationId).emit("typing:stopped", {
+            io.to(conversationId).emit("typing:stop", {
                 userId: userId.sub,
                 conversationId: conversationId,
             });

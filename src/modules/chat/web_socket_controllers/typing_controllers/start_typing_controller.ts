@@ -17,7 +17,7 @@ export class StartTypingController {
         {
             const userId = socket.data.userId;
 
-            io.to(conversationId).emit("typing:started", {
+            io.to(conversationId).emit("typing:start", {
                 userId: userId.sub,
                 conversationId: conversationId,
             });
