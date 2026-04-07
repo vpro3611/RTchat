@@ -85,6 +85,31 @@ const otherUserIsOnline = computed(() => {
   return userId ? UserCacheStore.isOnline[userId] : false;
 });
 
+const otherUserIsTyping = computed(() => {
+  if (chat.value?.conversationType !== 'direct') return false;
+  const userId = otherUserId.value;
+  if (!userId) return false;
+  return ChatStore.getTypingUsers(conversationId.value).includes(userId);
+});
+
+const typingText = computed(() => {
+  if (!conversationId.value) return "";
+  const typingUserIds = ChatStore.getTypingUsers(conversationId.value)
+    .filter(userId => userId !== AuthStore.user?.id);
+  
+  if (typingUserIds.length === 0) return "";
+  
+  const names = typingUserIds.map(userId => UserCacheStore.getUsername(userId) || "Someone");
+  
+  if (names.length === 1) {
+    return `${names[0]} is typing...`;
+  } else if (names.length === 2) {
+    return `${names[0]} and ${names[1]} are typing...`;
+  } else {
+    return `${names[0]}, ${names[1]} and ${names.length - 2} others are typing...`;
+  }
+});
+
 const otherUserLastSeen = computed(() => {
   const userId = otherUserId.value;
   if (!userId) return null;
@@ -612,7 +637,8 @@ watch(
           </div>
           <div class="text-caption">
             <template v-if="chat?.conversationType === 'direct'">
-              <span v-if="otherUserIsOnline" class="text-primary text-weight-bold">Online</span>
+              <span v-if="otherUserIsTyping" class="text-primary text-weight-bold">Typing...</span>
+              <span v-else-if="otherUserIsOnline" class="text-primary text-weight-bold">Online</span>
               <span v-else-if="otherUserLastSeen" class="text-grey">Last seen {{ otherUserLastSeen }}</span>
               <span v-else class="text-grey">Direct</span>
             </template>
@@ -712,6 +738,11 @@ watch(
 
     <!-- INPUT AREA (STICKY) -->
     <footer class="input-area border-top q-pa-md">
+      <!-- Typing indicator -->
+      <div v-if="chat?.conversationType === 'group' && typingText" class="typing-text-line q-mb-xs text-caption text-grey-7">
+        {{ typingText }}
+      </div>
+
       <!-- Upload Previews -->
       <UploadPreviewBar
         v-if="pendingFiles.length > 0"

@@ -10,6 +10,7 @@ export const ChatStore = reactive({
   nextCursor: null as string | null,
   hasMore: true,
   typingStatuses: {} as Record<string, Set<string>>,
+  typingTimeouts: {} as Record<string, Record<string, NodeJS.Timeout>>,
 
   setChats(chats: CreateGroupChatResponse[], cursor: string | null) {
     this.chats = chats;
@@ -120,11 +121,26 @@ export const ChatStore = reactive({
       this.typingStatuses[conversationId] = new Set<string>();
     }
     this.typingStatuses[conversationId].add(userId);
+
+    // Fallback timeout to prevent ghost typing indicators
+    if (!this.typingTimeouts[conversationId]) {
+      this.typingTimeouts[conversationId] = {};
+    }
+    if (this.typingTimeouts[conversationId][userId]) {
+      clearTimeout(this.typingTimeouts[conversationId][userId]);
+    }
+    this.typingTimeouts[conversationId][userId] = setTimeout(() => {
+      this.stopTyping(conversationId, userId);
+    }, 5000);
   },
 
   stopTyping(conversationId: string, userId: string) {
     if (this.typingStatuses[conversationId]) {
       this.typingStatuses[conversationId].delete(userId);
+    }
+    if (this.typingTimeouts[conversationId]?.[userId]) {
+      clearTimeout(this.typingTimeouts[conversationId][userId]);
+      delete this.typingTimeouts[conversationId][userId];
     }
   },
 
