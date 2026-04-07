@@ -23,6 +23,7 @@ export async function startServer() {
         null as any,
         null as any,
         null as any,
+        null as any,
         null as any
     );
 
@@ -38,7 +39,8 @@ export async function startServer() {
         dependencies.readMessageController,
         dependencies.getUserConversationsService,
         dependencies.startTypingController,
-        dependencies.stopTypingController
+        dependencies.stopTypingController,
+        dependencies.updateLastSeenAtUseCase
     );
 
     const app = createApp(dependencies);

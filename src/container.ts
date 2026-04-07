@@ -335,6 +335,7 @@ import {
 } from "./modules/infrasctructure/ports/email_verif_infra/email_verif_service/confirm_reset_activity_use_case";
 import {ConfirmResetActivityController} from "./modules/users/controllers/confirm_reset_activity_controller";
 import {ResendUserStatusToTrueController} from "./modules/users/controllers/resend_user_status_to_true_controller";
+import {UpdateLastSeenAtUseCase} from "./modules/users/application/update_last_seen_at_use_case";
 
 import {SendMessageRestController} from "./modules/chat/controllers/message/send_message_rest_controller";
 import {ReplyToMessageRestController} from "./modules/chat/controllers/message/reply_to_message_rest_controller";
@@ -406,6 +407,7 @@ export function assembleContainer(io: Server)
     const confirmResetPasswordUseCase = new ConfirmResetPasswordUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
     const resetUserStatusToTrueUseCase = new ResetUserStatusToTrueUseCase(userRepoWriterPG, userRepoReaderPG, userMapper, sendEmailVerifShared, emailVerificationTokenRepoPG);
     const confirmResetActivityUseCase = new ConfirmResetActivityUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
+    const updateLastSeenAtUseCase = new UpdateLastSeenAtUseCase(userRepoWriterPG);
 
 
     // TODO : USER SERVICES
@@ -1012,6 +1014,8 @@ export function assembleContainer(io: Server)
         resetUserStatusToTrueController,
         confirmResetActivityController,
         resendUserStatusToTrueController,
+
+        updateLastSeenAtUseCase,
 
         // jwt token service
         jwtTokenService,

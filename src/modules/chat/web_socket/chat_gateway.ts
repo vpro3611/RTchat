@@ -12,6 +12,7 @@ import {MarkConversationAsReadController, ReadMessageSchema} from "../web_socket
 import {ReplyToMessageSocketController, ReplyToMessageSchema} from "../web_socket_controllers/message_controllers/reply_to_message_controller";
 import {StartTypingController, StartTypingSchema} from "../web_socket_controllers/typing_controllers/start_typing_controller";
 import {StopTypingController, StopTypingSchema} from "../web_socket_controllers/typing_controllers/stop_typing_controller";
+import {UpdateLastSeenAtUseCase} from "../../users/application/update_last_seen_at_use_case";
 
 export class ChatGateway {
     private io: Server<ClientToServerEvents, ServerToClientEvents, {}, SocketData>
@@ -29,6 +30,7 @@ export class ChatGateway {
         private getUserConversationsService: GetUserConversationsTxService,
         private startTypingController: StartTypingController,
         private stopTypingController: StopTypingController,
+        private updateLastSeenAtUseCase: UpdateLastSeenAtUseCase,
     ) {
         this.io = new Server(server, {
             cors: {
@@ -47,6 +49,7 @@ export class ChatGateway {
         getUserConversationsService: GetUserConversationsTxService,
         startTypingController: StartTypingController,
         stopTypingController: StopTypingController,
+        updateLastSeenAtUseCase: UpdateLastSeenAtUseCase,
     ) {
         this.sendMessageController = sendMessageController;
         this.replyToMessageController = replyToMessageController;
@@ -56,6 +59,7 @@ export class ChatGateway {
         this.getUserConversationsService = getUserConversationsService;
         this.startTypingController = startTypingController;
         this.stopTypingController = stopTypingController;
+        this.updateLastSeenAtUseCase = updateLastSeenAtUseCase;
     }
 
     isConnected() {
@@ -129,6 +133,9 @@ export class ChatGateway {
             // Join personal room for targeted notifications
             socket.join(`user:${userId.sub}`);
 
+            // Send current online users list to the new connection
+            socket.emit("user:online_list", { userIds: Array.from(this.ONLINE_USERS.keys()) });
+
             this.io.emit("user:online", {userId: userId.sub});
 
             await this.autoJoinConversations(socket);
@@ -138,7 +145,7 @@ export class ChatGateway {
             socket.on("disconnect", () => this.handleDisconnect(socket));
         }
 
-    private handleDisconnect = (socket: AuthSocket) => {
+    private handleDisconnect = async (socket: AuthSocket) => {
         const userId = this.extractUserIdSocket(socket);
 
         const sockets = this.ONLINE_USERS.get(userId.sub);
@@ -152,6 +159,7 @@ export class ChatGateway {
         if (sockets.size === 0) {
             this.ONLINE_USERS.delete(userId.sub);
             this.io.emit("user:offline", {userId: userId.sub});
+            await this.updateLastSeenAtUseCase.execute(userId.sub, new Date());
         }
     }
 
