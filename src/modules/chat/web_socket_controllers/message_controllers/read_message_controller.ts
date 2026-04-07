@@ -24,11 +24,21 @@ export class MarkConversationAsReadController {
 
             await this.markConversationReadTxService.markConversationReadTxService(userId.sub, conversationId, messageId);
 
+            const readAt = new Date().toISOString();
+
             io.to(conversationId).emit("message:read", {
                 userId: userId.sub,
                 conversationId: conversationId,
                 messageId: messageId,
-                readAt: new Date().toISOString()
-        });
+                readAt: readAt
+            });
+
+            // Also emit to user's personal room to sync unread count across their own tabs
+            io.to(`user:${userId.sub}`).emit("message:read", {
+                userId: userId.sub,
+                conversationId: conversationId,
+                messageId: messageId,
+                readAt: readAt
+            });
     }
 }
