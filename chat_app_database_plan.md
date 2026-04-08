@@ -154,7 +154,7 @@ CREATE INDEX idx_messages_created_at ON messages(created_at);
 
 ---
 
-# 8. Read Receipts (Optional but Recommended)
+# 8. Read Receipts
 
 ```sql
 CREATE TABLE message_reads (
@@ -222,7 +222,7 @@ Redis should handle:
 
 # Final Notes
 
-This schema supports:
+Feats list if all goes as expected, in 1 month: 
 
 - Direct chats
 - Group chats
@@ -235,5 +235,4 @@ This schema supports:
 - Soft delete
 - JWT refresh system
 
-This structure is production-ready and scalable for a modular monolith or future microservice split.
 
