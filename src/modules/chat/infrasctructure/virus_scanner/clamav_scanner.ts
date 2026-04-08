@@ -40,8 +40,19 @@ export class ClamAVScanner implements VirusScannerInterface {
         try {
             await execAsync(`clamscan ${tempPath}`);
             return true;
-        } catch (error) {
-            return false;
+        } catch (error: any) {
+            // Clamscan exit codes: 0 = clean, 1 = infected, 2 = error
+            if (error.code === 1) {
+                console.warn(`File scan result: INFECTED (via binary)`);
+                return false;
+            }
+            
+            // If it's error code 2 or command not found (code 127)
+            console.error(`Virus scan technical error (binary fallback failed):`, error.message);
+            
+            // If the scanner itself failed to run (e.g. not installed), 
+            // we'll log it but let the file pass to avoid blocking all users due to infra issues.
+            return true;
         } finally {
             await fs.unlink(tempPath).catch(() => {});
         }
