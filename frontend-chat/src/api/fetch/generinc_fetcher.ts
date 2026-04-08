@@ -34,15 +34,23 @@ export async function fetchJson<T>(url: string, options?: RequestInit): Promise<
 
 export async function fetchJsonNoError<T>(url: string, options?: RequestInit): Promise<T | null> {
     const response = await fetch(url, options);
-    const data = await response.json();
 
     if (!response.ok) {
         return null;
     }
 
     if (response.status === 204) {
-      return undefined as T;
+        return undefined as T;
     }
 
-    return data as T;
+    const text = await response.text();
+    if (!text) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(text) as T;
+    } catch {
+        return null;
+    }
 }
