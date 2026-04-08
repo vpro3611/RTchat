@@ -1,0 +1,2 @@
+{"type":"click","text":"A\n    \n      Avatar Dot\n      A small green/grey dot on the user's avatar in chat lists and messages.\n      \n        \n          JD","choice":"avatar-dot","id":null,"timestamp":1775578696076}
+{"type":"click","text":"B\n    \n      Chat Header Status\n      \"Online\" or \"Last seen...\" text below the username in the chat header.\n      \n        John Doe\n        Online","choice":"chat-header-status","id":null,"timestamp":1775578696980}

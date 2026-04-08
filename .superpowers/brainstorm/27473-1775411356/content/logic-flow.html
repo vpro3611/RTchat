@@ -1,0 +1,54 @@
+<h2>Decoupled Logic Flow</h2>
+<p class="subtitle">How the new components interact without touching 'Send Message' logic</p>
+
+<div class="mockup">
+  <div class="mockup-header">The Reply Chain</div>
+  <div class="mockup-body">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div><strong>Controller</strong> receives <code>{ content, parentMessageId }</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div><strong>UseCase</strong> fetches parent from <code>MessageRepo</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div><strong>UseCase</strong> saves new message to <code>MessageRepo</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div><strong>UseCase</strong> saves link to <code>MessageReplyRepo</code></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Key Advantage</h3>
+<div class="section">
+  <p>By keeping this separate, we avoid the <code>ERR_HTTP_HEADERS_SENT</code> issues which were likely caused by overlapping logic or multiple responses in the modified <code>SendMessage</code> path.</p>
+</div>
+
+<style>
+.step {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 6px;
+}
+.step-num {
+  background: #1976d2;
+  color: white;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+</style>

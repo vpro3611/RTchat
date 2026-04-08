@@ -1,0 +1,45 @@
+<h2>Decoupled Reply Architecture</h2>
+<p class="subtitle">Designing the new independent path for message replies</p>
+
+<div class="mockup">
+  <div class="mockup-header">Endpoint Design Options</div>
+  <div class="mockup-body">
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <div class="option-box">
+        <div class="label">Option A: Sub-resource</div>
+        <code>POST /private/conversation/:id/messages/:msgId/reply</code>
+        <p style="font-size: 0.8rem; color: #666;">Explicitly links to the parent message in the URL.</p>
+      </div>
+      
+      <div class="option-box">
+        <div class="label">Option B: Dedicated Resource</div>
+        <code>POST /private/conversation/:id/replies</code>
+        <p style="font-size: 0.8rem; color: #666;">Parent ID is passed in the request body. Clean and flat.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>New Components Map</h3>
+<div class="section">
+  <ul>
+    <li><strong>Repo:</strong> <code>MessageReplyRepositoryPg</code></li>
+    <li><strong>TxService:</strong> <code>ReplyToMessageTxService</code></li>
+    <li><strong>REST:</strong> <code>ReplyToMessageRestController</code></li>
+    <li><strong>Socket:</strong> <code>message:reply</code> (new event)</li>
+  </ul>
+</div>
+
+<style>
+.option-box {
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 8px;
+  background: #fdfdfd;
+}
+.label {
+  font-weight: bold;
+  color: #1976d2;
+  margin-bottom: 5px;
+}
+</style>

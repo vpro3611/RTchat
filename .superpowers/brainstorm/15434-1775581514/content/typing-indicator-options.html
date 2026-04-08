@@ -1,0 +1,43 @@
+<h2>Typing Indicator Options</h2>
+<p class="subtitle">How should we show when others are typing?</p>
+
+<div class="options">
+  <div class="option" data-choice="discrete-line" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Discrete Line</h3>
+      <p>A small, non-intrusive text line right above the input field.</p>
+      <div class="mockup" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: white;">
+        <div style="font-size: 0.8em; color: #666; font-style: italic; margin-bottom: 5px;">John is typing...</div>
+        <div style="height: 35px; border: 1px solid #ccc; border-radius: 4px; display: flex; align-items: center; padding: 0 10px; color: #999;">Type a message</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="animated-bubble" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Animated Bubble</h3>
+      <p>An animated "..." bubble that appears at the bottom of the message list.</p>
+      <div class="mockup" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+        <div style="width: 50px; background: #e0e0e0; padding: 8px; border-radius: 12px; display: flex; gap: 4px; justify-content: center;">
+          <div style="width: 6px; height: 6px; background: #999; border-radius: 50%;"></div>
+          <div style="width: 6px; height: 6px; background: #999; border-radius: 50%;"></div>
+          <div style="width: 6px; height: 6px; background: #999; border-radius: 50%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="header-status" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Header Status</h3>
+      <p>Replaces the "Online" status in the header with "Typing..."</p>
+      <div class="mockup" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: white;">
+        <div style="font-weight: bold;">John Doe</div>
+        <div style="font-size: 0.8em; color: #3B82F6; font-weight: bold;">Typing...</div>
+      </div>
+    </div>
+  </div>
+</div>

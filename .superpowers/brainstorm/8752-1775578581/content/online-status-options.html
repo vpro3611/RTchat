@@ -1,0 +1,44 @@
+<h2>Online Status Indicator Options</h2>
+<p class="subtitle">Where and how should the online status be displayed?</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="avatar-dot" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Avatar Dot</h3>
+      <p>A small green/grey dot on the user's avatar in chat lists and messages.</p>
+      <div class="mockup" style="width: fit-content; margin-top: 10px;">
+        <div style="position: relative; width: 40px; height: 40px; background: #3B82F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+          JD
+          <div style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #10B981; border: 2px solid white; border-radius: 50%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="chat-header-status" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Chat Header Status</h3>
+      <p>"Online" or "Last seen..." text below the username in the chat header.</p>
+      <div class="mockup" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        <div style="font-weight: bold;">John Doe</div>
+        <div style="font-size: 0.8em; color: #10B981;">Online</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="user-list-label" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>User List Label</h3>
+      <p>Text label next to the username in the participant list.</p>
+      <div class="mockup" style="margin-top: 10px;">
+        <div style="display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #eee;">
+          <span>John Doe</span>
+          <span style="font-size: 0.7em; padding: 2px 6px; background: #D1FAE5; color: #065F46; border-radius: 10px;">ONLINE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
