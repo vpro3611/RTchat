@@ -20,8 +20,8 @@ FROM node:22-alpine AS runtime
 
 WORKDIR /app
 
-# Install ffmpeg for voice messages
-RUN apk add --no-cache ffmpeg
+# Install ffmpeg for voice messages and clamav for virus scanning
+RUN apk add --no-cache ffmpeg clamav
 
 # Copy package files and install production dependencies
 COPY package*.json ./
