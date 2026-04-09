@@ -139,3 +139,6 @@ If you prefer to run the application locally without Docker (e.g., for active de
 
 ## 📚 Codebase Documentation
 For an in-depth look at the architectural patterns, domain-driven design principles, database schemas, and API contracts, please refer to the [CODEBASE.md](./CODEBASE.md).
+
+## 👤 User Guide Documentation
+For detailed instructions on how to use the application, or for more visual guides/approaches, please refer to the [USERGUIDE.md](./USER_GUIDE.md).
