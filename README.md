@@ -1,6 +1,6 @@
 # RTChat - Real-Time Messaging Platform
 
-RTChat is a modern, full-stack real-time messaging application. Built with a focus on clean architecture, performance, and user experience, it features a robust backend powered by Node.js, Express, and PostgreSQL, and a highly responsive frontend crafted with Vue.js 3 and the Quasar Framework.
+RTChat (of real-time chat application) is a modern, full-stack real-time messaging application. Built with a focus on clean architecture, performance, and user experience, it features a robust backend powered by Node.js, Express, and PostgreSQL, and a highly responsive frontend crafted with Vue.js 3 and the Quasar Framework.
 
 ## 🌟 Key Features
 
@@ -50,12 +50,12 @@ The project is fully containerized, making it easy to deploy and scale. The infr
 Before starting the application, ensure you have a `.env` file in the root directory. You can copy the provided example or use the following template:
 
 ```env
-# Database
+# Database (Imp: Change image of db when published, this variation is only for testing AND local development)  
 DB_USER=vpro3611
 DB_PASSWORD=new_pass
 DB_NAME=rtchat
 
-# Secrets (Change in production!)
+# Secrets (Change in production! (Obligatory))
 ACCESS_TOKEN_SECRET=your_access_token_secret
 REFRESH_TOKEN_SECRET=your_refresh_token_secret
 MESSAGE_ENCRYPTION_KEY=your_encryption_key
