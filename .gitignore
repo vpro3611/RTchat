@@ -15,6 +15,7 @@ yarn-error.log*
 .vscode/*
 
 /dist
+note.md
 # .koda/
 improvings.md
 chat_app_database_plan.md
