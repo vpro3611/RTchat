@@ -31,7 +31,7 @@ export async function startServer() {
     const dependencies = assembleContainer(gateway.getIo());
 
     // Start cron job
-    dependencies.joinRequestCronService.start();
+    await dependencies.joinRequestCronService.start();
     
     // 3. Обновляем контроллеры в гейтвее
     gateway.updateControllers(
