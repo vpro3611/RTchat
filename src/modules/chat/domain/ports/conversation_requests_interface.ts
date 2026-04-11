@@ -9,4 +9,5 @@ export interface ConversationRequestsInterface {
     getUsersRequests(userId: string, status?: string): Promise<ConversationRequests[]>;
     updateRequest(requestId: string, conversationId: string, status: string, reviewMessage: string): Promise<ConversationRequests>;
     removeRequest(requestId: string): Promise<void>;
+    expireRequests(): Promise<number>;
 }

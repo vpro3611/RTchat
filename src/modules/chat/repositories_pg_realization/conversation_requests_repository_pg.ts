@@ -165,4 +165,20 @@ export class ConversationRequestsRepositoryPg implements ConversationRequestsInt
             throw mapPgError(error);
         }
     }
+
+    async expireRequests(): Promise<number> {
+        try {
+            const query = `
+                UPDATE conversation_join_requests
+                SET status = 'expired'
+                WHERE status = 'pending'
+                  AND submitted_at < NOW() - INTERVAL '7 days'
+                RETURNING id;
+            `;
+            const result = await this.pool.query(query);
+            return result.rowCount ?? 0;
+        } catch (error) {
+            throw mapPgError(error);
+        }
+    }
 }

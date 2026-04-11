@@ -29,6 +29,9 @@ export async function startServer() {
 
     // 2. Теперь когда у нас есть io, собираем контейнер
     const dependencies = assembleContainer(gateway.getIo());
+
+    // Start cron job
+    await dependencies.joinRequestCronService.start();
     
     // 3. Обновляем контроллеры в гейтвее
     gateway.updateControllers(
