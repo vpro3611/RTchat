@@ -345,6 +345,9 @@ import {ReplyToMessageUseCase} from "./modules/chat/application/message/reply_to
 import {MessageReplyRepositoryPg} from "./modules/chat/repositories_pg_realization/message_reply_repository_pg";
 import {EncryptionPort} from "./modules/infrasctructure/ports/encryption/encryption_port";
 import {CryptoEncryptionService} from "./modules/infrasctructure/crypto_encryption_service";
+import { ExpireJoinRequestsTxService } from "./modules/chat/transactional_services/conversation_requests/expire_join_requests_service";
+import { ExpireJoinRequestsUseCase } from "./modules/chat/application/conversation_requests/expire_join_requests_use_case";
+import { JoinRequestCronService } from "./modules/chat/infrastructure/cron/join_request_cron_service";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -805,6 +808,10 @@ export function assembleContainer(io: Server)
     const setConversationAvatarService = new SetConversationAvatarTxService(txManager, encryptionService);
     const deleteConversationAvatarService = new DeleteConversationAvatarTxService(txManager, encryptionService);
 
+    const expireJoinRequestsService = new ExpireJoinRequestsTxService(txManager, encryptionService);
+    const expireJoinRequestsUseCase = new ExpireJoinRequestsUseCase(expireJoinRequestsService);
+    const joinRequestCronService = new JoinRequestCronService(expireJoinRequestsUseCase);
+
     // TODO : WEB SOCKET CONTROLLERS (MESSAGE)
     const deleteMessageController = new DeleteMessageController(deleteMessageService);
     const editMessageController = new EditMessageController(editMessageService);
@@ -1094,6 +1101,8 @@ export function assembleContainer(io: Server)
         deleteUserAvatarController,
         setConversationAvatarController,
         deleteConversationAvatarController,
+
+        joinRequestCronService,
     }
 }
 
