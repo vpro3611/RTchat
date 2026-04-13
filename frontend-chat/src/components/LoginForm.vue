@@ -83,9 +83,15 @@ function handleSubmit() {
         </div>
       </div>
 
+      <div class="q-mt-lg flex flex-center">
+        <GoogleLogin :callback="handleGoogleLogin" />
+      </div>
+
       <div v-if="props.error" class="text-negative text-weight-bold q-mt-sm">
         {{ props.error }}
       </div>
     </q-form>
   </div>
+</template>
+v>
 </template>
