@@ -5,6 +5,7 @@ import {InvalidTokenJWTError, SecretNotDefinedError} from "../errors/token_error
 
 const ACCESS_TOKEN_TIME = "15m";
 const REFRESH_TOKEN_TIME = "7d";
+const REGISTRATION_TOKEN_TIME = "1h";
 
 export class TokenServiceJWT implements TokenServiceInterface {
 
@@ -24,7 +25,12 @@ export class TokenServiceJWT implements TokenServiceInterface {
         return refreshToken;
     }
 
-    private mapError(error: unknown, tokenType: "access" | "refresh"): never {
+    private checkRegistrationSecret(): string {
+        const secret = process.env.ACCESS_TOKEN_SECRET || "fallback_reg_secret";
+        return secret;
+    }
+
+    private mapError(error: unknown, tokenType: "access" | "refresh" | "registration"): never {
         if (error instanceof Error && process.env.NODE_ENV !== "production") {
             throw new InvalidTokenJWTError(`${error.message} - Invalid ${tokenType} token`);
         }
@@ -57,6 +63,18 @@ export class TokenServiceJWT implements TokenServiceInterface {
             }
         )
     }
+    generateRegistrationToken(email: string): string {
+        const secret = this.checkRegistrationSecret();
+        return jwt.sign(
+            {
+                email: email
+            },
+            secret,
+            {
+                expiresIn: REGISTRATION_TOKEN_TIME
+            }
+        );
+    }
     verifyAccessToken(token: string): AccessTokenPayload {
         const accessToken = this.checkAccessSecret();
         try {
@@ -77,6 +95,17 @@ export class TokenServiceJWT implements TokenServiceInterface {
             ) as RefreshTokenPayload;
         } catch (error) {
             this.mapError(error, "refresh");
+        }
+    }
+    verifyRegistrationToken(token: string): { email: string; exp: number } {
+        const secret = this.checkRegistrationSecret();
+        try {
+            return jwt.verify(
+                token,
+                secret
+            ) as { email: string; exp: number };
+        } catch (error) {
+            this.mapError(error, "registration");
         }
     }
 }
