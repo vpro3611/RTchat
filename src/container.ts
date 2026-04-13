@@ -454,6 +454,8 @@ export function assembleContainer(io: Server)
     const refreshController = new RefreshController(authService);
     const registerController = new RegisterController(authService);
     const verifyEmailController = new VerifyEmailController(authService);
+    const loginGoogleController = new LoginGoogleController(authService);
+    const registerGoogleController = new RegisterGoogleController(authService);
 
 
     const resendVerificationService = new ResendVerificationService(
@@ -1106,4 +1108,4 @@ export function assembleContainer(io: Server)
     }
 }
 
-export type AppContainer = ReturnType<typeof assembleContainer>;
+export type AppContainer = ReturnType<typeof assembleContainer>;ype AppContainer = ReturnType<typeof assembleContainer>;
