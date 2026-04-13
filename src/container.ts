@@ -348,6 +348,8 @@ import {CryptoEncryptionService} from "./modules/infrasctructure/crypto_encrypti
 import { ExpireJoinRequestsTxService } from "./modules/chat/transactional_services/conversation_requests/expire_join_requests_service";
 import { ExpireJoinRequestsUseCase } from "./modules/chat/application/conversation_requests/expire_join_requests_use_case";
 import { JoinRequestCronService } from "./modules/chat/infrastructure/cron/join_request_cron_service";
+import {RegisterGoogleController} from "./modules/authentification/controllers/register_google_controller";
+import {LoginGoogleController} from "./modules/authentification/controllers/login_google_controller";
 
 export const RedisCacheService = new CacheService(redisClient);
 
@@ -1032,6 +1034,8 @@ export function assembleContainer(io: Server)
         // auth
         loginEmailController,
         loginUsernameController,
+        loginGoogleController,
+        registerGoogleController,
         logoutController,
         refreshController,
         registerController,
@@ -1108,4 +1112,4 @@ export function assembleContainer(io: Server)
     }
 }
 
-export type AppContainer = ReturnType<typeof assembleContainer>;ype AppContainer = ReturnType<typeof assembleContainer>;
+export type AppContainer = ReturnType<typeof assembleContainer>;

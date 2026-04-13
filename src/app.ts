@@ -216,6 +216,16 @@ export const createApp = (dependencies: AppContainer): Express => {
         dependencies.loginUsernameController.loginUsernameController
     ); //
 
+    publicRouter.post("/auth/google/login",
+        validateBody(LoginGoogleBodySchema),
+        dependencies.loginGoogleController.loginGoogleController
+    );
+
+    publicRouter.post("/auth/google/register",
+        validateBody(RegisterGoogleBodySchema),
+        dependencies.registerGoogleController.registerGoogleController
+    );
+
     publicRouter.get("/verify-email",
         dependencies.verifyEmailController.verifyEmailController
     ); //
@@ -485,12 +495,6 @@ export const createApp = (dependencies: AppContainer): Express => {
     privateRouter.delete("/conversation/:conversationId/avatar",
         validateParams(DeleteConversationAvatarParamsSchema),
         dependencies.deleteConversationAvatarController.deleteAvatar
-    ); //
-
-    app.use(errorMiddleware());
-
-    return app;
-}    dependencies.deleteConversationAvatarController.deleteAvatar
     ); //
 
     app.use(errorMiddleware());
