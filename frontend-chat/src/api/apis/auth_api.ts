@@ -131,7 +131,7 @@ export const AuthApi = {
     },
 
     loginByGoogle(idToken: string) {
-        return fetchJson<any>(`${BaseUrl.apiBaseUrl}/public/auth/google/login`, {
+        return fetchJson<Record<string, unknown>>(`${BaseUrl.apiBaseUrl}/public/auth/google/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -142,7 +142,7 @@ export const AuthApi = {
     },
 
     registerByGoogle(username: string, password: string, registrationToken: string) {
-        return fetchJson<any>(`${BaseUrl.apiBaseUrl}/public/auth/google/register`, {
+        return fetchJson<Record<string, unknown>>(`${BaseUrl.apiBaseUrl}/public/auth/google/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
