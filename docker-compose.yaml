@@ -50,6 +50,9 @@ services:
       - CLAMAV_HOST=${CLAMAV_HOST:-localhost}
       - CLAMAV_PORT=${CLAMAV_PORT:-3310}
       - MESSAGE_ENCRYPTION_KEY=${MESSAGE_ENCRYPTION_KEY}
+      - CLIENT_ID=${CLIENT_ID}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+      - CALLBACK_URL=${CALLBACK_URL}
     ports:
       - "3000:3000"
     depends_on:
@@ -65,6 +68,7 @@ services:
       context: ./frontend-chat
       args:
         - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:9000}
+        - VITE_GOOGLE_CLIENT_ID=${CLIENT_ID}
     container_name: rtchat-frontend
     ports:
       - "9000:80"

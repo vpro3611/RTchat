@@ -17,6 +17,10 @@ RUN npm run postinstall
 ARG VITE_API_BASE_URL=http://localhost:3000
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
+# Argument for Google Client ID
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+
 # Build the app
 RUN npm run build
 
