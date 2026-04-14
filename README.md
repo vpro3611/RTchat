@@ -9,6 +9,7 @@ RTChat (of real-time chat application) is a modern, full-stack real-time messagi
 - **Rich Media & File Sharing:** Secure attachment uploads with built-in virus scanning (ClamAV) and up to 20MB file size support.
 - **Voice Messages:** Integrated voice recording and sharing.
 - **Message Management:** Edit, delete, forward, reply, and bookmark/save messages.
+- **Google OAuth 2 Authentication:** Seamlessly sign in or register using your Google account.
 - **User Privacy:** Advanced blocking system and granular participant muting capabilities.
 - **Security:** JWT-based authentication, password encryption, and secure HTTPS/WSS proxying via Nginx.
 
@@ -59,6 +60,11 @@ DB_NAME=rtchat
 ACCESS_TOKEN_SECRET=your_access_token_secret
 REFRESH_TOKEN_SECRET=your_refresh_token_secret
 MESSAGE_ENCRYPTION_KEY=your_encryption_key
+
+# Google OAuth 2 (Required for Google login)
+CLIENT_ID=your_google_client_id
+CLIENT_SECRET=your_google_client_secret
+CALLBACK_URL=http://localhost:3000/public/auth/google/callback
 
 # Email/SMTP (For registration & verification)
 SMTP_HOST=smtp.example.com

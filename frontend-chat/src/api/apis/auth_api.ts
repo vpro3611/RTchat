@@ -128,5 +128,27 @@ export const AuthApi = {
             },
             body: JSON.stringify({email}),
         })
+    },
+
+    loginByGoogle(idToken: string) {
+        return fetchJson<Record<string, unknown>>(`${BaseUrl.apiBaseUrl}/public/auth/google/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({idToken}),
+        })
+    },
+
+    registerByGoogle(username: string, password: string, registrationToken: string) {
+        return fetchJson<Record<string, unknown>>(`${BaseUrl.apiBaseUrl}/public/auth/google/register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({username, password, registrationToken}),
+        })
     }
 }

@@ -19,6 +19,9 @@ import {
 } from "../infrasctructure/ports/email_verif_infra/email_verif_service/email_verification_use_case";
 import {InvalidTokenJWTError, TokenExpiredError} from "./errors/token_errors";
 import {SendVerifEmailShared} from "../users/shared/send_verif_email_shared";
+import {LoginGoogleUseCase} from "../users/application/login_google_use_case";
+import {RegisterGoogleUseCase} from "../users/application/register_google_use_case";
+import {GoogleAuthService} from "./google_auth_service/google_auth_service";
 
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -142,6 +145,60 @@ export class AuthService {
             return {user, ...tokens};
         });
     }
+
+    async loginByGoogle(idToken: string, clientId: string) {
+        return this.txManager.runInTransaction(async (client) => {
+            const userRepoReader = new UserRepoReaderPg(client);
+            const mapper = new UserMapper();
+            const googleAuthService = new GoogleAuthService(clientId);
+
+            const refreshTokenRepo = new RefreshTokenRepoPg(client);
+
+            const loginGoogleUseCase = new LoginGoogleUseCase(userRepoReader, mapper, googleAuthService, this.jwtService);
+
+            const result = await loginGoogleUseCase.loginGoogleUseCase(idToken);
+
+            if (result.registrationToken) {
+                return {
+                    user: null,
+                    accessToken: null,
+                    refreshToken: null,
+                    registrationToken: result.registrationToken,
+                    requiresRegistration: true
+                };
+            }
+
+            const tokens = await this.generateTokens(result.user!.id, refreshTokenRepo);
+
+            return {user: result.user, ...tokens, requiresRegistration: false, registrationToken: null};
+        });
+    }
+
+    async registerByGoogle(username: string, password: string, registrationToken: string) {
+        return this.txManager.runInTransaction(async (client) => {
+            const userRepoReader = new UserRepoReaderPg(client);
+            const userRepoWriter = new UserRepoWriterPg(client);
+            const bcrypter = new Bcrypter();
+            const mapper = new UserMapper();
+
+            const refreshTokenRepo = new RefreshTokenRepoPg(client);
+
+            const registerGoogleUseCase = new RegisterGoogleUseCase(
+                userRepoReader,
+                userRepoWriter,
+                bcrypter,
+                mapper,
+                this.jwtService
+            );
+
+            const user = await registerGoogleUseCase.registerGoogleUseCase(username, password, registrationToken);
+
+            const tokens = await this.generateTokens(user.id, refreshTokenRepo);
+
+            return {user, ...tokens};
+        });
+    }
+
     async logout(refreshToken: string) {
         return this.txManager.runInTransaction(async (client) => {
             const refreshRepo = new RefreshTokenRepoPg(client);

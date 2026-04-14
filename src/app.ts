@@ -6,6 +6,8 @@ import {validateBody} from "./modules/middlewares/validate_body";
 import {RegisterBodySchema} from "./modules/authentification/controllers/register_controller";
 import {LoginEmailBodySchema} from "./modules/authentification/controllers/login_email_controller";
 import {LoginUsernameBodySchema} from "./modules/authentification/controllers/login_username_controller";
+import {LoginGoogleBodySchema} from "./modules/authentification/controllers/login_google_controller";
+import {RegisterGoogleBodySchema} from "./modules/authentification/controllers/register_google_controller";
 import {errorMiddleware} from "./modules/middlewares/error_middleware";
 import {ChangeEmailBodySchema} from "./modules/users/controllers/change_email_controller";
 import {ChangePasswordBodySchema} from "./modules/users/controllers/change_password_controller";
@@ -213,6 +215,16 @@ export const createApp = (dependencies: AppContainer): Express => {
         validateBody(LoginUsernameBodySchema),
         dependencies.loginUsernameController.loginUsernameController
     ); //
+
+    publicRouter.post("/auth/google/login",
+        validateBody(LoginGoogleBodySchema),
+        dependencies.loginGoogleController.loginGoogleController
+    );
+
+    publicRouter.post("/auth/google/register",
+        validateBody(RegisterGoogleBodySchema),
+        dependencies.registerGoogleController.registerGoogleController
+    );
 
     publicRouter.get("/verify-email",
         dependencies.verifyEmailController.verifyEmailController

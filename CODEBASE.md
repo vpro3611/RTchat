@@ -27,7 +27,7 @@ src/
 ├── container.ts                # Dependency Injection (DI) Container
 ├── database.ts                 # PostgreSQL connection pool
 ├── modules/
-│   ├── authentification/       # Auth domain (JWT, login, registration)
+│   ├── authentification/       # Auth domain (JWT, Google OAuth 2, login, registration)
 │   ├── chat/                   # Core messaging domain
 │   │   ├── domain/             # Entities (Conversation, Message, Participant)
 │   │   ├── application/        # Use Cases (Send Message, Create Group)
@@ -102,6 +102,7 @@ The database utilizes foreign keys, indexes, and soft-deletes where appropriate.
 ## 🔌 API & WebSocket Contract
 
 ### REST API Design
+- **Auth Flow:** Supports standard Email/Username login and **Google OAuth 2** (`/public/auth/google/login`, `/public/auth/google/register`).
 - **Validation:** All incoming HTTP requests are validated at the middleware layer using **Zod** schemas before reaching the controllers.
 - **Standardized Responses:** Errors are mapped to a standardized JSON format `{ "code": "ERROR_CODE", "message": "Human readable message" }`.
 - **Pagination:** List endpoints (messages, conversations) utilize cursor-based pagination for high performance.

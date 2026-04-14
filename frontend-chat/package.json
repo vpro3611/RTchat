@@ -20,7 +20,8 @@
     "quasar": "^2.16.0",
     "socket.io-client": "^4.8.1",
     "vue": "^3.5.22",
-    "vue-router": "^5.0.0"
+    "vue-router": "^5.0.0",
+    "vue3-google-login": "^2.0.37"
   },
   "devDependencies": {
     "@eslint/js": "^9.14.0",
