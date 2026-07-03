@@ -21,7 +21,15 @@ export class GoogleAuthService implements GoogleAuthServiceInterface {
             }
             return payload.email;
         } catch (e: any) {
-            throw new InvalidTokenJWTError("Failed to verify Google ID token");
+            console.error("Google verify error:");
+            console.error(e);
+
+            if (e.response?.data) {
+                console.error(e.response.data);
+            }
+
+            throw e;
+        }
         }
     }
 }
