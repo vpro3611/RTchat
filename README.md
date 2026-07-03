@@ -2,7 +2,7 @@
 
 RTChat (of real-time chat application) is a modern, full-stack real-time messaging application. Built with a focus on clean architecture, performance, and user experience, it features a robust backend powered by Node.js, Express, and PostgreSQL, and a highly responsive frontend crafted with Vue.js 3 and the Quasar Framework.
 
-## 🌟 Key Features
+##  Key Features
 
 - **Real-Time Communication:** Instant messaging with WebSocket (Socket.io) integration.
 - **Direct & Group Chats:** Support for one-on-one conversations and multi-user groups with role management.
@@ -13,7 +13,7 @@ RTChat (of real-time chat application) is a modern, full-stack real-time messagi
 - **User Privacy:** Advanced blocking system and granular participant muting capabilities.
 - **Security:** JWT-based authentication, password encryption, and secure HTTPS/WSS proxying via Nginx.
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 ### Backend
 - **Runtime & Language:** Node.js, TypeScript 5.x
@@ -35,7 +35,7 @@ RTChat (of real-time chat application) is a modern, full-stack real-time messagi
 
 ---
 
-## 🐳 Infrastructure & Docker Guide
+##  Infrastructure & Docker Guide
 
 The project is fully containerized, making it easy to deploy and scale. The infrastructure consists of four main services:
 1. **db**: PostgreSQL database.
@@ -110,7 +110,7 @@ docker compose down
 
 ---
 
-## 💻 Local Development
+##  Local Development
 
 If you prefer to run the application locally without Docker (e.g., for active debugging):
 
@@ -143,8 +143,8 @@ If you prefer to run the application locally without Docker (e.g., for active de
    npm run dev
    ```
 
-## 📚 Codebase Documentation
+##  Codebase Documentation
 For an in-depth look at the architectural patterns, domain-driven design principles, database schemas, and API contracts, please refer to the [CODEBASE.md](./CODEBASE.md).
 
-## 👤 User Guide Documentation
+##  User Guide Documentation
 For detailed instructions on how to use the application, or for more visual guides/approaches, please refer to the [USERGUIDE.md](./USER_GUIDE.md).

@@ -1,10 +1,10 @@
-# 📘 RTChat - User Guide & Features
+#  RTChat - User Guide & Features
 
 Welcome to the **RTChat User Guide**. This document will walk you through the key features and functionalities of the platform to help you get started quickly.
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### 1. Welcome Screen
 When you first log in, you are greeted by our modern **Welcome Screen**. This central hub confirms your identity and encourages you to start interacting.
@@ -15,7 +15,7 @@ When you first log in, you are greeted by our modern **Welcome Screen**. This ce
 
 ---
 
-## 💬 Messaging & Media
+##  Messaging & Media
 
 ### 2. The Chat Room
 The chat room is designed for speed and clarity. It supports real-time message delivery, typing indicators, and rich media.
@@ -31,7 +31,7 @@ You can send photos, documents, and even recorded voice messages directly in the
 
 ---
 
-## 👥 Community & Groups
+##  Community & Groups
 
 ### 4. Group Management
 RTChat makes it easy to collaborate. You can manage participants, assign roles (Admin/Owner), and see who is currently in the group.
@@ -69,7 +69,7 @@ Keep track of any join requests you've sent to private groups. You can see their
 
 ---
 
-## 🎨 Personalization
+##  Personalization
 
 ### 9. Theme Customization
 RTChat supports **Light**, **Dark**, and **System** themes. Switch between them instantly to suit your environment and reduce eye strain.
@@ -85,7 +85,7 @@ Save important messages to your personal **Bookmarks** section. This is a privat
 
 ---
 
-## 👤 Profile Settings
+##  Profile Settings
 Manage your identity. Update your avatar, view your membership status, and manage your account details directly from the **Profile** dialog.
 
 ![Profile Info](docs/assets/users_profile.png)

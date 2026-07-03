@@ -4,7 +4,7 @@ This document serves as the comprehensive architectural and engineering guide fo
 
 ---
 
-## 🏛 Architectural Principles
+##  Architectural Principles
 
 RTChat is built upon **Clean Architecture** and **Domain-Driven Design (DDD)** principles. The goal is to enforce a strict separation of concerns, ensuring that the core business logic remains isolated from external frameworks, databases, and UI components.
 
@@ -16,7 +16,7 @@ RTChat is built upon **Clean Architecture** and **Domain-Driven Design (DDD)** p
 
 ---
 
-## 🏗 Backend Architecture
+##  Backend Architecture
 
 ### Directory Structure
 ```text
@@ -53,7 +53,7 @@ src/
 
 ---
 
-## 🎨 Frontend Architecture
+##  Frontend Architecture
 
 The frontend is a Single Page Application (SPA) built with **Vue.js 3** (Composition API) and **Quasar Framework**.
 
@@ -84,7 +84,7 @@ frontend-chat/
 
 ---
 
-## 🗄 Database Schema (PostgreSQL)
+##  Database Schema (PostgreSQL)
 
 The database utilizes foreign keys, indexes, and soft-deletes where appropriate.
 
@@ -99,7 +99,7 @@ The database utilizes foreign keys, indexes, and soft-deletes where appropriate.
 
 ---
 
-## 🔌 API & WebSocket Contract
+##  API & WebSocket Contract
 
 ### REST API Design
 - **Auth Flow:** Supports standard Email/Username login and **Google OAuth 2** (`/public/auth/google/login`, `/public/auth/google/register`).
