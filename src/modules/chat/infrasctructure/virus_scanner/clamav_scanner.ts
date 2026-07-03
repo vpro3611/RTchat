@@ -59,6 +59,10 @@ export class ClamAVScanner implements VirusScannerInterface {
     }
 
     async scanBuffer(buffer: Buffer): Promise<boolean> {
+        if (process.env.CLAMAV_DISABLED === "true") {
+            console.log("Virus scanning is disabled (CLAMAV_DISABLED is set to true). Skipping scan.");
+            return true;
+        }
         await this.init();
         
         if (this.useFallback) {

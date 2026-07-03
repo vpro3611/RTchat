@@ -1,6 +1,7 @@
 import {AuthService} from "../auth_service";
 import {Request, Response} from "express";
 import {RefreshTokenNotFound} from "../errors/token_errors";
+import {getCookieOptions} from "./cookie_config";
 
 export class LogoutController {
     constructor(private readonly authService: AuthService) {}
@@ -15,12 +16,7 @@ export class LogoutController {
 
         await this.authService.logout(refreshToken);
 
-        res.clearCookie("refreshToken", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV! === "production",
-            sameSite: process.env.NODE_ENV! === "production" ? "strict" : "lax",
-            path: "/",
-        });
+        res.clearCookie("refreshToken", getCookieOptions());
 
         res.status(204).send();
     }

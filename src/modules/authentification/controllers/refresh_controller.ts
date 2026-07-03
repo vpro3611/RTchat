@@ -1,6 +1,7 @@
 import {AuthService} from "../auth_service";
 import {Request, Response} from "express";
 import {RefreshTokenNotFound} from "../errors/token_errors";
+import {getCookieOptions} from "./cookie_config";
 
 export class RefreshController {
     constructor(private readonly authService: AuthService) {}
@@ -14,12 +15,7 @@ export class RefreshController {
 
         const tokens = await this.authService.refresh(refreshToken);
 
-        res.cookie("refreshToken", tokens.refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV! === "production",
-            sameSite: process.env.NODE_ENV! === "production" ? "strict" : "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: "/",
-        }).json({accessToken: tokens.accessToken})
+        res.cookie("refreshToken", tokens.refreshToken, getCookieOptions())
+            .json({accessToken: tokens.accessToken});
     }
 }

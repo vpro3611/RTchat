@@ -133,6 +133,18 @@ export const createApp = (dependencies: AppContainer): Express => {
         "http://localhost:9000",
     ];
 
+    if (process.env.FRONTEND_URL) {
+        allowedOrigins.push(process.env.FRONTEND_URL);
+        try {
+            const parsedUrl = new URL(process.env.FRONTEND_URL);
+            if (!allowedOrigins.includes(parsedUrl.origin)) {
+                allowedOrigins.push(parsedUrl.origin);
+            }
+        } catch (_) {
+            // Ignore invalid URL formatting in env
+        }
+    }
+
     app.use(cors({
         origin: (origin, callback) => {
             if (!origin) {

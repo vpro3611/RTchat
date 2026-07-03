@@ -1,6 +1,7 @@
 import {AuthService} from "../auth_service";
 import {Request, Response} from "express";
 import {z} from "zod";
+import {getCookieOptions} from "./cookie_config";
 
 export const RegisterGoogleBodySchema = z.object({
     username: z.string(),
@@ -18,12 +19,8 @@ export class RegisterGoogleController {
 
         const result = await this.authService.registerByGoogle(username, password, registrationToken);
 
-        res.cookie("refreshToken", result.refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV! === "production",
-            sameSite: process.env.NODE_ENV! === "production" ? "strict" : "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: "/",
-        }).status(201).json({accessToken: result.accessToken, user: result.user});
+        res.cookie("refreshToken", result.refreshToken, getCookieOptions())
+            .status(201)
+            .json({accessToken: result.accessToken, user: result.user});
     }
 }
