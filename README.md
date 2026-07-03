@@ -2,6 +2,19 @@
 
 RTChat (of real-time chat application) is a modern, full-stack real-time messaging application. Built with a focus on clean architecture, performance, and user experience, it features a robust backend powered by Node.js, Express, and PostgreSQL, and a highly responsive frontend crafted with Vue.js 3 and the Quasar Framework.
 
+
+
+
+> [!WARNING]
+> **Email functionality is disabled on the free deployment.**
+>
+> This project uses SMTP (via Nodemailer) to send emails for verifications. The free hosting tier blocks the required SMTP ports, so email-related features (such as sending verification emails, password reset emails, etc.) will not work in the deployed demo. In the first place, this is a demo, and it is not sponsored, therefore it is unlikely to receive funding in the nearest future. 
+> For now, until we obtain funding, please, login via Google.
+> To use email functionality, run the application locally (or via Docker) or deploy it to a hosting plan that allows outbound SMTP connections.
+> Sorry for the inconvenience. Hope, besides this, you will like the app.
+
+
+
 ##  Key Features
 
 - **Real-Time Communication:** Instant messaging with WebSocket (Socket.io) integration.
