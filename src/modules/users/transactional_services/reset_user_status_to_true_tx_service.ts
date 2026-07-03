@@ -4,7 +4,7 @@ import {
 import {UserRepoWriterPg} from "../repositories/user_repo_writer_pg";
 import {UserRepoReaderPg} from "../repositories/user_repo_reader_pg";
 import {UserMapper} from "../shared/map_to_dto";
-import {EmailSenderNodemailer} from "../../infrasctructure/ports/email_verif_infra/email_sender/email_sender";
+import {EmailSenderResend} from "../../infrasctructure/ports/email_verif_infra/email_sender/email_sender";
 import {
     EmailVerificationTokenRepoPg
 } from "../../infrasctructure/ports/email_verif_infra/email_verification_token_repo/email_verification_token_repo_pg";
@@ -21,7 +21,7 @@ export class ResetUserStatusToTrueTxService {
             const userRepoReader = new UserRepoReaderPg(client);
             const userMapper = new UserMapper();
 
-            const emailSender = new EmailSenderNodemailer();
+            const emailSender = new EmailSenderResend();
             const emailVerifRepo = new EmailVerificationTokenRepoPg(client);
 
             const sendEmailVerifShared = new SendVerifEmailShared(

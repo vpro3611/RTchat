@@ -5,7 +5,7 @@ import {sha256} from "js-sha256";
 import {UserRepoReaderPg} from "../users/repositories/user_repo_reader_pg";
 import {UserRepoWriterPg} from "../users/repositories/user_repo_writer_pg";
 import {Bcrypter} from "../infrasctructure/ports/bcrypter/bcrypter";
-import {EmailSenderNodemailer} from "../infrasctructure/ports/email_verif_infra/email_sender/email_sender";
+import {EmailSenderResend} from "../infrasctructure/ports/email_verif_infra/email_sender/email_sender";
 import {
     EmailVerificationTokenRepoPg
 } from "../infrasctructure/ports/email_verif_infra/email_verification_token_repo/email_verification_token_repo_pg";
@@ -89,7 +89,7 @@ export class AuthService {
             const userRepoReader = new UserRepoReaderPg(client);
             const userRepoWriter = new UserRepoWriterPg(client);
             const bcrypter = new Bcrypter();
-            const emailSender = new EmailSenderNodemailer();
+            const emailSender = new EmailSenderResend();
             const emailVerifRepo = new EmailVerificationTokenRepoPg(client);
             const mapper = new UserMapper();
 

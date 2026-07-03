@@ -7,7 +7,7 @@ import {UserMapper} from "../shared/map_to_dto";
 import {UserLookup} from "../shared/user_exists_by_id";
 import {ChangeEmailUseCase} from "../application/change_email_use_case";
 import {SendVerifEmailShared} from "../shared/send_verif_email_shared";
-import {EmailSenderNodemailer} from "../../infrasctructure/ports/email_verif_infra/email_sender/email_sender";
+import {EmailSenderResend} from "../../infrasctructure/ports/email_verif_infra/email_sender/email_sender";
 import {
     EmailVerificationTokenRepoPg
 } from "../../infrasctructure/ports/email_verif_infra/email_verification_token_repo/email_verification_token_repo_pg";
@@ -24,7 +24,7 @@ export class ChangeEmailTxService {
             const mapper = new UserMapper();
             const userLookup = new UserLookup(userRepoReader);
 
-            const emailSender = new EmailSenderNodemailer();
+            const emailSender = new EmailSenderResend();
             const emailVerifRepo = new EmailVerificationTokenRepoPg(client);
 
             const sendVerifShared = new SendVerifEmailShared(emailSender, emailVerifRepo);

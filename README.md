@@ -66,11 +66,9 @@ CLIENT_ID=your_google_client_id
 CLIENT_SECRET=your_google_client_secret
 CALLBACK_URL=http://localhost:3000/public/auth/google/callback
 
-# Email/SMTP (For registration & verification)
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=your_email@example.com
-SMTP_PASS=your_email_password
+# Email/Resend (For registration & verification)
+RESEND_API_KEY=re_xxxxxxxxx
+RESEND_FROM_EMAIL=noreply@example.com
 
 # URLs
 API_URL=http://localhost:3000

@@ -15,7 +15,7 @@ import {ChangeUsernameUseCase} from "./modules/users/application/change_username
 import {LoginEmailUseCase} from "./modules/users/application/login_email_use_case";
 import {LoginUsernameUseCase} from "./modules/users/application/login_username_use_case";
 import {RegisterUseCase} from "./modules/users/application/register_use_case";
-import {EmailSenderNodemailer} from "./modules/infrasctructure/ports/email_verif_infra/email_sender/email_sender";
+import {EmailSenderResend} from "./modules/infrasctructure/ports/email_verif_infra/email_sender/email_sender";
 import {ToggleIsActiveUseCase} from "./modules/users/application/toggle_status_use_case_to_false";
 import {ChangeEmailTxService} from "./modules/users/transactional_services/change_email_tx_service";
 import {ChangePasswordTxService} from "./modules/users/transactional_services/change_password_tx_service";
@@ -378,7 +378,7 @@ export function assembleContainer(io: Server)
 
     const refreshTokenRepoPG = new RefreshTokenRepoPg(pool);
 
-    const emailSender = new EmailSenderNodemailer();
+    const emailSender = new EmailSenderResend();
     const emailVerificationTokenRepoPG = new EmailVerificationTokenRepoPg(pool);
     const emailVerificationUseCase = new EmailVerificationUseCase(emailVerificationTokenRepoPG, userRepoWriterPG);
 
